@@ -2,6 +2,8 @@
 experiment in developing along side gpt. 
 
 original chat 抜粋 with gpt:
+
+
 Sure, I can provide more specific advice on how to initiate developing this program.
 Here are some steps you could follow to get started:
 1. Familiarize yourself with the Amazon Kindle API: The first step is to familiarize yourself with the Amazon Kindle API. The Amazon Kindle API is aSure, I can provide more specific advice on how to initiate developing this program.
