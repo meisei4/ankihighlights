@@ -32,60 +32,47 @@ def test_build_card_from_note():
     assert ankikindle.build_card_from_note(note) == expected_card
 
 
-def test_add_and_remove_cards_to_anki_not_mocking():
-    deck_name = "mail suck in japan"
+def test_add_and_remove_cards_to_anki():
+    deck_name = "mail sucks in japan"
     model_name = "aedict"
-
-    # Replace these values with actual cards to add to Anki
     cards = [
         {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
     ]
+    added_note_ids = ankikindle.add_notes_to_anki(cards, deck_name, model_name)
 
-    # Call the method being tested with the provided arguments
-    card_ids = ankikindle.add_cards_to_anki(cards, deck_name, model_name)
+    all_note_ids = ankisync2.ankiconnect('findNotes', query=f'deck:"{deck_name}"')
+    for note_id in added_note_ids:
+        assert note_id in all_note_ids
 
-    # Confirm that the cards were added to the deck
-    connection = ankisync2.ankiconnect('requestPermission')
-    note_ids = connection.findNotes(f'deck:"{deck_name}"')
-    for card_id in card_ids:
-        assert card_id in note_ids
+    ankikindle.remove_notes_from_anki(added_note_ids)
 
-    ankikindle.remove_cards_from_anki(card_ids)
+    note_ids = ankisync2.ankiconnect('findNotes', query=f'deck:"{deck_name}"')
+    for note_id in added_note_ids:
+        assert note_id not in note_ids
 
-    note_ids = connection.findNotes(f'deck:"{deck_name}"')
-    for card_id in card_ids:
-        assert card_id not in note_ids
+#TODO this is somehow now a proper mock of the ankiconnect api
 
-    connection.disconnect()
-
-
-def test_add_cards_to_anki():
-    # Create a mock AnkiConnect instance and set its return values
+def test_add_cards_to_anki_mocked():
     mock_anki = Mock()
-    mock_anki.deckList.return_value = [{'name': 'Default', 'id': 1}]
-    mock_anki.modelList.return_value = [{'name': 'Basic', 'id': 2}]
-    mock_anki.invoke.side_effect = [{'result': True}, {'noteId': 1}, {'noteId': 2}]
+    mock_anki.ankiconnect.return_value = {'permission': 'granted'}
+    mock_anki.ankiconnect.side_effect = [
+        {'permission': 'granted'},  # requestPermission
+        [{'name': 'Default', 'id': 1}],  # deckNames
+        [{'name': 'Basic', 'id': 2}],  # modelNames
+        {'result':  101},  # addNote for first card
+        {'result': 102}  # addNote for second card
+    ]
 
-    # Mock the ankisync2.ankiconnect method to return the mock AnkiConnect instance
-    ankisync2.ankiconnect = Mock(return_value=mock_anki)
+    ankisync2.ankiconnect = mock_anki.ankiconnect
 
     cards = [{'sentence': 'Example sentence', 'word': 'example'},
              {'sentence': 'Another example', 'word': 'another'}]
 
-    ankikindle.add_cards_to_anki(cards, 'Default', 'Basic')
+    added_note_ids = ankikindle.add_notes_to_anki(cards, 'Default', 'Basic')
 
-    # Verify that AnkiConnect methods were called correctly
-    mock_anki.connect.assert_called_once_with()
-    mock_anki.invoke.assert_has_calls([
-        call('authorize', username='username', password='password'),
-        call('addNote', note={'deckName': 'Default', 'modelName': 'Basic',
-                              'fields': {'Front': 'Example sentence', 'Back': 'example'}, 'tags': ['kindle']}),
-        call('addNote', note={'deckName': 'Default', 'modelName': 'Basic',
-                              'fields': {'Front': 'Another example', 'Back': 'another'}, 'tags': ['kindle']})
-    ])
-    mock_anki.disconnect.assert_called_once_with()
+    assert added_note_ids == [101, 102]
 
-
+#TODO old test now, figure out once all other unit tests are finished
 def test_main(monkeypatch):
     mock_response = [{"asin": "B08R7GSGYF",
                       "lastUpdatedDate": 1649529364,

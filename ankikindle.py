@@ -5,9 +5,9 @@ import ankisync2.ankiconnect
 # Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the "Authorization" header in the developer tools.
 logger = logging.getLogger(__name__)
 
+#TODO come up with good names for stuff like note, clipping, card, word, expressions and etc
 
 def main():
-
     deck_name, model_name = get_deck_and_model_names()
 
     # TODO get header and actually have this response thing work
@@ -17,14 +17,8 @@ def main():
     clippings_json = response.json()
     clippings = parse_clippings(clippings_json)
     for clipping in clippings:
-        anki_cards = parse_notes(clipping['notes'])
-        add_cards_to_anki(anki_cards, deck_name, model_name)
-
-
-def get_login_credentials():
-    username = input("Enter your Anki username: ")
-    password = input("Enter your Anki password: ")
-    return username, password
+        anki_notes = parse_notes(clipping['notes'])
+        add_notes_to_anki(anki_notes, deck_name, model_name)
 
 
 def get_deck_and_model_names():
@@ -60,19 +54,10 @@ def build_card_from_note(note):
     return {'sentence': sentence, 'word': word}
 
 
-def add_cards_to_anki(cards, deck_name, model_name):
-    connection = ankisync2.ankiconnect('requestPermission')
-    if not connection['result']:
-        raise Exception(f"Failed to authenticate with Anki: {connection['error']}")
-
-    deck = next((d for d in connection.deckList() if d['name'] == deck_name), None)
-    if not deck:
-        raise Exception(f"Deck '{deck_name}' not found in remote Anki account")
-    models = connection.modelList()
-    model = next((m for m in models if m['name'] == model_name), None)
-    if not model:
-        raise Exception(f"Model '{model_name}' not found in remote Anki account")
-
+def add_notes_to_anki(cards, deck_name, model_name):
+    ankiconnect_request_permission()
+    confirm_existence_of_ankiconnect_item_by_name('deckNames', deck_name)
+    confirm_existence_of_ankiconnect_item_by_name('modelNames', model_name)
     added_note_ids = []
     for card in cards:
         fields = {
@@ -80,19 +65,25 @@ def add_cards_to_anki(cards, deck_name, model_name):
             'Furigana': card['word']
         }
         note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields, 'tags': ['kindle']}
-        result = connection.invoke('addNote', note=note)
-        added_note_ids.append(result['result'])
-
-    connection.disconnect()
+        result = ankisync2.ankiconnect('addNote', note=note)
+        added_note_ids.append(result)
     return added_note_ids
 
 
-def remove_cards_from_anki(added_note_ids):
-    connection = ankisync2.ankiconnect('requestPermission')
-    if not connection['result']:
-        raise Exception(f"Failed to authenticate with Anki: {connection['error']}")
+def ankiconnect_request_permission():
+    anki_conn = ankisync2.ankiconnect('requestPermission')
+    if not anki_conn['permission'] == 'granted':
+        raise Exception(f"Failed to authenticate with Anki; response: {anki_conn}")
 
-    notes_to_delete = connection.invoke('findNotes', query=f"nid:{','.join(added_note_ids)}")
-    connection.invoke('deleteNotes', notes=notes_to_delete)
 
-    connection.disconnect()
+def confirm_existence_of_ankiconnect_item_by_name(action, target_item):
+    items = ankisync2.ankiconnect(f'{action}')
+    if target_item not in items:
+        raise Exception(f"{action.capitalize()} '{target_item}' not found in remote Anki account")
+    return True
+
+
+def remove_notes_from_anki(added_note_ids):
+    ankiconnect_request_permission()
+    notes_to_delete = ankisync2.ankiconnect('findNotes', query=f"nid:{','.join(str(n) for n in added_note_ids)}")
+    ankisync2.ankiconnect('deleteNotes', notes=notes_to_delete)
