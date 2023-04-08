@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    username, password = get_login_credentials()
 
     deck_name, model_name = get_deck_and_model_names()
 
@@ -19,7 +18,7 @@ def main():
     clippings = parse_clippings(clippings_json)
     for clipping in clippings:
         anki_cards = parse_notes(clipping['notes'])
-        add_cards_to_anki(anki_cards, deck_name, model_name, username, password)
+        add_cards_to_anki(anki_cards, deck_name, model_name)
 
 
 def get_login_credentials():
