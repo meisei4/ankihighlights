@@ -17,13 +17,13 @@ def main():
     clippings_json = response.json()
     clippings = parse_clippings(clippings_json)
     for clipping in clippings:
-        anki_notes = parse_notes(clipping['notes'])
+        anki_notes = build_notes(clipping['notes'])
         add_notes_to_anki(anki_notes, deck_name, model_name)
 
 
 def get_deck_and_model_names():
-    deck_name = input("Enter the name of the deck you want to add cards to: ")
-    model_name = input("Enter the name of the card type you want to use: ")
+    deck_name = input("Enter the name of the deck you want to add notes to: ")
+    model_name = input("Enter the name of the note type you want to use: ")
     return deck_name, model_name
 
 
@@ -40,17 +40,17 @@ def parse_clippings(clippings_json):
     return clippings
 
 
-def parse_notes(notes):
-    anki_cards = []
-    for note in notes:
-        card = build_card_from_note(note)
-        anki_cards.append(card)
-    return anki_cards
+def build_notes(notes_dict):
+    anki_notes = []
+    for note in notes_dict:
+        anki_note = build_note(note)
+        anki_notes.append(anki_note)
+    return anki_notes
 
 
-def build_card_from_note(note):
-    sentence = note['sentence']
-    word = note['highlight']
+def build_note(note_contents):
+    sentence = note_contents['sentence']
+    word = note_contents['highlight']
     return {'sentence': sentence, 'word': word}
 
 
@@ -64,7 +64,7 @@ def add_notes_to_anki(cards, deck_name, model_name):
             'Expression': card['sentence'],
             'Furigana': card['word']
         }
-        note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields, 'tags': ['kindle']}
+        note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields}
         result = ankisync2.ankiconnect('addNote', note=note)
         added_note_ids.append(result)
     return added_note_ids
