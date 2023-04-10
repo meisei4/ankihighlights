@@ -2,14 +2,6 @@ import ankisync2
 from .. import ankikindle
 from unittest.mock import Mock
 
-"""@pytest.fixture
-def mock_anki_connect():
-    # TODO figure out how this patch thing works and its relation to dependency injections
-    with patch('ankisync2.ankiconnect') as mock_ac:
-       yield mock_ac.return_value
-"""
-
-
 def test_build_notes():
     notes = [{"annotationId": "ABCDEFGH1234",
               "highlight": "狐につままれ",
