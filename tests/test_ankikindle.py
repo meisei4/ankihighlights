@@ -12,16 +12,6 @@ def test_build_notes():
     assert ankikindle.build_notes(notes) == expected_notes
 
 
-def test_build_note():
-    note = {"annotationId": "ABCDEFGH1234",
-            "highlight": "狐につままれ",
-            "location": {"value": 4, "type": "page"},
-            "sentence": "若槻は狐につままれたような面持ちで確認した。",
-            "note": ""}
-    expected_note = {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
-    assert ankikindle.build_note(note) == expected_note
-
-
 # TODO remove this test because unit test probalby shouldnt touch the actual anki API
 #  #(this is just the first test to actually confirm it works
 def test_add_and_remove_notes_to_anki():
