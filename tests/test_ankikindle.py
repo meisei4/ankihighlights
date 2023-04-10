@@ -66,5 +66,4 @@ def test_add_notes_to_anki_mocked(mock_anki_connect):
     model_name = 'Basic Model'
 
     result = ankikindle.add_notes_to_anki(notes, deck_name, model_name, anki_connect=mock_anki_connect)
-
     assert result == [101, 102]
