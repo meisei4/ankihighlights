@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 #TODO come up with good names for stuff like note, clipping, card, word, expressions and etc
 
-def main():
+def main(anki_connect_injection):
     deck_name, model_name = get_deck_and_model_names()
 
     # TODO get header and actually have this response thing work
@@ -18,7 +18,7 @@ def main():
     clippings = parse_clippings(clippings_json)
     for clipping in clippings:
         anki_notes = build_notes(clipping['notes'])
-        add_notes_to_anki(anki_notes, deck_name, model_name)
+        add_notes_to_anki(anki_notes, deck_name, model_name,anki_connect_injection)
 
 
 def get_deck_and_model_names():
@@ -54,10 +54,10 @@ def build_note(note_contents):
     return {'sentence': sentence, 'word': word}
 
 
-def add_notes_to_anki(cards, deck_name, model_name):
-    ankiconnect_request_permission()
-    confirm_existence_of_ankiconnect_item_by_name('deckNames', deck_name)
-    confirm_existence_of_ankiconnect_item_by_name('modelNames', model_name)
+def add_notes_to_anki(cards, deck_name, model_name, anki_connect_injection):
+    ankiconnect_request_permission(anki_connect_injection)
+    confirm_existence_of_ankiconnect_item_by_name('deckNames', deck_name,anki_connect_injection)
+    confirm_existence_of_ankiconnect_item_by_name('modelNames', model_name,anki_connect_injection)
     added_note_ids = []
     for card in cards:
         fields = {
@@ -65,25 +65,26 @@ def add_notes_to_anki(cards, deck_name, model_name):
             'Furigana': card['word']
         }
         note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields}
-        result = ankisync2.ankiconnect('addNote', note=note)
+        result = anki_connect_injection('addNote', note=note)
+        #TODO check for dupes?
         added_note_ids.append(result)
     return added_note_ids
 
 
-def ankiconnect_request_permission():
-    anki_conn = ankisync2.ankiconnect('requestPermission')
+def ankiconnect_request_permission(anki_connect_injection):
+    anki_conn = anki_connect_injection('requestPermission')
     if not anki_conn['permission'] == 'granted':
         raise Exception(f"Failed to authenticate with Anki; response: {anki_conn}")
 
 
-def confirm_existence_of_ankiconnect_item_by_name(action, target_item):
-    items = ankisync2.ankiconnect(f'{action}')
+def confirm_existence_of_ankiconnect_item_by_name(action, target_item, anki_connect_injection):
+    items = anki_connect_injection(f'{action}')
     if target_item not in items:
         raise Exception(f"{action.capitalize()} '{target_item}' not found in remote Anki account")
     return True
 
 
-def remove_notes_from_anki(added_note_ids):
-    ankiconnect_request_permission()
+def remove_notes_from_anki(added_note_ids, anki_connect_injection):
+    ankiconnect_request_permission(anki_connect_injection)
     notes_to_delete = ankisync2.ankiconnect('findNotes', query=f"nid:{','.join(str(n) for n in added_note_ids)}")
     ankisync2.ankiconnect('deleteNotes', notes=notes_to_delete)
