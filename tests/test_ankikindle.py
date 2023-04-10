@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 @pytest.fixture
 def mock_anki_connect():
+    # TODO figure out how this patch thing works and its relation to dependency injections
     with patch('ankisync2.ankiconnect') as mock_ac:
         yield mock_ac.return_value
 
@@ -33,6 +34,7 @@ def test_build_note():
     assert ankikindle.build_note(note) == expected_note
 
 
+# TODO remove this test because unit test probalby shouldnt touch the actual anki API (this is just the first test to actually confirm it works
 def test_add_and_remove_notes_to_anki():
     deck_name = "mail sucks in japan"
     model_name = "aedict"
@@ -51,7 +53,8 @@ def test_add_and_remove_notes_to_anki():
     for note_id in added_note_ids:
         assert note_id not in note_ids
 
-
+# TODO: figure out how to get this dependency injection thing working (using patch and fixtures?,
+#  also ask gpt about code practice related to passing api methods as parameters to functions that you write, to make testing easier?)
 def test_add_notes_to_anki_mocked(mock_anki_connect):
     mock_anki_connect.return_value.side_effect = [
         {'permission': 'granted'},  # requestPermission
