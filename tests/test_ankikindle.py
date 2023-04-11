@@ -31,12 +31,13 @@ def test_confirm_existence_of_ankiconnect_item_by_name_no_items_found():
     mock_anki_connect_injection.assert_called_once_with('getItems')
 
 
-def test_add_notes_to_anki_mocked():
+def test_add_notes_to_anki_mocked_no_duplicate_found():
     mock_anki_connect = Mock()
     mock_anki_connect.side_effect = [
         {'permission': 'granted'},  # requestPermission
         ['Default'],  # deckNames
         ['Basic'],  # modelNames
+        [],
         101,  # addNote for first note
     ]
 
@@ -47,6 +48,22 @@ def test_add_notes_to_anki_mocked():
     result_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name,
                                                    anki_connect_injection=mock_anki_connect)
     assert result_note_ids == [101]
+
+def test_update_note_with_more_examples(mock_anki_connect_injection):
+    # Mock anki_connect_injection function
+    mock_note = {'例文': 'example1'}
+    mock_anki_connect_injection.return_value = [mock_note]
+
+    # Call the function
+    ankikindle.update_note_with_more_examples(1, 'example2', mock_anki_connect_injection)
+
+    # Check that anki_connect_injection was called with the expected arguments
+    mock_anki_connect_injection.assert_called_once_with('notesInfo', notes=[1])
+    expected_note = {'Example Sentence': 'example1<br/>example2'}
+    mock_anki_connect_injection.assert_any_call('updateNoteFields', note=expected_note)
+
+    # Check that the counter was updated
+    mock_anki_connect_injection.assert_any_call('incrementCounter', key='update_note_with_more_examples')
 
 
 # TODO remove this test because unit test probably shouldn't touch the actual anki API
@@ -59,12 +76,12 @@ def test_add_and_remove_notes_to_anki():
     ]
     added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankisync2.ankiconnect)
 
-    all_note_ids = ankisync2.ankiconnect('findNotes', query=f'deck:"{deck_name}"')
+    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id in all_note_ids
 
     ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
 
-    note_ids = ankisync2.ankiconnect('findNotes', query=f'deck:"{deck_name}"')
+    note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id not in note_ids
