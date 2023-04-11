@@ -6,11 +6,11 @@ from unittest.mock import Mock
 
 
 def test_build_notes():
-    notes = [{"annotationId": "ABCDEFGH1234",
-              "highlight": "狐につままれ",
-              "location": {"value": 4, "type": "page"},
-              "sentence": "若槻は狐につままれたような面持ちで確認した。",
-              "note": ""}]
+    notes = [{'annotationId': 'ABCDEFGH1234',
+              'highlight': '狐につままれ',
+              'location': {'value': 4, 'type': 'page'},
+              'sentence': '若槻は狐につままれたような面持ちで確認した。',
+              'note': ''}]
     expected_notes = [{'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}]
     assert ankikindle.build_notes(notes) == expected_notes
 
@@ -49,39 +49,46 @@ def test_add_notes_to_anki_mocked_no_duplicate_found():
                                                    anki_connect_injection=mock_anki_connect)
     assert result_note_ids == [101]
 
-def test_update_note_with_more_examples(mock_anki_connect_injection):
-    # Mock anki_connect_injection function
-    mock_note = {'例文': 'example1'}
-    mock_anki_connect_injection.return_value = [mock_note]
 
-    # Call the function
+def test_update_note_with_more_examples(mock_anki_connect_injection):
+    mock_anki_connect = Mock()
+    mock_anki_connect.side_effect = [
+        {'permission': 'granted'},  # requestPermission
+        ['Default'],  # deckNames
+        ['Basic'],  # modelNames
+        [101],  # found note
+        101,  # addNote for first note
+    ]
+
+    notes = [{'sentence': 'This is a test sentence', 'word': 'test'}]
+    deck_name = 'Default'
+    model_name = 'Basic'
+
     ankikindle.update_note_with_more_examples(1, 'example2', mock_anki_connect_injection)
 
     # Check that anki_connect_injection was called with the expected arguments
     mock_anki_connect_injection.assert_called_once_with('notesInfo', notes=[1])
     expected_note = {'Example Sentence': 'example1<br/>example2'}
     mock_anki_connect_injection.assert_any_call('updateNoteFields', note=expected_note)
-
-    # Check that the counter was updated
-    mock_anki_connect_injection.assert_any_call('incrementCounter', key='update_note_with_more_examples')
+    # TODO have an assert here
 
 
 # TODO remove this test because unit test probably shouldn't touch the actual anki API
 #  this is just the first test to actually confirm it works
 def test_add_and_remove_notes_to_anki():
-    deck_name = "mail sucks in japan"
-    model_name = "aedict"
+    deck_name = 'mail sucks in japan'
+    model_name = 'aedict'
     notes = [
         {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
     ]
     added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankisync2.ankiconnect)
 
-    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
+    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
     for note_id in added_note_ids:
         assert note_id in all_note_ids
 
     ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
 
-    note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
+    note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
     for note_id in added_note_ids:
         assert note_id not in note_ids

@@ -15,13 +15,13 @@ NOTES = 'notes'
 SENTENCE = 'sentence'
 WORD = 'word'
 
-# Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the "Authorization" header in the developer tools.
+# Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the 'Authorization' header in the developer tools.
 logger = logging.getLogger(__name__)
 
 
 def main(anki_connect_injection):
-    deck_name = ""
-    model_name = ""
+    deck_name = ''
+    model_name = ''
 
     # TODO get header and actually have this response thing work
     headers = ""
@@ -77,23 +77,57 @@ def add_or_update_note(clipping_note, deck_name, model_name, anki_connect_inject
     if len(existing_notes) >= 1:
         update_note_with_more_examples(existing_notes[0], clipping_note[SENTENCE], anki_connect_injection)
         return existing_notes[0]
-
     return add_new_note(clipping_note, deck_name, model_name, anki_connect_injection)
+
+
+example_of_params_for_update = {
+    'note': {
+        'id': 1514547547030,
+        'fields': {
+            'Expression': 'some blah',
+            'Furigana': 'blah',
+            'Example Sentence': 'blah blah blah'
+        }
+    }
+}
+examples_of_params_info = {'params': {
+    'notes': [1502298033753]
+}}
+example_return_from_info = {
+    'result': [{
+        'noteId': 1502298033753,
+        'modelName': 'Basic',
+        'tags': ['6'],  # this is the counter tag!!!!!!!!!!!!!!!!!!
+        'fields': {
+            'Front': {'value': 'front content', 'order': 0},
+            'Back': {'value': 'back content', 'order': 1}
+        }
+    }]
+}
 
 
 def update_note_with_more_examples(note_id, new_example, anki_connect_injection):
     # TODO figure out how notesInfo return type looks
-    note = anki_connect_injection('notesInfo', notes=[note_id])[0]
-    more_examples = note['Example Sentence']
+    new_note = anki_connect_injection('notesInfo', notes=[note_id])[0]
+    new_fields = new_note['fields']
+    more_examples = new_fields['Example Sentence']
+    # TODO check here for how many occurrences of <br/> there are, and only allow 2 max (for 3 example sentences).
+    #  otherwise replace the oldest sentence with the new_example
     more_examples += '<br/>' + new_example
-    fields = {'Example Sentence': more_examples}
-    update_counter(note_id, anki_connect_injection)
-    anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': fields})
+    new_fields['Example Sentence'] = more_examples
+    if new_note['deckName'] is not 'Priority Words':
+        counter_tag = new_note['tags'][0]  # assume only one tag? update this to maybe be some field. tags are scary
+        counter_tag += 1
+        if counter_tag >= 3:
+            new_note['deckName'] = 'Priority Words'
+        anki_connect_injection('updateNoteFields', note={'id': note_id, 'tags': [str(counter_tag)], 'fields': new_fields})
+    else:
+        anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
 
 
 def update_counter(note_id, anki_connect_injection):
     note = anki_connect_injection('notesInfo', notes=[note_id])[0]
-    counter = int(note['Counter'])
+    counter = int(note['tags'][0])
     counter += 1
     note['Counter'] = str(counter)
     if counter >= 3:
@@ -105,17 +139,17 @@ def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection):
     fields = {
         'Expression': clipping_note[SENTENCE],
         'Furigana': clipping_note[WORD],
-        'Example Sentence': clipping_note[SENTENCE],
-        'Counter': 1
+        'Example Sentence': clipping_note[SENTENCE],  # still keep the front of the card visible if needed (especially
+        # when more sentences start to overwrite this somehow)
     }
-    anki_note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields}
+    anki_note = {'deckName': deck_name, 'modelName': model_name, 'tags': ['1'], 'fields': fields}
     return anki_connect_injection(ADD_NOTE, note=anki_note)
 
 
 def ankiconnect_request_permission(anki_connect_injection):
     anki_conn = anki_connect_injection('requestPermission')
     if not anki_conn['permission'] == 'granted':
-        raise Exception(f"Failed to authenticate with Anki; response: {anki_conn}")
+        raise Exception(f'Failed to authenticate with Anki; response: {anki_conn}')
 
 
 def confirm_existence_of_ankiconnect_item_by_name(action, target_item, anki_connect_injection):
