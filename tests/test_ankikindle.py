@@ -1,6 +1,9 @@
 import ankisync2
+import pytest
+
 from .. import ankikindle
 from unittest.mock import Mock
+
 
 def test_build_notes():
     notes = [{"annotationId": "ABCDEFGH1234",
@@ -12,8 +15,42 @@ def test_build_notes():
     assert ankikindle.build_notes(notes) == expected_notes
 
 
-# TODO remove this test because unit test probalby shouldnt touch the actual anki API
-#  #(this is just the first test to actually confirm it works
+def test_ankiconnect_request_permission_permission_denied():
+    mock_anki_connect_injection = Mock(return_value={'permission': 'denied'})
+    with pytest.raises(Exception) as e:
+        ankikindle.ankiconnect_request_permission(mock_anki_connect_injection)
+    assert str(e.value) == "Failed to authenticate with Anki; response: {'permission': 'denied'}"
+    mock_anki_connect_injection.assert_called_once_with('requestPermission')
+
+
+def test_confirm_existence_of_ankiconnect_item_by_name_no_items_found():
+    mock_anki_connect_injection = Mock(return_value=[])
+    with pytest.raises(Exception) as e:
+        ankikindle.confirm_existence_of_ankiconnect_item_by_name('getItems', 'test_item', mock_anki_connect_injection)
+    assert str(e.value) == "getItems 'test_item' not found in remote Anki account"
+    mock_anki_connect_injection.assert_called_once_with('getItems')
+
+
+def test_add_notes_to_anki_mocked():
+    mock_anki_connect = Mock()
+    mock_anki_connect.side_effect = [
+        {'permission': 'granted'},  # requestPermission
+        ['Default'],  # deckNames
+        ['Basic'],  # modelNames
+        101,  # addNote for first note
+    ]
+
+    notes = [{'sentence': 'This is a test sentence', 'word': 'test'}]
+    deck_name = 'Default'
+    model_name = 'Basic'
+
+    result_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name,
+                                                   anki_connect_injection=mock_anki_connect)
+    assert result_note_ids == [101]
+
+
+# TODO remove this test because unit test probably shouldn't touch the actual anki API
+#  this is just the first test to actually confirm it works
 def test_add_and_remove_notes_to_anki():
     deck_name = "mail sucks in japan"
     model_name = "aedict"
@@ -31,24 +68,3 @@ def test_add_and_remove_notes_to_anki():
     note_ids = ankisync2.ankiconnect('findNotes', query=f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id not in note_ids
-
-# TODO: figure out how to get this dependency injection thing working (using patch and fixtures?,
-#  also ask gpt about code practice related to passing api methods as parameters to functions that you write,
-#  to make testing easier?)
-
-
-def test_add_notes_to_anki_mocked():
-    mock_anki_connect = Mock()
-    mock_anki_connect.side_effect = [
-        {'permission': 'granted'},  # requestPermission
-        ['Default'],  # deckNames
-        ['Basic'],  # modelNames
-        101,  # addNote for first note
-    ]
-
-    notes = [{'sentence': 'This is a test sentence', 'word': 'test'}]
-    deck_name = 'Default'
-    model_name = 'Basic'
-
-    result_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, anki_connect_injection=mock_anki_connect)
-    assert result_note_ids == [101]

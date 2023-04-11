@@ -5,6 +5,7 @@ import ankisync2.ankiconnect
 # Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the "Authorization" header in the developer tools.
 logger = logging.getLogger(__name__)
 
+
 # TODO come up with good names for stuff like note, clipping, card, word, expressions etc later
 
 
@@ -60,8 +61,11 @@ def add_notes_to_anki(clipping_notes, deck_name, model_name, anki_connect_inject
             'Furigana': clipping_note['word']
         }
         anki_note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields}
+        # TODO check for duplicate, and when the word exists already, then just add the most recent sentence to some
+        #  "more example sentences" also put a counter on the card in the form of a tag or some other attribute. if
+        #  the counter goes above some threshold (you keep encountering this word and keep highlighting it) then add
+        #  the card to some more serious deck
         result = anki_connect_injection('addNote', note=anki_note)
-        # TODO check for dupes?
         added_note_ids.append(result)
     return added_note_ids
 
@@ -75,11 +79,14 @@ def ankiconnect_request_permission(anki_connect_injection):
 def confirm_existence_of_ankiconnect_item_by_name(action, target_item, anki_connect_injection):
     items = anki_connect_injection(f'{action}')
     if target_item not in items:
-        raise Exception(f"{action.capitalize()} '{target_item}' not found in remote Anki account")
+        raise Exception(f"{action} '{target_item}' not found in remote Anki account")
     return True
 
 
-def remove_notes_from_anki(added_note_ids, anki_connect_injection):
+# TODO only for recovery during unmocked connection testing purposes (adding unwanted cards). move somewhere else or
+#  figure out it being needed later
+def remove_notes_from_anki(note_ids_to_be_removed, anki_connect_injection):
     ankiconnect_request_permission(anki_connect_injection)
-    notes_to_delete = ankisync2.ankiconnect('findNotes', query=f"nid:{','.join(str(n) for n in added_note_ids)}")
+    notes_to_delete = ankisync2.ankiconnect('findNotes',
+                                            query=f"nid:{','.join(str(n) for n in note_ids_to_be_removed)}")
     ankisync2.ankiconnect('deleteNotes', notes=notes_to_delete)
