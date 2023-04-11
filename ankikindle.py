@@ -5,26 +5,21 @@ import ankisync2.ankiconnect
 # Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the "Authorization" header in the developer tools.
 logger = logging.getLogger(__name__)
 
-#TODO come up with good names for stuff like note, clipping, card, word, expressions and etc
+# TODO come up with good names for stuff like note, clipping, card, word, expressions etc later
+
 
 def main(anki_connect_injection):
-    deck_name, model_name = get_deck_and_model_names()
+    deck_name = ""
+    model_name = ""
 
     # TODO get header and actually have this response thing work
     headers = ""
-    response = requests.get(f'https://kindle.amazon.com/kp/kindle-dbs/notes/2010-05-01/<YOUR_TITLE>',
-                            headers=headers)
+    response = requests.get(f'https://kindle.amazon.com/kp/kindle-dbs/notes/2010-05-01/<YOUR_TITLE>', headers=headers)
     clippings_json = response.json()
     clippings = parse_clippings(clippings_json)
     for clipping in clippings:
         anki_notes = build_notes(clipping['notes'])
-        add_notes_to_anki(anki_notes, deck_name, model_name,anki_connect_injection)
-
-
-def get_deck_and_model_names():
-    deck_name = input("Enter the name of the deck you want to add notes to: ")
-    model_name = input("Enter the name of the note type you want to use: ")
-    return deck_name, model_name
+        add_notes_to_anki(anki_notes, deck_name, model_name, anki_connect_injection)
 
 
 def parse_clippings(clippings_json):
@@ -54,19 +49,19 @@ def build_note(note_contents):
     return {'sentence': sentence, 'word': word}
 
 
-def add_notes_to_anki(cards, deck_name, model_name, anki_connect_injection):
+def add_notes_to_anki(clipping_notes, deck_name, model_name, anki_connect_injection):
     ankiconnect_request_permission(anki_connect_injection)
-    confirm_existence_of_ankiconnect_item_by_name('deckNames', deck_name,anki_connect_injection)
-    confirm_existence_of_ankiconnect_item_by_name('modelNames', model_name,anki_connect_injection)
+    confirm_existence_of_ankiconnect_item_by_name('deckNames', deck_name, anki_connect_injection)
+    confirm_existence_of_ankiconnect_item_by_name('modelNames', model_name, anki_connect_injection)
     added_note_ids = []
-    for card in cards:
+    for clipping_note in clipping_notes:
         fields = {
-            'Expression': card['sentence'],
-            'Furigana': card['word']
+            'Expression': clipping_note['sentence'],
+            'Furigana': clipping_note['word']
         }
-        note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields}
-        result = anki_connect_injection('addNote', note=note)
-        #TODO check for dupes?
+        anki_note = {'deckName': deck_name, 'modelName': model_name, 'fields': fields}
+        result = anki_connect_injection('addNote', note=anki_note)
+        # TODO check for dupes?
         added_note_ids.append(result)
     return added_note_ids
 
