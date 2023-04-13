@@ -116,7 +116,9 @@ def update_note_with_more_examples(note_id, new_example, anki_connect_injection)
     more_examples += '<br/>' + new_example
     new_fields['Example Sentence'] = more_examples
     if new_note['deckName'] is not 'Priority Words':
-        counter_tag = new_note['tags'][0]  # assume only one tag? update this to maybe be some field. tags are scary
+        tags = new_note['tags']
+        # 'not tags' means its empty??
+        counter_tag = int(tags[0]) if not tags else 1  # assume only one tag? update this to maybe be some field.
         counter_tag += 1
         if counter_tag >= 3:
             new_note['deckName'] = 'Priority Words'

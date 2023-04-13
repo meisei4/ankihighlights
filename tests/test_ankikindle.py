@@ -50,27 +50,34 @@ def test_add_notes_to_anki_mocked_no_duplicate_found():
     assert result_note_ids == [101]
 
 
-def test_update_note_with_more_examples(mock_anki_connect_injection):
+def test_update_note_with_more_examples():
     mock_anki_connect = Mock()
     mock_anki_connect.side_effect = [
-        {'permission': 'granted'},  # requestPermission
-        ['Default'],  # deckNames
-        ['Basic'],  # modelNames
-        [101],  # found note
-        101,  # addNote for first note
+        [{
+            'noteId': 101,
+            'modelName': 'Basic',
+            'deckName': 'Default',
+            'tags': ['1'],
+            'fields': {
+                'Furigana': 'test',
+                'Expression': 'This is a test sentence',
+                'Example Sentence': 'example1'
+            }
+        }],  # notesInfo for first note
+        None  # updateNoteFields
     ]
-
-    notes = [{'sentence': 'This is a test sentence', 'word': 'test'}]
-    deck_name = 'Default'
-    model_name = 'Basic'
-
-    ankikindle.update_note_with_more_examples(1, 'example2', mock_anki_connect_injection)
-
-    # Check that anki_connect_injection was called with the expected arguments
-    mock_anki_connect_injection.assert_called_once_with('notesInfo', notes=[1])
-    expected_note = {'Example Sentence': 'example1<br/>example2'}
-    mock_anki_connect_injection.assert_any_call('updateNoteFields', note=expected_note)
-    # TODO have an assert here
+    ankikindle.update_note_with_more_examples(101, 'example2', mock_anki_connect)
+    mock_anki_connect.assert_any_call('notesInfo', notes=[101])
+    expected_note = {
+        'id': 101,
+        'tags': ['2'],
+        'fields': {
+            'Furigana': 'test',
+            'Expression': 'This is a test sentence',
+            'Example Sentence': 'example1<br/>example2'
+        }
+    }
+    mock_anki_connect.assert_any_call('updateNoteFields', note=expected_note)
 
 
 # TODO remove this test because unit test probably shouldn't touch the actual anki API
@@ -83,7 +90,7 @@ def test_add_and_remove_notes_to_anki():
     ]
     added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankisync2.ankiconnect)
 
-    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
+    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id in all_note_ids
 
