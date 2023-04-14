@@ -99,3 +99,33 @@ def test_add_and_remove_notes_to_anki():
     note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
     for note_id in added_note_ids:
         assert note_id not in note_ids
+
+
+def test_add_update_and_remove_notes_to_anki():
+    deck_name = 'mail sucks in japan'
+    model_name = 'aedict'
+    notes = [
+        {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
+    ]
+    added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankisync2.ankiconnect)
+
+    # test that added notes are in the deck
+    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
+    for note_id in added_note_ids:
+        assert note_id in all_note_ids
+
+    # update the first note
+    new_example = '新しい例文'
+    ankikindle.update_note_with_more_examples(added_note_ids[0], new_example, ankisync2.ankiconnect)
+
+    # test that the note was updated
+    updated_note = ankisync2.ankiconnect('notesInfo', notes=[added_note_ids[0]])[0]
+    assert new_example in updated_note['fields']['Example Sentence']
+
+    # remove the added notes
+    ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
+
+    # test that the notes are no longer in the deck
+    note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
+    for note_id in added_note_ids:
+        assert note_id not in note_ids
