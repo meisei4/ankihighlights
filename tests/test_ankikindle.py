@@ -61,12 +61,13 @@ def test_update_note_with_more_examples():
             'fields': {
                 'Furigana': 'test',
                 'Expression': 'This is a test sentence',
-                'Example Sentence': 'example1'
+                'EXAMPLE_SENTENCE': 'example1'
             }
         }],  # notesInfo for first note
         None  # updateNoteFields
     ]
     ankikindle.update_note_with_more_examples(101, 'example2', mock_anki_connect)
+    # TODO notesInfo is insane it has a ton of value and order info in the dict. figure out how to get around this easier
     mock_anki_connect.assert_any_call('notesInfo', notes=[101])
     expected_note = {
         'id': 101,
@@ -74,7 +75,7 @@ def test_update_note_with_more_examples():
         'fields': {
             'Furigana': 'test',
             'Expression': 'This is a test sentence',
-            'Example Sentence': 'example1<br/>example2'
+            ankikindle.EXAMPLE_SENTENCE: 'example1<br/>example2'
         }
     }
     mock_anki_connect.assert_any_call('updateNoteFields', note=expected_note)
@@ -115,16 +116,13 @@ def test_add_update_and_remove_notes_to_anki():
         assert note_id in all_note_ids
 
     # update the first note
-    new_example = '新しい例文'
+    new_example = '狐につままれの新しい例文'
     ankikindle.update_note_with_more_examples(added_note_ids[0], new_example, ankisync2.ankiconnect)
 
-    # test that the note was updated
     updated_note = ankisync2.ankiconnect('notesInfo', notes=[added_note_ids[0]])[0]
-    assert new_example in updated_note['fields']['Example Sentence']
+    assert new_example in updated_note['fields'][ankikindle.EXAMPLE_SENTENCE]['value']
 
     # remove the added notes
-    ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
-
     # test that the notes are no longer in the deck
     note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
     for note_id in added_note_ids:

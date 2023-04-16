@@ -11,6 +11,7 @@ DECK_NAMES = 'deckNames'
 MODEL_NAMES = 'modelNames'
 
 # dict keys
+EXAMPLE_SENTENCE = 'Sentence'
 NOTES = 'notes'
 SENTENCE = 'sentence'
 WORD = 'word'
@@ -86,7 +87,7 @@ example_of_params_for_update = {
         'fields': {
             'Expression': 'some blah',
             'Furigana': 'blah',
-            'Example Sentence': 'blah blah blah'
+            'Sentence': 'blah blah blah'
         }
     }
 }
@@ -110,12 +111,14 @@ def update_note_with_more_examples(note_id, new_example, anki_connect_injection)
     # TODO figure out how notesInfo return type looks
     new_note = anki_connect_injection('notesInfo', notes=[note_id])[0]
     new_fields = new_note['fields']
-    more_examples = new_fields['Example Sentence']
+    more_examples = new_fields[EXAMPLE_SENTENCE]['value']
     # TODO check here for how many occurrences of <br/> there are, and only allow 2 max (for 3 example sentences).
     #  otherwise replace the oldest sentence with the new_example
     more_examples += '<br/>' + new_example
-    new_fields['Example Sentence'] = more_examples
-    if new_note['deckName'] is not 'Priority Words':
+    new_fields[EXAMPLE_SENTENCE]['value'] = more_examples
+    # TODO how to get deckname from note/card??? why does this have to be so difficult with this api, why implement both card and note????
+    card_to_be_updated = anki_connect_injection('cardsInfo', cards=[note_id])[0]
+    if card_to_be_updated['deckName'] is not 'Priority Words':
         tags = new_note['tags']
         # 'not tags' means its empty??
         counter_tag = int(tags[0]) if not tags else 1  # assume only one tag? update this to maybe be some field.
@@ -141,7 +144,7 @@ def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection):
     fields = {
         'Expression': clipping_note[SENTENCE],
         'Furigana': clipping_note[WORD],
-        'Example Sentence': clipping_note[SENTENCE],  # still keep the front of the card visible if needed (especially
+        EXAMPLE_SENTENCE: clipping_note[SENTENCE],  # still keep the front of the card visible if needed (especially
         # when more sentences start to overwrite this somehow)
     }
     anki_note = {'deckName': deck_name, 'modelName': model_name, 'tags': ['1'], 'fields': fields}
