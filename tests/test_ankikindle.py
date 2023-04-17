@@ -69,8 +69,9 @@ def test_update_note_with_more_examples_mocked():
                 'Pronunciation': {'value': '', 'order': -1}
             }
         }],  # notesInfo for first note
-        [{'Default': [1]}], # getDecks
-        None  # updateNoteFields
+        [{'Default': [1]}],  # getDecks
+        None,  # updateNoteFields
+        None
     ]
     ankikindle.update_note_with_more_examples(101, 'example2', mock_anki_connect)
     # TODO notesInfo is insane it has a ton of value and order info in the dict.
@@ -131,8 +132,8 @@ def test_add_update_and_remove_notes_to_anki():
 
     updated_note = ankisync2.ankiconnect('notesInfo', notes=[added_note_ids[0]])[0]
     assert new_example in updated_note['fields'][ankikindle.EXAMPLE_SENTENCE]['value']
+    assert updated_note['tags'][0] == '2'
 
-    # remove the added notes
     ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
     # TODO this is not actually the correct note ids, i think that the updateNotes will update the note_id so you need
     #  to get the new ones id

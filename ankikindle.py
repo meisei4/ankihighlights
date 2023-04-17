@@ -82,43 +82,35 @@ def add_or_update_note(clipping_note, deck_name, model_name, anki_connect_inject
 
 
 def update_note_with_more_examples(note_id, new_example, anki_connect_injection):
-    # TODO figure out how notesInfo return type looks
     new_note = anki_connect_injection('notesInfo', notes=[note_id])[0]
     new_fields = new_note['fields']
     more_examples = new_fields[EXAMPLE_SENTENCE]['value']
-    # TODO check here for how many occurrences of \n there are, and only allow 2 max (for 3 example sentences).
-    #  otherwise replace the oldest sentence with the new_example
-    more_examples += '\n' + new_example
+    # TODO check here for how many occurrences of \n (or </br>) there are, and only allow 2 max (for 3 example
+    #  sentences). otherwise replace the oldest sentence with the new_example
+    more_examples += '</br>' + new_example
     # TODO this is some messed up stuff, the return of notesInfo gives all these "value: , order:" dict things for
     #  the fields but the update only takes the fields: {fieldName: value} stuff AHHHHHHHHHHHHHHHH
     #  (maybe raise an issue or fork and update api alone?)
-    new_fields['Sentence'] = more_examples # ew
+    new_fields['Sentence'] = more_examples  # ew
     new_fields['Expression'] = new_fields['Expression']['value']  # ew
     new_fields['Furigana'] = new_fields['Furigana']['value']  # ew
     new_fields['Meaning'] = new_fields['Meaning']['value']  # ew
     new_fields['Pronunciation'] = new_fields['Pronunciation']['value']  # ew
-    current_deck = anki_connect_injection('getDecks', cards=[note_id]) # ew notes and cards bleh
-    if 'Priority Words' in current_deck:
-        tags = new_note['tags']
+
+    current_deck = anki_connect_injection('getDecks', cards=[note_id])  # ew notes and cards bleh
+    if 'Priority Words' not in current_deck:
+        previous_tags = new_note['tags']
         # 'not tags' means its empty??
-        counter_tag = int(tags[0]) if not tags else 1  # assume only one tag? update this to maybe be some field.
+        counter_tag = int(previous_tags[0]) if not previous_tags else 1  # assume only one tag? update this to maybe be some field.
         counter_tag += 1
         if counter_tag >= 3:
             new_note['deckName'] = 'Priority Words'
         anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
-        anki_connect_injection('updateNoteTags', note={'id': note_id, 'tags': [str(counter_tag)]})
+        # TODO this takes a while... so maybe figure out a better way to update the whole note at once
+        # anki_connect_injection('updateNoteTags', note=note_id, tags=[str(counter_tag)])
+        anki_connect_injection('replaceTags', notes=[note_id], tag_to_replace =previous_tags[0], replace_with_tag=str(counter_tag))
     else:
         anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
-
-
-def update_counter(note_id, anki_connect_injection):
-    note = anki_connect_injection('notesInfo', notes=[note_id])[0]
-    counter = int(note['tags'][0])
-    counter += 1
-    note['Counter'] = str(counter)
-    if counter >= 3:
-        note['deckName'] = 'Priority Words'
-    anki_connect_injection('updateNoteFields', note=note)
 
 
 def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection):
