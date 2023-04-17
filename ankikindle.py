@@ -81,51 +81,32 @@ def add_or_update_note(clipping_note, deck_name, model_name, anki_connect_inject
     return add_new_note(clipping_note, deck_name, model_name, anki_connect_injection)
 
 
-example_of_params_for_update = {
-    'note': {
-        'id': 1514547547030,
-        'fields': {
-            'Expression': 'some blah',
-            'Furigana': 'blah',
-            'Sentence': 'blah blah blah'
-        }
-    }
-}
-examples_of_params_info = {'params': {
-    'notes': [1502298033753]
-}}
-example_return_from_info = {
-    'result': [{
-        'noteId': 1502298033753,
-        'modelName': 'Basic',
-        'tags': ['6'],  # this is the counter tag!!!!!!!!!!!!!!!!!!
-        'fields': {
-            'Front': {'value': 'front content', 'order': 0},
-            'Back': {'value': 'back content', 'order': 1}
-        }
-    }]
-}
-
-
 def update_note_with_more_examples(note_id, new_example, anki_connect_injection):
     # TODO figure out how notesInfo return type looks
     new_note = anki_connect_injection('notesInfo', notes=[note_id])[0]
     new_fields = new_note['fields']
     more_examples = new_fields[EXAMPLE_SENTENCE]['value']
-    # TODO check here for how many occurrences of <br/> there are, and only allow 2 max (for 3 example sentences).
+    # TODO check here for how many occurrences of \n there are, and only allow 2 max (for 3 example sentences).
     #  otherwise replace the oldest sentence with the new_example
-    more_examples += '<br/>' + new_example
-    new_fields[EXAMPLE_SENTENCE]['value'] = more_examples
-    # TODO how to get deckname from note/card??? why does this have to be so difficult with this api, why implement both card and note????
-    card_to_be_updated = anki_connect_injection('cardsInfo', cards=[note_id])[0]
-    if card_to_be_updated['deckName'] is not 'Priority Words':
+    more_examples += '\n' + new_example
+    # TODO this is some messed up stuff, the return of notesInfo gives all these "value: , order:" dict things for
+    #  the fields but the update only takes the fields: {fieldName: value} stuff AHHHHHHHHHHHHHHHH
+    #  (maybe raise an issue or fork and update api alone?)
+    new_fields['Sentence'] = more_examples # ew
+    new_fields['Expression'] = new_fields['Expression']['value']  # ew
+    new_fields['Furigana'] = new_fields['Furigana']['value']  # ew
+    new_fields['Meaning'] = new_fields['Meaning']['value']  # ew
+    new_fields['Pronunciation'] = new_fields['Pronunciation']['value']  # ew
+    current_deck = anki_connect_injection('getDecks', cards=[note_id]) # ew notes and cards bleh
+    if 'Priority Words' in current_deck:
         tags = new_note['tags']
         # 'not tags' means its empty??
         counter_tag = int(tags[0]) if not tags else 1  # assume only one tag? update this to maybe be some field.
         counter_tag += 1
         if counter_tag >= 3:
             new_note['deckName'] = 'Priority Words'
-        anki_connect_injection('updateNoteFields', note={'id': note_id, 'tags': [str(counter_tag)], 'fields': new_fields})
+        anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
+        anki_connect_injection('updateNoteTags', note={'id': note_id, 'tags': [str(counter_tag)]})
     else:
         anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
 
