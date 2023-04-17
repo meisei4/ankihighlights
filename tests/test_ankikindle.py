@@ -1,8 +1,5 @@
-import json
-
 import ankisync2
 import pytest
-import requests
 
 from .. import ankikindle
 from unittest.mock import Mock
@@ -88,29 +85,9 @@ def test_update_note_with_more_examples_mocked():
             'Pronunciation': {'value': '', 'order': -1}
         }
     }
-    # this is not this input for the actual updateNoteFields, since input param is messed up value order thing
+    # TODO fix this to be the actual input for updateNoteFields, since input param is messed up value order thing (
+    #  look into insomnia)
     # mock_anki_connect.assert_any_call('updateNoteFields', note=expected_note)
-
-
-# TODO remove this test because unit test probably shouldn't touch the actual anki API
-#  this is just the first test to actually confirm it works
-def test_add_and_remove_notes_to_anki():
-    deck_name = 'mail sucks in japan'
-    model_name = 'aedict'
-    notes = [
-        {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
-    ]
-    added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankisync2.ankiconnect)
-
-    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
-    for note_id in added_note_ids:
-        assert note_id in all_note_ids
-
-    ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
-
-    note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
-    for note_id in added_note_ids:
-        assert note_id not in note_ids
 
 
 def test_add_update_and_remove_notes_to_anki():

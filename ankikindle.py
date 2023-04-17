@@ -101,7 +101,7 @@ def update_note_with_more_examples(note_id, new_example, anki_connect_injection)
     if 'Priority Words' not in current_deck:
         previous_tags = new_note['tags']
         # 'not tags' means its empty??
-        counter_tag = int(previous_tags[0]) if not previous_tags else 1  # assume only one tag? update this to maybe be some field.
+        counter_tag = int(previous_tags[0]) if not previous_tags else 1  # assume only one tag? maybe use a field later.
         counter_tag += 1
         if counter_tag >= 3:
             new_note['deckName'] = 'Priority Words'
