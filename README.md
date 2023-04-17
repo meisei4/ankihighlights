@@ -2,16 +2,7 @@
 experiment in developing along side gpt. 
 
 original chat 抜粋 with gpt:
-
-
-Sure, I can provide more specific advice on how to initiate developing this program.
-Here are some steps you could follow to get started:
-1. Familiarize yourself with the Amazon Kindle API: The first step is to familiarize yourself with the Amazon Kindle API. The Amazon Kindle API is a RESTful API that allows developers to access various features of the Kindle device, including the clippings file. You can use the API to download the clippings file periodically and monitor it for updates.
-2. Read and write files using Python: Once you are familiar with the Kindle API, you can start writing Python code to read and write files. You can use Python's built-in open() function to read and write files, and the os module to manipulate files and directories.
-3. Parse the clippings file: Once you have downloaded the clippings file, you can use Python's built-in string manipulation functions to parse the file and extract the highlighted text. You can then use this text to create Anki cards.
-4. Use AnkiConnect API to create Anki cards: You can use the AnkiConnect API to create Anki cards from your Python code. AnkiConnect is an API that allows developers to interact with Anki using JSON-RPC requests. You can use the API to create a new note with the highlighted text and any other relevant information.
-5. Set up a periodic task: To monitor the clippings file for updates, you can set up a periodic task using Python's built-in schedule module or a third-party library like schedule. The periodic task can download the clippings file at regular intervals and check it for updates.
-Overall, you can use Python's built-in modules and third-party libraries to implement the functionality you need for this program. Once you have a working prototype, you can start thinking about how to make it more scalable and secure.
+[し]
 
 explanation of the current code
 Python script that reads Kindle clippings from the user's Kindle account and then adds them as notes to the Anki app using the Anki Connect API.
@@ -47,7 +38,7 @@ potential JSON responses from the Kindle clippings (highlights) file (completely
                 "note": "Highlight"
             },
             {
-                "word": "自分”
+                "word": "自分”,
                 "text": "どんな仕事をしていようと、いつだって、こうやって机に向かって仕事をしている自分がいる。",
                 "location": {
                     "page": 498
@@ -71,7 +62,7 @@ example JSON request (or response?) for the word "自分" and the sentences it h
         "Expression": "こうやって机に向かって仕事をしている自分がいる"
         "Sentence": [ "こうやって机に向かって仕事をしている自分がいる", "分の能力を信じて、夢に向かって努力しましょう"]
     }
-    "tags": [2]
+    "tags": ['2']
 }
 ```
 
