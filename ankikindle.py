@@ -108,7 +108,7 @@ def update_note_with_more_examples(note_id, new_example, anki_connect_injection)
         anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
         # TODO this takes a while... so maybe figure out a better way to update the whole note at once
         # anki_connect_injection('updateNoteTags', note=note_id, tags=[str(counter_tag)])
-        anki_connect_injection('replaceTags', notes=[note_id], tag_to_replace =previous_tags[0], replace_with_tag=str(counter_tag))
+        anki_connect_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0], replace_with_tag=str(counter_tag))
     else:
         anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
 

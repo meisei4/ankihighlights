@@ -98,12 +98,10 @@ def test_add_update_and_remove_notes_to_anki():
     ]
     added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankisync2.ankiconnect)
 
-    # test that added notes are in the deck
     all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id in all_note_ids
 
-    # update the first note
     new_example = '狐につままれの新しい例文'
     ankikindle.update_note_with_more_examples(added_note_ids[0], new_example, ankisync2.ankiconnect)
 
@@ -112,8 +110,6 @@ def test_add_update_and_remove_notes_to_anki():
     assert updated_note['tags'][0] == '2'
 
     ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
-    # TODO this is not actually the correct note ids, i think that the updateNotes will update the note_id so you need
-    #  to get the new ones id
     note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
     for note_id in added_note_ids:
         assert note_id not in note_ids
