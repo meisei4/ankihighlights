@@ -33,6 +33,7 @@ def get_anki_card_ids_from_query(query):
     return response
 
 
+# TODO now have to replace a lot of the card vs note api thing...
 def get_anki_card_details(array_of_card_ids):
     payload = {
         "action": "cardsInfo",
