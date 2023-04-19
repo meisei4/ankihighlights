@@ -89,7 +89,7 @@ def test_add_update_and_remove_notes_to_anki():
     ankikindle.update_note_with_more_examples(added_note_ids[0], new_example, ankiconnect_wrapper)
 
     updated_note = ankiconnect_wrapper.get_single_anki_note_details(added_note_ids[0], True)
-    assert new_example in updated_note['fields'][ankikindle.EXAMPLE_SENTENCE]
+    assert new_example in updated_note['fields']['Sentence']
     assert updated_note['tags'][0] == '2'
 
     ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)

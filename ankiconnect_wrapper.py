@@ -134,6 +134,18 @@ def add_anki_note(note):
     return response.json()["result"]
 
 
+def delete_anki_note(note_id):
+    payload = {
+        "action": "deleteNotes",
+        "version": 6,
+        "params": {
+            "notes": [note_id]
+        }
+    }
+    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    return response.json()["result"]
+
+
 # TODO test this actually on insomnia
 def update_anki_note(note_id, fields, tag):
     payload = {

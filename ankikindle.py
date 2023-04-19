@@ -1,22 +1,9 @@
 import logging
 import requests
-import ankisync2.ankiconnect
-
 import ankiconnect_wrapper
 
 # ankiconnect actions
-ADD_NOTE = 'addNote'
-DELETE_NOTES = 'deleteNotes'
 # TODO figure out how findNotes return type looks
-FIND_NOTES = 'findNotes'
-DECK_NAMES = 'deckNames'
-MODEL_NAMES = 'modelNames'
-
-# dict keys
-EXAMPLE_SENTENCE = 'Sentence'
-NOTES = 'notes'
-SENTENCE = 'sentence'
-WORD = 'word'
 
 # Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the 'Authorization' header in the developer tools.
 logger = logging.getLogger(__name__)
@@ -32,7 +19,7 @@ def main(anki_connect_injection):
     clippings_json = response.json()
     clippings = parse_clippings(clippings_json)
     for clipping in clippings:
-        anki_notes = build_notes(clipping[NOTES])
+        anki_notes = build_notes(clipping['notes'])
         add_notes_to_anki(anki_notes, deck_name, model_name, anki_connect_injection)
 
 
@@ -44,7 +31,7 @@ def parse_clippings(clippings_json):
             'lastUpdatedDate': clipping['lastUpdatedDate'],
             'authors': clipping['authors'],
             'title': clipping['title'],
-            NOTES: clipping[NOTES]
+            'notes': clipping['notes']
         })
     return clippings
 
@@ -58,12 +45,12 @@ def build_notes(notes_dict):
 
 
 def build_single_note(note_contents):
-    sentence = note_contents[SENTENCE]
+    sentence = note_contents['sentence']
     word = note_contents['highlight']
-    return {SENTENCE: sentence, WORD: word}
+    return {'sentence': sentence, 'word': word}
 
 
-def add_notes_to_anki(clipping_notes, deck_name, model_name, ankiconnect_injection):
+def add_notes_to_anki(clipping_notes, deck_name, model_name, ankiconnect_injection: ankiconnect_wrapper):
     ankiconnect_request_permission(ankiconnect_injection)
     if deck_name not in ankiconnect_injection.get_all_deck_names():
         raise Exception(f"'{deck_name}' not found in remote Anki account")
@@ -76,25 +63,25 @@ def add_notes_to_anki(clipping_notes, deck_name, model_name, ankiconnect_injecti
     return added_note_ids
 
 
-def add_or_update_note(clipping_note, deck_name, model_name, ankiconnect_wrapper_injection):
-    query = 'deck:"{}" "Furigana:{}"'.format(deck_name, clipping_note[WORD])
-    existing_notes = ankiconnect_wrapper.get_anki_note_ids_from_query(query)
+def add_or_update_note(clipping_note, deck_name, model_name, ankiconnect_injection: ankiconnect_wrapper):
+    query = 'deck:"{}" "Furigana:{}"'.format(deck_name, clipping_note['word'])
+    existing_notes = ankiconnect_injection.get_anki_note_ids_from_query(query)
     if len(existing_notes) >= 1:
-        update_note_with_more_examples(existing_notes[0], clipping_note[SENTENCE], ankiconnect_wrapper_injection)
+        update_note_with_more_examples(existing_notes[0], clipping_note['sentence'], ankiconnect_injection)
         return existing_notes[0]
-    return add_new_note(clipping_note, deck_name, model_name, ankiconnect_wrapper_injection)
+    return add_new_note(clipping_note, deck_name, model_name, ankiconnect_injection)
 
 
-def update_note_with_more_examples(note_id, new_example, ankiconnect_wrapper_injection):
-    note = ankiconnect_wrapper_injection.get_single_anki_note_details(note_id, True)
+def update_note_with_more_examples(note_id, new_example, ankiconnect_injection: ankiconnect_wrapper):
+    note = ankiconnect_injection.get_single_anki_note_details(note_id, True)
     new_fields = note['fields']
-    more_examples = new_fields[EXAMPLE_SENTENCE]
+    more_examples = new_fields['Sentence']
     # TODO check here for how many occurrences of \n (or </br>) there are, and only allow 2 max (for 3 example
     #  sentences). otherwise replace the oldest sentence with the new_example
     more_examples += '</br>' + new_example
     new_fields['Sentence'] = more_examples
     # TODO figure out if this works with cards, sometimes cards and notes have different ids
-    containing_decks = ankiconnect_wrapper_injection.get_decks_containing_card(note_id)
+    containing_decks = ankiconnect_injection.get_decks_containing_card(note_id)
     if 'Priority Words' not in containing_decks:
         previous_tags = note['tags']
         # 'not tags' means its empty??
@@ -103,36 +90,34 @@ def update_note_with_more_examples(note_id, new_example, ankiconnect_wrapper_inj
         if counter_tag >= 3:
             note['deckName'] = 'Priority Words'
 
-        ankiconnect_wrapper_injection.update_anki_note(note_id, new_fields, str(counter_tag))
+        ankiconnect_injection.update_anki_note(note_id, new_fields, str(counter_tag))
         # TODO test that updateNote works instead of just tags and or replace tags
         # anki_connect_injection('updateNoteTags', note=note_id, tags=[str(counter_tag)])
-        # ankiconnect_wrapper_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0],
+        # ankiconnect_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0],
         #                              replace_with_tag=str(counter_tag))
     else:
-        ankiconnect_wrapper_injection.update_anki_note(note_id, new_fields, note['tags'])
+        ankiconnect_injection.update_anki_note(note_id, new_fields, note['tags'])
 
 
-def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection):
+def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection: ankiconnect_wrapper):
     fields = {
-        'Expression': clipping_note[SENTENCE],
-        'Furigana': clipping_note[WORD],
-        EXAMPLE_SENTENCE: clipping_note[SENTENCE],  # still keep the front of the card visible if needed (especially
+        'Expression': clipping_note['sentence'],
+        'Furigana': clipping_note['word'],
+        'Sentence': clipping_note['sentence'],  # still keep the front of the card visible if needed (especially
         # when more sentences start to overwrite this somehow)
     }
     anki_note = {'deckName': deck_name, 'modelName': model_name, 'tags': ['1'], 'fields': fields}
     return anki_connect_injection.add_anki_note(anki_note)
 
 
-def ankiconnect_request_permission(ankiconnect_wrapper_injection):
-    result = ankiconnect_wrapper_injection.request_connection_permission()
+def ankiconnect_request_permission(ankiconnect_injection):
+    result = ankiconnect_injection.request_connection_permission()
     if not result['permission'] == 'granted':
         raise Exception(f'Failed to authenticate with Anki; response: {result}')
 
 
 # TODO only for recovery during unmocked connection testing purposes (adding unwanted cards). move somewhere else or
 #  figure out it being needed later
-def remove_notes_from_anki(note_ids_to_be_removed, anki_connect_injection):
-    ankiconnect_request_permission(anki_connect_injection)
-    notes_to_delete = ankisync2.ankiconnect(FIND_NOTES,
-                                            query=f"nid:{','.join(str(n) for n in note_ids_to_be_removed)}")
-    ankisync2.ankiconnect(DELETE_NOTES, notes=notes_to_delete)
+def remove_notes_from_anki(note_id_to_be_deleted, ankiconnect_injection: ankiconnect_wrapper):
+    ankiconnect_request_permission(ankiconnect_injection)
+    ankiconnect_injection.delete_anki_note(note_id_to_be_deleted)
