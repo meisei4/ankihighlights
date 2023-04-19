@@ -1,6 +1,7 @@
 import ankisync2
 import pytest
 
+import ankiconnect_wrapper
 from .. import ankikindle
 from unittest.mock import Mock
 
@@ -16,37 +17,26 @@ def test_build_notes():
 
 
 def test_ankiconnect_request_permission_permission_denied():
-    mock_anki_connect_injection = Mock(return_value={'permission': 'denied'})
+    ankiconnect_wrapper_mock = Mock()
+    ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'denied'}
     with pytest.raises(Exception) as e:
-        ankikindle.ankiconnect_request_permission(mock_anki_connect_injection)
+        ankikindle.ankiconnect_request_permission(ankiconnect_wrapper_mock)
     assert str(e.value) == "Failed to authenticate with Anki; response: {'permission': 'denied'}"
-    mock_anki_connect_injection.assert_called_once_with('requestPermission')
-
-
-def test_confirm_existence_of_ankiconnect_item_by_name_no_items_found():
-    mock_anki_connect_injection = Mock(return_value=[])
-    with pytest.raises(Exception) as e:
-        ankikindle.confirm_existence_of_ankiconnect_item_by_name('getItems', 'test_item', mock_anki_connect_injection)
-    assert str(e.value) == "getItems 'test_item' not found in remote Anki account"
-    mock_anki_connect_injection.assert_called_once_with('getItems')
 
 
 def test_add_notes_to_anki_mocked_no_duplicate_found():
-    mock_anki_connect = Mock()
-    mock_anki_connect.side_effect = [
-        {'permission': 'granted'},  # requestPermission
-        ['Default'],  # deckNames
-        ['Basic'],  # modelNames
-        [],
-        101,  # addNote for first note
-    ]
+    ankiconnect_wrapper_mock = Mock()
+    ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
+    ankiconnect_wrapper_mock.get_all_deck_names.return_value = ['Default']
+    ankiconnect_wrapper_mock.get_all_card_type_names.return_value = ['Basic']
+    ankiconnect_wrapper_mock.get_anki_note_ids_from_query.return_value = []
+    ankiconnect_wrapper_mock.add_anki_note.return_value = 101
 
     notes = [{'sentence': 'This is a test sentence', 'word': 'test'}]
     deck_name = 'Default'
     model_name = 'Basic'
 
-    result_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name,
-                                                   anki_connect_injection=mock_anki_connect)
+    result_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankiconnect_wrapper_mock)
     assert result_note_ids == [101]
 
 
@@ -71,8 +61,6 @@ def test_update_note_with_more_examples_mocked():
         None
     ]
     ankikindle.update_note_with_more_examples(101, 'example2', mock_anki_connect)
-    # TODO notesInfo is insane it has a ton of value and order info in the dict.
-    #  figure out how to get around this easier
     mock_anki_connect.assert_any_call('notesInfo', notes=[101])
     expected_note = {
         'id': 101,
@@ -96,7 +84,7 @@ def test_add_update_and_remove_notes_to_anki():
     notes = [
         {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
     ]
-    added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankisync2.ankiconnect)
+    added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankiconnect_wrapper)
 
     all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
     for note_id in added_note_ids:

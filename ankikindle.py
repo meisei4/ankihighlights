@@ -2,6 +2,8 @@ import logging
 import requests
 import ankisync2.ankiconnect
 
+import ankiconnect_wrapper
+
 # ankiconnect actions
 ADD_NOTE = 'addNote'
 DELETE_NOTES = 'deleteNotes'
@@ -61,20 +63,22 @@ def build_single_note(note_contents):
     return {SENTENCE: sentence, WORD: word}
 
 
-def add_notes_to_anki(clipping_notes, deck_name, model_name, anki_connect_injection):
-    ankiconnect_request_permission(anki_connect_injection)
-    confirm_existence_of_ankiconnect_item_by_name(DECK_NAMES, deck_name, anki_connect_injection)
-    confirm_existence_of_ankiconnect_item_by_name(MODEL_NAMES, model_name, anki_connect_injection)
+def add_notes_to_anki(clipping_notes, deck_name, model_name, ankiconnect_injection):
+    ankiconnect_request_permission(ankiconnect_injection)
+    if deck_name not in ankiconnect_injection.get_all_deck_names():
+        raise Exception(f"'{deck_name}' not found in remote Anki account")
+    if model_name not in ankiconnect_injection.get_all_card_type_names():
+        raise Exception(f"'{model_name}' not found in remote Anki account")
     added_note_ids = []
     for clipping_note in clipping_notes:
-        note_id = add_or_update_note(clipping_note, deck_name, model_name, anki_connect_injection)
+        note_id = add_or_update_note(clipping_note, deck_name, model_name, ankiconnect_injection)
         added_note_ids.append(note_id)
     return added_note_ids
 
 
 def add_or_update_note(clipping_note, deck_name, model_name, anki_connect_injection):
     query = 'deck:"{}" "Furigana:{}"'.format(deck_name, clipping_note[WORD])
-    existing_notes = anki_connect_injection(FIND_NOTES, query=query)
+    existing_notes = ankiconnect_wrapper.get_anki_note_ids_from_query(query)
     if len(existing_notes) >= 1:
         update_note_with_more_examples(existing_notes[0], clipping_note[SENTENCE], anki_connect_injection)
         return existing_notes[0]
@@ -88,9 +92,7 @@ def update_note_with_more_examples(note_id, new_example, anki_connect_injection)
     # TODO check here for how many occurrences of \n (or </br>) there are, and only allow 2 max (for 3 example
     #  sentences). otherwise replace the oldest sentence with the new_example
     more_examples += '</br>' + new_example
-    # TODO this is some messed up stuff, the return of notesInfo gives all these "value: , order:" dict things for
-    #  the fields but the update only takes the fields: {fieldName: value} stuff AHHHHHHHHHHHHHHHH
-    #  (maybe raise an issue or fork and update api alone?)
+    # TODO replace all of the Command based stuff with the new ankiconnect_wrapper
     new_fields['Sentence'] = more_examples  # ew
     new_fields['Expression'] = new_fields['Expression']['value']  # ew
     new_fields['Furigana'] = new_fields['Furigana']['value']  # ew
@@ -108,7 +110,8 @@ def update_note_with_more_examples(note_id, new_example, anki_connect_injection)
         anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
         # TODO this takes a while... so maybe figure out a better way to update the whole note at once
         # anki_connect_injection('updateNoteTags', note=note_id, tags=[str(counter_tag)])
-        anki_connect_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0], replace_with_tag=str(counter_tag))
+        anki_connect_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0],
+                               replace_with_tag=str(counter_tag))
     else:
         anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
 
@@ -121,20 +124,13 @@ def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection):
         # when more sentences start to overwrite this somehow)
     }
     anki_note = {'deckName': deck_name, 'modelName': model_name, 'tags': ['1'], 'fields': fields}
-    return anki_connect_injection(ADD_NOTE, note=anki_note)
+    return anki_connect_injection.add_anki_note(anki_note)
 
 
-def ankiconnect_request_permission(anki_connect_injection):
-    anki_conn = anki_connect_injection('requestPermission')
-    if not anki_conn['permission'] == 'granted':
-        raise Exception(f'Failed to authenticate with Anki; response: {anki_conn}')
-
-
-def confirm_existence_of_ankiconnect_item_by_name(action, target_item, anki_connect_injection):
-    items = anki_connect_injection(f'{action}')
-    if target_item not in items:
-        raise Exception(f"{action} '{target_item}' not found in remote Anki account")
-    return True
+def ankiconnect_request_permission(ankiconnect_wrapper_injection):
+    result = ankiconnect_wrapper_injection.request_connection_permission()
+    if not result['permission'] == 'granted':
+        raise Exception(f'Failed to authenticate with Anki; response: {result}')
 
 
 # TODO only for recovery during unmocked connection testing purposes (adding unwanted cards). move somewhere else or
