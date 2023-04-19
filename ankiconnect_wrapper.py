@@ -32,6 +32,18 @@ def get_all_card_type_names():
     return response.json()["result"]
 
 
+def get_decks_containing_card(card_id):
+    payload = {
+        "action": "getDecks",
+        "version": 6,
+        "params": {
+            "cards": [card_id]
+        }
+    }
+    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    return response.json()["result"].keys()
+
+
 def get_anki_card_ids_from_query(query):
     payload = {
         "action": "findCards",
@@ -116,6 +128,23 @@ def add_anki_note(note):
         "version": 6,
         "params": {
             "note": note
+        }
+    }
+    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    return response.json()["result"]
+
+
+# TODO test this actually on insomnia
+def update_anki_note(note_id, fields, tag):
+    payload = {
+        "action": "updateNote",
+        "version": 6,
+        "params": {
+            "note": {
+                "id": note_id,
+                "fields": fields,
+                "tags": [tag]
+            }
         }
     }
     response = requests.request("GET", api_url, json=payload, headers=glob_headers)

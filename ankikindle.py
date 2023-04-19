@@ -76,40 +76,40 @@ def add_notes_to_anki(clipping_notes, deck_name, model_name, ankiconnect_injecti
     return added_note_ids
 
 
-def add_or_update_note(clipping_note, deck_name, model_name, anki_connect_injection):
+def add_or_update_note(clipping_note, deck_name, model_name, ankiconnect_wrapper_injection):
     query = 'deck:"{}" "Furigana:{}"'.format(deck_name, clipping_note[WORD])
     existing_notes = ankiconnect_wrapper.get_anki_note_ids_from_query(query)
     if len(existing_notes) >= 1:
-        update_note_with_more_examples(existing_notes[0], clipping_note[SENTENCE], anki_connect_injection)
+        update_note_with_more_examples(existing_notes[0], clipping_note[SENTENCE], ankiconnect_wrapper_injection)
         return existing_notes[0]
-    return add_new_note(clipping_note, deck_name, model_name, anki_connect_injection)
+    return add_new_note(clipping_note, deck_name, model_name, ankiconnect_wrapper_injection)
 
 
-def update_note_with_more_examples(note_id, new_example, anki_connect_injection):
-    new_note = anki_connect_injection.get_single_anki_note_details(note_id, True)
-    new_fields = new_note['fields']
+def update_note_with_more_examples(note_id, new_example, ankiconnect_wrapper_injection):
+    note = ankiconnect_wrapper_injection.get_single_anki_note_details(note_id, True)
+    new_fields = note['fields']
     more_examples = new_fields[EXAMPLE_SENTENCE]
     # TODO check here for how many occurrences of \n (or </br>) there are, and only allow 2 max (for 3 example
     #  sentences). otherwise replace the oldest sentence with the new_example
     more_examples += '</br>' + new_example
-    # TODO replace all of the Command based stuff with the new ankiconnect_wrapper
     new_fields['Sentence'] = more_examples
-
-    current_deck = anki_connect_injection('getDecks', cards=[note_id])  # ew notes and cards bleh
-    if 'Priority Words' not in current_deck:
-        previous_tags = new_note['tags']
+    # TODO figure out if this works with cards, sometimes cards and notes have different ids
+    containing_decks = ankiconnect_wrapper_injection.get_decks_containing_card(note_id)
+    if 'Priority Words' not in containing_decks:
+        previous_tags = note['tags']
         # 'not tags' means its empty??
         counter_tag = int(previous_tags[0]) if not previous_tags else 1  # assume only one tag? maybe use a field later.
         counter_tag += 1
         if counter_tag >= 3:
-            new_note['deckName'] = 'Priority Words'
-        anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
-        # TODO this takes a while... so maybe figure out a better way to update the whole note at once
+            note['deckName'] = 'Priority Words'
+
+        ankiconnect_wrapper_injection.update_anki_note(note_id, new_fields, str(counter_tag))
+        # TODO test that updateNote works instead of just tags and or replace tags
         # anki_connect_injection('updateNoteTags', note=note_id, tags=[str(counter_tag)])
-        anki_connect_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0],
-                               replace_with_tag=str(counter_tag))
+        # ankiconnect_wrapper_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0],
+        #                              replace_with_tag=str(counter_tag))
     else:
-        anki_connect_injection('updateNoteFields', note={'id': note_id, 'fields': new_fields})
+        ankiconnect_wrapper_injection.update_anki_note(note_id, new_fields, note['tags'])
 
 
 def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection):

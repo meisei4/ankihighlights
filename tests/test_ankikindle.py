@@ -55,9 +55,8 @@ def test_update_note_with_more_examples_mocked():
                                                                               'Pronunciation': ''
                                                                           }
                                                                           }  # notesInfo for first note
-    ankiconnect_wrapper_mock.get_decks_for_note.return_value = {'Default': [1]}  # getDecks
-    ankiconnect_wrapper_mock.something.return_value = None  # updateNoteFields
-    ankiconnect_wrapper_mock.something.return_value = None
+    ankiconnect_wrapper_mock.get_decks_containing_card.return_value = ['Default']
+    ankiconnect_wrapper_mock.update_anki_note.return_value = None
     ankikindle.update_note_with_more_examples(101, 'example2', ankiconnect_wrapper_mock)
     expected_note = {
         'id': 101,
@@ -70,8 +69,7 @@ def test_update_note_with_more_examples_mocked():
             'Pronunciation': '',
         }
     }
-    # TODO fix this to be the actual input for updateNoteFields, since input param is messed up value order thing (
-    #  look into insomnia)
+    # TODO how do i update this to actually check if the expected note now gets updated? with mocks??? what?
     # mock_anki_connect.assert_any_call('updateNoteFields', note=expected_note)
 
 
@@ -83,18 +81,18 @@ def test_add_update_and_remove_notes_to_anki():
     ]
     added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankiconnect_wrapper)
 
-    all_note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f'deck:"{deck_name}"')
+    all_note_ids = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id in all_note_ids
 
     new_example = '狐につままれの新しい例文'
-    ankikindle.update_note_with_more_examples(added_note_ids[0], new_example, ankisync2.ankiconnect)
+    ankikindle.update_note_with_more_examples(added_note_ids[0], new_example, ankiconnect_wrapper)
 
-    updated_note = ankisync2.ankiconnect('notesInfo', notes=[added_note_ids[0]])[0]
-    assert new_example in updated_note['fields'][ankikindle.EXAMPLE_SENTENCE]['value']
+    updated_note = ankiconnect_wrapper.get_single_anki_note_details(added_note_ids[0], True)
+    assert new_example in updated_note['fields'][ankikindle.EXAMPLE_SENTENCE]
     assert updated_note['tags'][0] == '2'
 
     ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
-    note_ids = ankisync2.ankiconnect(ankikindle.FIND_NOTES, query=f"deck:'{deck_name}'")
+    note_ids = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id not in note_ids
