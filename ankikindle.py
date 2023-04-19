@@ -86,18 +86,14 @@ def add_or_update_note(clipping_note, deck_name, model_name, anki_connect_inject
 
 
 def update_note_with_more_examples(note_id, new_example, anki_connect_injection):
-    new_note = anki_connect_injection('notesInfo', notes=[note_id])[0]
+    new_note = anki_connect_injection.get_single_anki_note_details(note_id, True)
     new_fields = new_note['fields']
-    more_examples = new_fields[EXAMPLE_SENTENCE]['value']
+    more_examples = new_fields[EXAMPLE_SENTENCE]
     # TODO check here for how many occurrences of \n (or </br>) there are, and only allow 2 max (for 3 example
     #  sentences). otherwise replace the oldest sentence with the new_example
     more_examples += '</br>' + new_example
     # TODO replace all of the Command based stuff with the new ankiconnect_wrapper
-    new_fields['Sentence'] = more_examples  # ew
-    new_fields['Expression'] = new_fields['Expression']['value']  # ew
-    new_fields['Furigana'] = new_fields['Furigana']['value']  # ew
-    new_fields['Meaning'] = new_fields['Meaning']['value']  # ew
-    new_fields['Pronunciation'] = new_fields['Pronunciation']['value']  # ew
+    new_fields['Sentence'] = more_examples
 
     current_deck = anki_connect_injection('getDecks', cards=[note_id])  # ew notes and cards bleh
     if 'Priority Words' not in current_deck:

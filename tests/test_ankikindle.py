@@ -40,37 +40,34 @@ def test_add_notes_to_anki_mocked_no_duplicate_found():
     assert result_note_ids == [101]
 
 
+# TODO mock the new wrapper not the
 def test_update_note_with_more_examples_mocked():
-    mock_anki_connect = Mock()
-    mock_anki_connect.side_effect = [
-        [{
-            'noteId': 101,
-            'modelName': 'Basic',
-            'deckName': 'Default',
-            'tags': ['1'],
-            'fields': {
-                'Furigana': {'value': 'test', 'order': 0},
-                'Expression': {'value': 'example1', 'order': 1},
-                'Sentence': {'value': 'example1', 'order': 2},
-                'Meaning': {'value': '', 'order': -1},
-                'Pronunciation': {'value': '', 'order': -1}
-            }
-        }],  # notesInfo for first note
-        [{'Default': [1]}],  # getDecks
-        None,  # updateNoteFields
-        None
-    ]
-    ankikindle.update_note_with_more_examples(101, 'example2', mock_anki_connect)
-    mock_anki_connect.assert_any_call('notesInfo', notes=[101])
+    ankiconnect_wrapper_mock = Mock()
+    ankiconnect_wrapper_mock.get_single_anki_note_details.return_value = {'noteId': 101,
+                                                                          'modelName': 'Basic',
+                                                                          'deckName': 'Default',
+                                                                          'tags': ['1'],
+                                                                          'fields': {
+                                                                              'Furigana': 'test',
+                                                                              'Expression': 'example1',
+                                                                              'Sentence': 'example1',
+                                                                              'Meaning': '',
+                                                                              'Pronunciation': ''
+                                                                          }
+                                                                          }  # notesInfo for first note
+    ankiconnect_wrapper_mock.get_decks_for_note.return_value = {'Default': [1]}  # getDecks
+    ankiconnect_wrapper_mock.something.return_value = None  # updateNoteFields
+    ankiconnect_wrapper_mock.something.return_value = None
+    ankikindle.update_note_with_more_examples(101, 'example2', ankiconnect_wrapper_mock)
     expected_note = {
         'id': 101,
         'tags': ['2'],
         'fields': {
-            'Furigana': {'value': 'test', 'order': 0},
-            'Expression': {'value': 'This is a test sentence', 'order': 1},
-            'Sentence': {'value': 'example1' + '\n' + 'example2', 'order': 2},
-            'Meaning': {'value': '', 'order': -1},
-            'Pronunciation': {'value': '', 'order': -1}
+            'Furigana': 'test',
+            'Expression': 'This is a test sentence',
+            'Sentence': 'example1' + '\n' + 'example2',
+            'Meaning': '',
+            'Pronunciation': '',
         }
     }
     # TODO fix this to be the actual input for updateNoteFields, since input param is messed up value order thing (

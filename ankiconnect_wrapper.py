@@ -86,11 +86,23 @@ def get_anki_note_ids_from_query(query):
     return response.json()["result"]
 
 
-def get_anki_note_details(array_of_note_ids, remove_order_boolean):
+def get_anki_notes_details(array_of_card_ids, remove_order_boolean):
     payload = {
         "action": "notesInfo",
         "version": version,
-        "params": {"cards": array_of_note_ids}
+        "params": {"cards": array_of_card_ids}
+    }
+    result = requests.request("GET", api_url, json=payload, headers=glob_headers).json()["result"]
+    if remove_order_boolean:
+        return remove_value_order_from_dict(result)
+    return result
+
+
+def get_single_anki_note_details(note_id, remove_order_boolean):
+    payload = {
+        "action": "notesInfo",
+        "version": version,
+        "params": {"cards": [note_id]}
     }
     result = requests.request("GET", api_url, json=payload, headers=glob_headers).json()["result"][0]
     if remove_order_boolean:
