@@ -21,7 +21,7 @@ Here's a brief summary of the steps involved in the script:
 
 JSON stuff:
 
-potential JSON responses from the Kindle clippings (highlights) file (completely made up):
+potential JSON responses from the amazon Kindle clippings (highlights) file (completely made up):
 ```json
 [
     {
@@ -52,7 +52,7 @@ potential JSON responses from the Kindle clippings (highlights) file (completely
 ]
 ```
 
-example JSON request (or response?) for the word "自分" and the sentences it has been found in.
+example anki based JSON request (or response? note_id blah, card_id blah figure it the heck out) for the word "自分" and the sentences it was orignally highlight in.
 
 ```json
 {
