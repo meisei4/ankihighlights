@@ -9,7 +9,7 @@ import ankiconnect_wrapper
 logger = logging.getLogger(__name__)
 
 
-def main(anki_connect_injection):
+def main(ankiconnect_injection):
     deck_name = ''
     model_name = ''
 
@@ -20,7 +20,7 @@ def main(anki_connect_injection):
     clippings = parse_clippings(clippings_json)
     for clipping in clippings:
         anki_notes = build_notes(clipping['notes'])
-        add_notes_to_anki(anki_notes, deck_name, model_name, anki_connect_injection)
+        add_notes_to_anki(anki_notes, deck_name, model_name, ankiconnect_injection)
 
 
 def parse_clippings(clippings_json):
@@ -99,7 +99,7 @@ def update_note_with_more_examples(note_id, new_example, ankiconnect_injection: 
         ankiconnect_injection.update_anki_note(note_id, new_fields, note['tags'])
 
 
-def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection: ankiconnect_wrapper):
+def add_new_note(clipping_note, deck_name, model_name, ankiconnect_injection: ankiconnect_wrapper):
     fields = {
         'Expression': clipping_note['sentence'],
         'Furigana': clipping_note['word'],
@@ -107,7 +107,7 @@ def add_new_note(clipping_note, deck_name, model_name, anki_connect_injection: a
         # when more sentences start to overwrite this somehow)
     }
     anki_note = {'deckName': deck_name, 'modelName': model_name, 'tags': ['1'], 'fields': fields}
-    return anki_connect_injection.add_anki_note(anki_note)
+    return ankiconnect_injection.add_anki_note(anki_note)
 
 
 def ankiconnect_request_permission(ankiconnect_injection):

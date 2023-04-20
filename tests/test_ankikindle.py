@@ -1,4 +1,3 @@
-import ankisync2
 import pytest
 
 import ankiconnect_wrapper
@@ -43,34 +42,31 @@ def test_add_notes_to_anki_mocked_no_duplicate_found():
 # TODO mock the new wrapper not the
 def test_update_note_with_more_examples_mocked():
     ankiconnect_wrapper_mock = Mock()
-    ankiconnect_wrapper_mock.get_single_anki_note_details.return_value = {'noteId': 101,
-                                                                          'modelName': 'Basic',
-                                                                          'deckName': 'Default',
-                                                                          'tags': ['1'],
-                                                                          'fields': {
-                                                                              'Furigana': 'test',
-                                                                              'Expression': 'example1',
-                                                                              'Sentence': 'example1',
-                                                                              'Meaning': '',
-                                                                              'Pronunciation': ''
-                                                                          }
-                                                                          }  # notesInfo for first note
+    mocked_return_value = {'noteId': 101,
+                           'modelName': 'Basic',
+                           'deckName': 'Default',
+                           'tags': ['1'],
+                           'fields': {
+                               'Furigana': 'test',
+                               'Expression': 'This is a test sentence',
+                               'Sentence': 'example1',
+                               'Meaning': '',
+                               'Pronunciation': ''
+                           }
+                           }  # notesInfo for first note
+    ankiconnect_wrapper_mock.get_single_anki_note_details.return_value = mocked_return_value
     ankiconnect_wrapper_mock.get_decks_containing_card.return_value = ['Default']
     ankiconnect_wrapper_mock.update_anki_note.return_value = None
     ankikindle.update_note_with_more_examples(101, 'example2', ankiconnect_wrapper_mock)
-    expected_note = {
-        'id': 101,
-        'tags': ['2'],
-        'fields': {
-            'Furigana': 'test',
-            'Expression': 'This is a test sentence',
-            'Sentence': 'example1' + '\n' + 'example2',
-            'Meaning': '',
-            'Pronunciation': '',
-        }
+
+    expected_fields = {
+        'Furigana': 'test',
+        'Expression': 'This is a test sentence',
+        'Sentence': 'example1' + '</br>' + 'example2',
+        'Meaning': '',
+        'Pronunciation': ''
     }
-    # TODO how do i update this to actually check if the expected note now gets updated? with mocks??? what?
-    # mock_anki_connect.assert_any_call('updateNoteFields', note=expected_note)
+    ankiconnect_wrapper_mock.update_anki_note.assert_called_once_with(101, expected_fields, '2')
 
 
 def test_add_update_and_remove_notes_to_anki():
@@ -92,7 +88,7 @@ def test_add_update_and_remove_notes_to_anki():
     assert new_example in updated_note['fields']['Sentence']
     assert updated_note['tags'][0] == '2'
 
-    ankikindle.remove_notes_from_anki(added_note_ids, ankisync2.ankiconnect)
+    ankikindle.remove_notes_from_anki(added_note_ids, ankiconnect_wrapper)
     note_ids = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:"{deck_name}"')
     for note_id in added_note_ids:
         assert note_id not in note_ids
