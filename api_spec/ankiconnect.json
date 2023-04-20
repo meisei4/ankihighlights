@@ -1,0 +1,454 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2023-04-20T12:54:22.019Z",
+  "__export_source": "insomnia.desktop.app:v2023.1.0",
+  "resources": [
+    {
+      "_id": "req_990f8afc6f504247a23366878e102d3d",
+      "parentId": "fld_6f4cd1f43f294b4aa06e72c3a99b4c21",
+      "modified": 1681987924280,
+      "created": 1681828602824,
+      "url": "localhost:8765",
+      "name": "deleteNote",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"deleteNotes\",\n    \"version\": 6,\n    \"params\": {\n        \"notes\": [1681978389664]\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681987922366,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_6f4cd1f43f294b4aa06e72c3a99b4c21",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681987965945,
+      "created": 1681987893968,
+      "name": "notes as input or as output",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1681987893968,
+      "_type": "request_group"
+    },
+    {
+      "_id": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "parentId": null,
+      "modified": 1681988110934,
+      "created": 1681734480644,
+      "name": "New Document",
+      "description": "",
+      "scope": "design",
+      "_type": "workspace"
+    },
+    {
+      "_id": "req_e833020633c9461a90d7b509b79438e1",
+      "parentId": "fld_6f4cd1f43f294b4aa06e72c3a99b4c21",
+      "modified": 1681987926005,
+      "created": 1681828470132,
+      "url": "localhost:8765",
+      "name": "addNote",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"addNote\",\n    \"version\": 6,\n    \"params\": {\n        \"note\": {\n            \"deckName\": \"mail sucks in japan\",\n            \"modelName\": \"aedict\",\n            \"fields\": {\n                \"Furigana\": \"test furigana\",\n                \"Expression\": \"test expression\"\n            },\n            \"tags\": [\"1\"]\n        }\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681987922316,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_145f35847af8453d8115f4afe7a47a54",
+      "parentId": "fld_6f4cd1f43f294b4aa06e72c3a99b4c21",
+      "modified": 1681987996038,
+      "created": 1681985633190,
+      "url": "localhost:8765",
+      "name": "findNotes",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"findNotes\",\n    \"version\": 6,\n    \"params\": {\n        \"query\": \"deck:2018年7月から\"\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681987922291,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_8819285798a04d8980259d2d73ad6413",
+      "parentId": "fld_6f4cd1f43f294b4aa06e72c3a99b4c21",
+      "modified": 1681988083365,
+      "created": 1681908306259,
+      "url": "localhost:8765",
+      "name": "notesInfo",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"notesInfo\",\n    \"version\": 6,\n    \"params\": {\n        \"notes\": [\n\t\t\t\t\t1509577365771\n\t\t\t\t]\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681987922266,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_12acdd03ad5a46acaa3d7394955fb630",
+      "parentId": "fld_8b5a311ed5fb411090c546a047b1a872",
+      "modified": 1681988023426,
+      "created": 1681735020503,
+      "url": "localhost:8765",
+      "name": "findCards",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"findCards\",\n    \"version\": 6,\n    \"params\": {\n        \"query\": \"deck:2020年7月から\"\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681861153740.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_8b5a311ed5fb411090c546a047b1a872",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681987956331,
+      "created": 1681987826823,
+      "name": "cards as input or as output",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1681987826824,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_ad65a0a29fb546eeb14a6382ba134547",
+      "parentId": "fld_8b5a311ed5fb411090c546a047b1a872",
+      "modified": 1681987856466,
+      "created": 1681824906239,
+      "url": "localhost:8765",
+      "name": "getDecks",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"getDecks\",\n    \"version\": 6,\n    \"params\": {\n        \"cards\": [1663373485548]\n    }\n}\n"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681861153715.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_32123277351f496e8648ce7c3c106140",
+      "parentId": "fld_8b5a311ed5fb411090c546a047b1a872",
+      "modified": 1681988070982,
+      "created": 1681735334059,
+      "url": "localhost:8765",
+      "name": "cardsInfo",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"cardsInfo\",\n    \"version\": 6,\n    \"params\": {\n        \"cards\": [\n\t\t\t\t\t1509577366153\n\t\t\t\t]\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681861153690.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_ab86d9b5e5b049cfb142f81a2a85cc55",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681825849399,
+      "created": 1681734480657,
+      "url": "localhost:8765",
+      "name": "deckNames",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"deckNames\",\n    \"version\": 6\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681734480657,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_4c03623d94fc41409fbe052a4e3cc380",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681823772162,
+      "created": 1681823743106,
+      "url": "localhost:8765",
+      "name": "modelNames",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"modelNames\",\n    \"version\": 6\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681734480632,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_796ecb54feac4e8cab2d89134dade192",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681988031074,
+      "created": 1681985777600,
+      "url": "localhost:8765",
+      "name": "cardsToNotes",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"cardsToNotes\",\n    \"version\": 6,\n    \"params\": {\n        \"cards\": [1593637677334]\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681734480619.5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_f380fab1bc82477dbbb1cba1c1629909",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681826183931,
+      "created": 1681826179750,
+      "url": "localhost:8765",
+      "name": "getDecksAndIds",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"deckNamesAndIds\",\n    \"version\": 6\n}\n"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681734480457,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_499b2c7f5d6f4f2590124a4ae49f8ff2",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681826279180,
+      "created": 1681826236689,
+      "url": "localhost:8765",
+      "name": "getDecksConfig",
+      "description": "",
+      "method": "GET",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n    \"action\": \"getDeckConfig\",\n    \"version\": 6,\n    \"params\": {\n        \"deck\": \"2022年5月から\"\n    }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1681734480407,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "env_341e65b4c124c07fab79c7bd11778d38c63f9bc9",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681734480650,
+      "created": 1681734480650,
+      "name": "Base Environment",
+      "data": {},
+      "dataPropertyOrder": null,
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1681734480650,
+      "_type": "environment"
+    },
+    {
+      "_id": "jar_341e65b4c124c07fab79c7bd11778d38c63f9bc9",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681734480653,
+      "created": 1681734480653,
+      "name": "Default Jar",
+      "cookies": [],
+      "_type": "cookie_jar"
+    },
+    {
+      "_id": "spc_872ea6f142a14029ae19c1f987ea78bf",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681993295551,
+      "created": 1681993295551,
+      "fileName": "ankiconnect_double",
+      "contents": "{\"_type\":\"export\",\"__export_format\":4,\"__export_date\":\"2023-04-20T10:56:05.437Z\",\"__export_source\":\"insomnia.desktop.app:v2023.1.0\",\"resources\":[{\"_id\":\"req_990f8afc6f504247a23366878e102d3d\",\"parentId\":\"fld_6f4cd1f43f294b4aa06e72c3a99b4c21\",\"modified\":1681987924280,\"created\":1681828602824,\"url\":\"localhost:8765\",\"name\":\"deleteNote\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"deleteNotes\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"notes\\\": [1681978389664]\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681987922366,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"fld_6f4cd1f43f294b4aa06e72c3a99b4c21\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681987965945,\"created\":1681987893968,\"name\":\"notes as input or as output\",\"description\":\"\",\"environment\":{},\"environmentPropertyOrder\":null,\"metaSortKey\":-1681987893968,\"_type\":\"request_group\"},{\"_id\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"parentId\":null,\"modified\":1681988110934,\"created\":1681734480644,\"name\":\"New Document\",\"description\":\"\",\"scope\":\"design\",\"_type\":\"workspace\"},{\"_id\":\"req_e833020633c9461a90d7b509b79438e1\",\"parentId\":\"fld_6f4cd1f43f294b4aa06e72c3a99b4c21\",\"modified\":1681987926005,\"created\":1681828470132,\"url\":\"localhost:8765\",\"name\":\"addNote\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"addNote\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"note\\\": {\\n            \\\"deckName\\\": \\\"mail sucks in japan\\\",\\n            \\\"modelName\\\": \\\"aedict\\\",\\n            \\\"fields\\\": {\\n                \\\"Furigana\\\": \\\"test furigana\\\",\\n                \\\"Expression\\\": \\\"test expression\\\"\\n            },\\n            \\\"tags\\\": [\\\"1\\\"]\\n        }\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681987922316,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_145f35847af8453d8115f4afe7a47a54\",\"parentId\":\"fld_6f4cd1f43f294b4aa06e72c3a99b4c21\",\"modified\":1681987996038,\"created\":1681985633190,\"url\":\"localhost:8765\",\"name\":\"findNotes\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"findNotes\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"query\\\": \\\"deck:2018年7月から\\\"\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681987922291,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_8819285798a04d8980259d2d73ad6413\",\"parentId\":\"fld_6f4cd1f43f294b4aa06e72c3a99b4c21\",\"modified\":1681988083365,\"created\":1681908306259,\"url\":\"localhost:8765\",\"name\":\"notesInfo\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"notesInfo\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"notes\\\": [\\n\\t\\t\\t\\t\\t1509577365771\\n\\t\\t\\t\\t]\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681987922266,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_12acdd03ad5a46acaa3d7394955fb630\",\"parentId\":\"fld_8b5a311ed5fb411090c546a047b1a872\",\"modified\":1681988023426,\"created\":1681735020503,\"url\":\"localhost:8765\",\"name\":\"findCards\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"findCards\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"query\\\": \\\"deck:2020年7月から\\\"\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681861153740.5,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"fld_8b5a311ed5fb411090c546a047b1a872\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681987956331,\"created\":1681987826823,\"name\":\"cards as input or as output\",\"description\":\"\",\"environment\":{},\"environmentPropertyOrder\":null,\"metaSortKey\":-1681987826824,\"_type\":\"request_group\"},{\"_id\":\"req_ad65a0a29fb546eeb14a6382ba134547\",\"parentId\":\"fld_8b5a311ed5fb411090c546a047b1a872\",\"modified\":1681987856466,\"created\":1681824906239,\"url\":\"localhost:8765\",\"name\":\"getDecks\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"getDecks\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"cards\\\": [1663373485548]\\n    }\\n}\\n\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681861153715.5,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_32123277351f496e8648ce7c3c106140\",\"parentId\":\"fld_8b5a311ed5fb411090c546a047b1a872\",\"modified\":1681988070982,\"created\":1681735334059,\"url\":\"localhost:8765\",\"name\":\"cardsInfo\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"cardsInfo\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"cards\\\": [\\n\\t\\t\\t\\t\\t1509577366153\\n\\t\\t\\t\\t]\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681861153690.5,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_ab86d9b5e5b049cfb142f81a2a85cc55\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681825849399,\"created\":1681734480657,\"url\":\"localhost:8765\",\"name\":\"deckNames\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"deckNames\\\",\\n    \\\"version\\\": 6\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681734480657,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_4c03623d94fc41409fbe052a4e3cc380\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681823772162,\"created\":1681823743106,\"url\":\"localhost:8765\",\"name\":\"modelNames\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"modelNames\\\",\\n    \\\"version\\\": 6\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681734480632,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_796ecb54feac4e8cab2d89134dade192\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681988031074,\"created\":1681985777600,\"url\":\"localhost:8765\",\"name\":\"cardsToNotes\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"cardsToNotes\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"cards\\\": [1593637677334]\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681734480619.5,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_f380fab1bc82477dbbb1cba1c1629909\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681826183931,\"created\":1681826179750,\"url\":\"localhost:8765\",\"name\":\"getDecksAndIds\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"deckNamesAndIds\\\",\\n    \\\"version\\\": 6\\n}\\n\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681734480457,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"req_499b2c7f5d6f4f2590124a4ae49f8ff2\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681826279180,\"created\":1681826236689,\"url\":\"localhost:8765\",\"name\":\"getDecksConfig\",\"description\":\"\",\"method\":\"GET\",\"body\":{\"mimeType\":\"application/json\",\"text\":\"{\\n    \\\"action\\\": \\\"getDeckConfig\\\",\\n    \\\"version\\\": 6,\\n    \\\"params\\\": {\\n        \\\"deck\\\": \\\"2022年5月から\\\"\\n    }\\n}\"},\"parameters\":[],\"headers\":[{\"name\":\"Content-Type\",\"value\":\"application/json\"}],\"authentication\":{},\"metaSortKey\":-1681734480407,\"isPrivate\":false,\"settingStoreCookies\":true,\"settingSendCookies\":true,\"settingDisableRenderRequestBody\":false,\"settingEncodeUrl\":true,\"settingRebuildPath\":true,\"settingFollowRedirects\":\"global\",\"_type\":\"request\"},{\"_id\":\"env_341e65b4c124c07fab79c7bd11778d38c63f9bc9\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681734480650,\"created\":1681734480650,\"name\":\"Base Environment\",\"data\":{},\"dataPropertyOrder\":null,\"color\":null,\"isPrivate\":false,\"metaSortKey\":1681734480650,\"_type\":\"environment\"},{\"_id\":\"jar_341e65b4c124c07fab79c7bd11778d38c63f9bc9\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681734480653,\"created\":1681734480653,\"name\":\"Default Jar\",\"cookies\":[],\"_type\":\"cookie_jar\"},{\"_id\":\"spc_872ea6f142a14029ae19c1f987ea78bf\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681988095533,\"created\":1681734480645,\"fileName\":\"ankiconnect_double\",\"contents\":\"\",\"contentType\":\"yaml\",\"_type\":\"api_spec\"},{\"_id\":\"uts_706e9ade2a234f72badcaa68b8584f1b\",\"parentId\":\"wrk_9ffff8d414074f7694fdca73fc022777\",\"modified\":1681734480658,\"created\":1681734480658,\"name\":\"Example Test Suite\",\"_type\":\"unit_test_suite\"}]}\n",
+      "contentType": "yaml",
+      "_type": "api_spec"
+    },
+    {
+      "_id": "uts_706e9ade2a234f72badcaa68b8584f1b",
+      "parentId": "wrk_9ffff8d414074f7694fdca73fc022777",
+      "modified": 1681734480658,
+      "created": 1681734480658,
+      "name": "Example Test Suite",
+      "_type": "unit_test_suite"
+    }
+  ]
+}
