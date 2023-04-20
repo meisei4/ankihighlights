@@ -2,7 +2,9 @@
 experiment in developing along side gpt. 
 
 original chat 抜粋 with gpt:
-[し]
+
+4shi死]
+
 This will be an app that listens to a users kindle clippings(highlight) file and upon any update to that file parses the update and generates an anki card(note) from it and adds it to that users anki app. This will be used to allow for better studying of encountered words during reading in a foreign language.
 
 explanation of the current code：
