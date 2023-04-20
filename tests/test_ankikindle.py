@@ -39,7 +39,6 @@ def test_add_notes_to_anki_mocked_no_duplicate_found():
     assert result_note_ids == [101]
 
 
-# TODO mock the new wrapper not the
 def test_update_note_with_more_examples_mocked():
     ankiconnect_wrapper_mock = Mock()
     mocked_return_value = {'noteId': 101,
@@ -70,25 +69,26 @@ def test_update_note_with_more_examples_mocked():
 
 
 def test_add_update_and_remove_notes_to_anki():
-    deck_name = 'mail sucks in japan'
+    deck_name = 'mail_sucks_in_japan'
     model_name = 'aedict'
     notes = [
         {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
     ]
     added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankiconnect_wrapper)
 
-    all_note_ids = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:"{deck_name}"')
+    all_note_ids_of_deck_that_was_added_to = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:{deck_name}')
     for note_id in added_note_ids:
-        assert note_id in all_note_ids
+        assert note_id in all_note_ids_of_deck_that_was_added_to
 
     new_example = '狐につままれの新しい例文'
-    ankikindle.update_note_with_more_examples(added_note_ids[0], new_example, ankiconnect_wrapper)
+    note_to_be_updated = added_note_ids[0]
+    ankikindle.update_note_with_more_examples(note_to_be_updated, new_example, ankiconnect_wrapper)
 
-    updated_note = ankiconnect_wrapper.get_single_anki_note_details(added_note_ids[0], True)
+    updated_note = ankiconnect_wrapper.get_single_anki_note_details(note_to_be_updated, True)
     assert new_example in updated_note['fields']['Sentence']
     assert updated_note['tags'][0] == '2'
 
-    ankikindle.remove_notes_from_anki(added_note_ids, ankiconnect_wrapper)
-    note_ids = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:"{deck_name}"')
-    for note_id in added_note_ids:
-        assert note_id not in note_ids
+    added_and_updated_note_id = updated_note['noteId']
+    ankikindle.remove_notes_from_anki(updated_note['noteId'], ankiconnect_wrapper)
+    note_ids_after_deletion = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:"{deck_name}"')
+    assert added_and_updated_note_id not in note_ids_after_deletion

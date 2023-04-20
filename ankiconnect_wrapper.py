@@ -162,8 +162,17 @@ def update_anki_note(note_id, fields, tag):
     return response.json()["result"]
 
 
-# ankiconnect_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0],
-#                              replace_with_tag=str(counter_tag))
+def get_anki_note_from_card(card_id):
+    payload = {
+        "action": "cardsToNotes",
+        "version": version,
+        "params": {
+            "cards": [card_id]
+        }
+    }
+    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    return response.json()["result"][0]
+
 
 # AUXILIARIES
 # TODO now have to replace a lot of the card vs note api thing...

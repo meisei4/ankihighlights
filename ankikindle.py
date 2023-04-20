@@ -88,15 +88,10 @@ def update_note_with_more_examples(note_id, new_example, ankiconnect_injection: 
         counter_tag = int(previous_tags[0]) if not previous_tags else 1  # assume only one tag? maybe use a field later.
         counter_tag += 1
         if counter_tag >= 3:
-            note['deckName'] = 'Priority Words'
-
+            note['deckName'] = 'Priority Words'  # TODO this wont work you need to update the note with more than
+            # just newfileds
         ankiconnect_injection.update_anki_note(note_id, new_fields, str(counter_tag))
-        # TODO test that updateNote works instead of just tags and or replace tags
-        # anki_connect_injection('updateNoteTags', note=note_id, tags=[str(counter_tag)])
-        # ankiconnect_injection('replaceTags', notes=[note_id], tag_to_replace=previous_tags[0],
-        #                              replace_with_tag=str(counter_tag))
-    else:
-        ankiconnect_injection.update_anki_note(note_id, new_fields, note['tags'])
+
 
 
 def add_new_note(clipping_note, deck_name, model_name, ankiconnect_injection: ankiconnect_wrapper):
