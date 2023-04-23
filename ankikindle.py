@@ -2,9 +2,6 @@ import logging
 import requests
 import ankiconnect_wrapper
 
-# ankiconnect actions
-# TODO figure out how findNotes return type looks
-
 # Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the 'Authorization' header in the developer tools.
 logger = logging.getLogger(__name__)
 
@@ -64,7 +61,8 @@ def add_notes_to_anki(clipping_notes, deck_name, model_name, ankiconnect_injecti
 
 
 def add_or_update_note(clipping_note, deck_name, model_name, ankiconnect_injection: ankiconnect_wrapper):
-    query = 'deck:"{}" "Furigana:{}"'.format(deck_name, clipping_note['word'])
+    query = f"deck:'{deck_name}' 'Furigana:{clipping_note['word']}'"
+    # TODO this should only ever return length 1, so why even have it return an array
     existing_notes = ankiconnect_injection.get_anki_note_ids_from_query(query)
     if len(existing_notes) >= 1:
         update_note_with_more_examples(existing_notes[0], clipping_note['sentence'], ankiconnect_injection)
@@ -76,21 +74,26 @@ def update_note_with_more_examples(note_id, new_example, ankiconnect_injection: 
     note = ankiconnect_injection.get_single_anki_note_details(note_id, True)
     new_fields = note['fields']
     more_examples = new_fields['Sentence']
-    # TODO check here for how many occurrences of \n (or </br>) there are, and only allow 2 max (for 3 example
-    #  sentences). otherwise replace the oldest sentence with the new_example
-    more_examples += '</br>' + new_example
+    more_examples = _check_and_update_example_sentences(more_examples, new_example)
     new_fields['Sentence'] = more_examples
     # TODO figure out if this works with cards, sometimes cards and notes have different ids
     containing_decks = ankiconnect_injection.get_decks_containing_card(note_id)
     if 'Priority Words' not in containing_decks:
         previous_tags = note['tags']
-        # 'not tags' means its empty??
         counter_tag = int(previous_tags[0]) if not previous_tags else 1  # assume only one tag? maybe use a field later.
         counter_tag += 1
         if counter_tag >= 3:
             note['deckName'] = 'Priority Words'  # TODO this wont work, u hav to upd8 the note deck differently
         ankiconnect_injection.update_anki_note(note_id, new_fields, str(counter_tag))
 
+
+def _check_and_update_example_sentences(more_examples, new_example):
+    example_list = more_examples.split('</br>')
+    example_list.insert(0, new_example)
+    if len(example_list) > 3:
+        example_list.pop()
+    more_examples = '</br>'.join(example_list)
+    return more_examples
 
 
 def add_new_note(clipping_note, deck_name, model_name, ankiconnect_injection: ankiconnect_wrapper):

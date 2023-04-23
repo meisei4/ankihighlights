@@ -68,7 +68,7 @@
       "method": "GET",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n    \"action\": \"addNote\",\n    \"version\": 6,\n    \"params\": {\n        \"note\": {\n            \"deckName\": \"mail sucks in japan\",\n            \"modelName\": \"aedict\",\n            \"fields\": {\n                \"Furigana\": \"test furigana\",\n                \"Expression\": \"test expression\"\n            },\n            \"tags\": [\"1\"]\n        }\n    }\n}"
+        "text": "{\n    \"action\": \"addNote\",\n    \"version\": 6,\n    \"params\": {\n        \"note\": {\n            \"deckName\": \"mail_sucks_in_japan\",\n            \"modelName\": \"aedict\",\n            \"fields\": {\n                \"Furigana\": \"test furigana\",\n                \"Expression\": \"test expression\"\n            },\n            \"tags\": [\"1\"]\n        }\n    }\n}"
       },
       "parameters": [],
       "headers": [
