@@ -1,5 +1,10 @@
 import logging
 import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 import ankiconnect_wrapper
 
 # Replace <YOUR_AUTHORIZATION_HEADER> with the value you copied from the 'Authorization' header in the developer tools.
@@ -18,6 +23,30 @@ def main(ankiconnect_injection):
     for clipping in clippings:
         anki_notes = build_notes(clipping['notes'])
         add_notes_to_anki(anki_notes, deck_name, model_name, ankiconnect_injection)
+
+
+def connect_to_clippings():
+    options = webdriver.FirefoxOptions()
+    options.add_argument('-headless')  # Run Firefox in headless mode, without opening a window
+    driver = webdriver.Firefox(options=options)
+    driver.get("https://read.amazon.co.jp/")
+
+    email_field = driver.find_element(By.ID, "ap_email")
+    email_field.send_keys("your_email@example.com")
+
+    password_field = driver.find_element(By.ID, "ap_password")
+    password_field.send_keys("your_password")
+
+    signin_button = driver.find_element(By.ID, "signInSubmit")
+    signin_button.click()
+
+    library_div = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "kp-notebook-library")))
+
+    book_elements = library_div.find_elements(By.CLASS_NAME, "kp-notebook-library-each-book")
+
+    for book_element in book_elements:
+        title_element = book_element.find_element(By.CLASS_NAME, "kp-notebook-library-each-book-title")
+        print(title_element.text)
 
 
 def parse_clippings(clippings_json):

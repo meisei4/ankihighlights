@@ -68,6 +68,23 @@ def test_update_note_with_more_examples_mocked():
     ankiconnect_wrapper_mock.update_anki_note.assert_called_once_with(101, expected_fields, '2')
 
 
+def test_check_and_update_example_sentences():
+    more_examples = ''
+    new_example = 'Example 1.'
+    expected_output = 'Example 1.</br>'
+    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
+
+    more_examples = 'Example 2.</br>Example 1.'
+    new_example = 'Example 3.'
+    expected_output = 'Example 3.</br>Example 2.</br>Example 1.'
+    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
+
+    more_examples = 'Example 3.</br>Example 2.</br>Example 1.'
+    new_example = 'Example 4.'
+    expected_output = 'Example 4.</br>Example 3.</br>Example 2.'
+    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
+
+
 def test_add_update_and_remove_notes_to_anki():
     deck_name = 'mail_sucks_in_japan'
     model_name = 'aedict'
@@ -92,23 +109,3 @@ def test_add_update_and_remove_notes_to_anki():
     ankikindle.remove_notes_from_anki(updated_note['noteId'], ankiconnect_wrapper)
     note_ids_after_deletion = ankiconnect_wrapper.get_anki_note_ids_from_query(f'deck:"{deck_name}"')
     assert added_and_updated_note_id not in note_ids_after_deletion
-
-
-def test_check_and_update_example_sentences():
-    # Test case 1: more_examples is an empty string
-    more_examples = ''
-    new_example = 'Example 1.'
-    expected_output = 'Example 1.</br>'
-    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
-
-    # Test case 2: more_examples contains less than 3 examples
-    more_examples = 'Example 2.</br>Example 1.'
-    new_example = 'Example 3.'
-    expected_output = 'Example 3.</br>Example 2.</br>Example 1.'
-    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
-
-    # Test case 3: more_examples contains 3 examples
-    more_examples = 'Example 3.</br>Example 2.</br>Example 1.'
-    new_example = 'Example 4.'
-    expected_output = 'Example 4.</br>Example 3.</br>Example 2.'
-    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
