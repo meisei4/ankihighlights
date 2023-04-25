@@ -1,7 +1,7 @@
 # ankikindle
-experiment in developing along side gpt. 
+experiment in developing alongside gpt. 
 
-original chat 抜粋 with gpt (it doesnt actually do this🤮🤮🤮):
+original chat 抜粋 with gpt (it doesn't actually do this🤮🤮🤮):
 
 
 This will be an app that listens to a users kindle clippings(highlight) file and upon any update to that file parses the update and generates an anki card(note) from it and adds it to that users anki app. This will be used to allow for better studying of encountered words during reading in a foreign language.
@@ -25,7 +25,7 @@ Here's a brief summary of the steps involved in the script:
 **KINDLE** 
 (Note: I am going to probably have to make some fake API wrapper that just queries the local database)
 - idea1 first implement everything assuming that some day there will be a proper RESTApi to get kindle metadata
-- idea2 implement so that some script can be ran whenever kindle device (with local files) is mounted, that this works 🤮🤮🤮
+- idea2 implement so that some script can be run whenever kindle device (with local files) is mounted, that this works 🤮🤮🤮
 
 potential JSON responses from the amazon Kindle clippings (highlights) file (completely made up):
 ```json
