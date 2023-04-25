@@ -41,7 +41,7 @@ potential JSON responses from the amazon Kindle clippings (highlights) file (com
                 "note": "Highlight"
             },
             {
-                "word": "自分”,
+                "word": "自分",
                 "text": "どんな仕事をしていようと、いつだって、こうやって机に向かって仕事をしている自分がいる。",
                 "location": {
                     "page": 498
@@ -62,9 +62,9 @@ example anki based JSON request (or response? note_id blah, card_id blah figure 
     "modelName": "aedict",
     "fields": {
         "Furigana": "自分[じぶん]",
-        "Expression": "こうやって机に向かって仕事をしている自分がいる"
+        "Expression": "こうやって机に向かって仕事をしている自分がいる",
         "Sentence": [ "こうやって机に向かって仕事をしている自分がいる", "分の能力を信じて、夢に向かって努力しましょう"]
-    }
+    },
     "tags": ['2']
 }
 ```
