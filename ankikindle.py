@@ -15,7 +15,7 @@ def main(ankiconnect_injection):
     deck_name = ''
     model_name = ''
 
-    # TODO implement scraper here to get clippings
+    # TODO implement something here to get vocab and sentence
     clippings = []
     for clipping in clippings:
         anki_notes = build_notes(clipping['notes'])

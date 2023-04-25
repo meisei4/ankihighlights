@@ -1,7 +1,9 @@
+from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
+
+# TODO this is unusable because it doesnt actually have vocab data, only highlights
 
 def connect_to_clippings(driver_injection, email, password):
     driver_injection.get("https://read.amazon.co.jp/notebook")
@@ -16,18 +18,32 @@ def connect_to_clippings(driver_injection, email, password):
     signin_button.click()
 
 
-def scrape_clippings(driver_injection):
-    books = driver_injection.find_elements_by_xpath("//span[contains(@data-action, 'get-annotations-for-asin')]")
+def scrape_book_titles(driver_injection):
+    return driver_injection.find_elements(By.XPATH, "//span[contains(@data-action, 'get-annotations-for-asin')]")
 
+
+def click_on_a_book_and_wait_for_annotations_to_show_up(driver_injection, book):
+    driver_injection.execute_script("arguments[0].click();", book)
+    pane_class = "aok-hidden"
+    WebDriverWait(driver_injection, 10).until(
+        lambda driver: pane_class in driver.find_element(By.ID, "kp-notebook-annotations-pane").get_attribute(
+            "class"))
+    WebDriverWait(driver_injection, 10).until(
+        lambda driver: pane_class not in driver.find_element(By.ID, "kp-notebook-annotations-pane").get_attribute(
+            "class"))
+
+
+def scrape_all_annotations_per_book(driver_injection):
+    books = scrape_book_titles(driver_injection)
+    annotations_per_book = []
     for book in books:
-        driver_injection.execute_script("arguments[0].click();", book)
-        # wait for the annotations to become available
-        # does this only check if a-row is the class or can it be "a-row aok-hidden"
-        WebDriverWait(driver_injection, 10).until(EC.presence_of_element_located(
-            (By.XPATH, "//*[@id='kp-notebook-annotations-pane'][contains(@class,'a-row')]")))
+        try:
+            click_on_a_book_and_wait_for_annotations_to_show_up(driver_injection, book)
+        except TimeoutException:
+            print(f"Timeout occurred while waiting for annotations to show up for book {book.text}, skipping...")
+            continue
+        annotations_div = driver_injection.find_elements(By.ID, "kp-notebook-annotations")
+        annotations = annotations_div[0].find_elements(By.XPATH, ".//*[@id='highlight']")
+        annotations_per_book.append({book.text: [annotation.text for annotation in annotations]})
 
-    annotations_div = driver_injection.find_element_by_id("kp-notebook-annotations")
-    highlight_elements = annotations_div.find_elements_by_xpath(".//*[@id='highlight']")
-    highlights = [highlight_element.text for highlight_element in highlight_elements]
-
-    return highlights
+    return annotations_per_book
