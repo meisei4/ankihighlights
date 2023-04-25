@@ -48,4 +48,3 @@ def test_remove_value_order_from_dict():
         }
     ]
     assert removed_value_order_dict == expected_result
-
