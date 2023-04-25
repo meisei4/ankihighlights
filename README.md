@@ -1,9 +1,8 @@
 # ankikindle
 experiment in developing along side gpt. 
 
-original chat 抜粋 with gpt:
+original chat 抜粋 with gpt (it doesnt actually do this🤮🤮🤮):
 
-4shi死]
 
 This will be an app that listens to a users kindle clippings(highlight) file and upon any update to that file parses the update and generates an anki card(note) from it and adds it to that users anki app. This will be used to allow for better studying of encountered words during reading in a foreign language.
 
@@ -12,7 +11,7 @@ Python script that reads Kindle clippings from the user's Kindle account and the
 
 Here's a brief summary of the steps involved in the script:
 
-1. sends a GET request to the Kindle server to retrieve clippings from the user's account. It parses the JSON response to extract the relevant data.
+1. somehow gets kindle vocab.db 🤮🤮🤮🤮🤮
 
 2. loops over each clipping (highlight) and converts it into an Anki note format.
 
@@ -21,7 +20,12 @@ Here's a brief summary of the steps involved in the script:
 4. assigns tags to the note based on the number of times the same word appears in the user's clippings (this is to be able to mark the word if its seen too many times, then will be sent to a new deck of higher study priority).
 
 
-JSON stuff:
+**__JSON stuff:**__
+
+**KINDLE** 
+(Note: I am going to probably have to make some fake API wrapper that just queries the local database)
+- idea1 first implement everything assuming that some day there will be a proper RESTApi to get kindle metadata
+- idea2 implement so that some script can be ran whenever kindle device (with local files) is mounted, that this works 🤮🤮🤮
 
 potential JSON responses from the amazon Kindle clippings (highlights) file (completely made up):
 ```json
@@ -54,7 +58,10 @@ potential JSON responses from the amazon Kindle clippings (highlights) file (com
 ]
 ```
 
-example anki based JSON request (or response? note_id blah, card_id blah figure it the heck out) for the word "自分" and the sentences it was orignally highlight in.
+
+**ANKI**
+
+example anki based JSON request for the word "自分" and the sentences it was originally highlight in.
 
 ```json
 {
@@ -65,7 +72,7 @@ example anki based JSON request (or response? note_id blah, card_id blah figure 
         "Expression": "こうやって机に向かって仕事をしている自分がいる",
         "Sentence": [ "こうやって机に向かって仕事をしている自分がいる", "分の能力を信じて、夢に向かって努力しましょう"]
     },
-    "tags": ['2']
+    "tags": ["2"]
 }
 ```
 
