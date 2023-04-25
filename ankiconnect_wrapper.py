@@ -190,3 +190,40 @@ def remove_value_order_from_dict(result):
         for field_key in fields_keys:
             updated_result[i]["fields"][field_key] = result[i]["fields"][field_key]["value"]
     return updated_result
+
+
+# TODO figure this out, when trying to add a new card just create new deck if the user doesnt want to decide a deck name
+def add_new_deck_to_anki(deck_name):
+    payload = {
+        "action": "createDeck",
+        "version": 6,
+        "params": {
+            "deck": deck_name
+        }
+    }
+    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    return response.json()["result"]
+
+
+# TODO figure this out (gonna have to create a specific card type at a some point,
+#  but remember to make it as customizable as possible according to anyone who will fork this project
+def add_new_card_type_to_anki(card_type_name):
+    payload = {
+        "action": "createModel",
+        "version": 6,
+        "params": {
+            "modelName": card_type_name,
+            "inOrderFields": ["Field1", "Field2", "Field3"],
+            "css": "Optional CSS with default to builtin css", # ????
+            "isCloze": False, #????
+            "cardTemplates": [
+                {
+                    "Name": "My Card 1",
+                    "Front": "Front html {{Field1}}",
+                    "Back": "Back html  {{Field2}}"
+                }
+            ]
+        }
+    }
+    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    return response.json()["result"]
