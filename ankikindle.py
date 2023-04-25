@@ -15,11 +15,8 @@ def main(ankiconnect_injection):
     deck_name = ''
     model_name = ''
 
-    # TODO get header and actually have this response thing work
-    headers = ""
-    response = requests.get(f'https://kindle.amazon.com/kp/kindle-dbs/notes/2010-05-01/<YOUR_TITLE>', headers=headers)
-    clippings_json = response.json()
-    clippings = parse_clippings(clippings_json)
+    # TODO implement scraper here to get clippings
+    clippings = []
     for clipping in clippings:
         anki_notes = build_notes(clipping['notes'])
         add_notes_to_anki(anki_notes, deck_name, model_name, ankiconnect_injection)
