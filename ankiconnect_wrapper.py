@@ -88,6 +88,14 @@ def get_anki_note_ids_from_query(query):
     return response.json()["result"]
 
 
+def get_anki_note_id_from_query(query):
+    note_ids = get_anki_note_ids_from_query(query)
+    if note_ids:
+        return note_ids[0]
+    else:
+        return None
+
+
 def get_anki_notes_details(array_of_card_ids, remove_order_boolean):
     payload = {
         "action": "notesInfo",
