@@ -136,7 +136,6 @@ def delete_anki_note(note_id):
     return response.json()["result"]
 
 
-# TODO test this actually on insomnia
 def update_anki_note(note_id, fields, tag):
     payload_for_fields = {
         "action": "updateNoteFields",

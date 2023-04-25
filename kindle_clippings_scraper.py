@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-# TODO this is unusable because it doesnt actually have vocab data, only highlights
+# TODO this whole module is unusable because it doesnt actually have vocab data, only highlights, figure out later
 
 def connect_to_clippings(driver_injection, email, password):
     driver_injection.get("https://read.amazon.co.jp/notebook")
