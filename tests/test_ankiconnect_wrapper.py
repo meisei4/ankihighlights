@@ -49,5 +49,3 @@ def test_remove_value_order_from_dict():
     ]
     assert removed_value_order_dict == expected_result
 
-# TODO DO NOT DO ANYTHING UNTIL YOU DO THE BELOW TODO
-# TODO write tests for creation and deletion of notes and cards and updating and stuff, use INSOMNIA
