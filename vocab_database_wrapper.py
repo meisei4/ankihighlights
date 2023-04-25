@@ -1,3 +1,49 @@
+import os
+import shutil
+import time
+
+
+def copy_to_backup_and_tmp_infinitely():
+    target_vocab_file_path = "/Volumes/Kindle/system/vocabulary/vocab.db"  # TODO macOS only
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    backup_dir = os.path.join(project_root, "backup")
+    tmp_dir = os.path.join(project_root, "tmp")
+    os.makedirs(backup_dir, exist_ok=True)
+    os.makedirs(tmp_dir, exist_ok=True)
+    count = 0
+    while count < 14:  # random threshold for testing
+        if os.path.exists(target_vocab_file_path):
+            count += 1
+            copy_vocab_db(count, target_vocab_file_path, backup_dir, tmp_dir)
+        time.sleep(2)
+
+    shutil.rmtree(tmp_dir)  # TODO just remove this one only used in case backup fails or something? not sure if this
+
+
+def copy_vocab_db(count, vocab_file_path, backup_dir, tmp_dir):
+    start_time = time.monotonic()
+    shutil.copy(vocab_file_path, backup_dir)
+    shutil.copy(vocab_file_path, tmp_dir)
+    end_time = time.monotonic()
+    elapsed_time = end_time - start_time
+    file_size = os.path.getsize(vocab_file_path) / 1024  # Get file size in KB
+    print()
+    print(f"vocab.db copied to backup and tmp folders for the {count}{ordinal_suffix(count)} time "
+          f"(elapsed time: {elapsed_time:.2f}s, file size: {file_size:.2f} KB)")
+
+
+def ordinal_suffix(count):
+    if 11 <= count <= 13:
+        return "th"
+    elif count % 10 == 1:
+        return "st"
+    elif count % 10 == 2:
+        return "nd"
+    elif count % 10 == 3:
+        return "rd"
+    else:
+        return "th"
+
 
 def get_table_info(db_connection_injection):
     table_info = {}
@@ -19,4 +65,3 @@ def get_table_info(db_connection_injection):
             table_info[table_name] = table_columns
 
     return table_info
-
