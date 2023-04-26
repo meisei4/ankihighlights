@@ -33,13 +33,34 @@ def copy_vocab_db(count: int, vocab_file_path: str, backup_dir: str, tmp_dir: st
           f"(elapsed time: {elapsed_time:.2f}s, file size: {file_size:.2f} KB)")
 
 
+'''
+  "WORDS": {
+    "id": "TEXT",
+    "word": "TEXT",
+    "stem": "TEXT",
+    "lang": "TEXT",
+    "category": "INTEGER",
+    "timestamp": "INTEGER",
+    "profileid": "TEXT"
+  },
+  "LOOKUPS": {
+    "id": "TEXT",
+    "word_key": "TEXT",
+    "book_key": "TEXT",
+    "dict_key": "TEXT",
+    "pos": "TEXT",
+    "usage": "TEXT",
+    "timestamp": "INTEGER"
+  }
+'''
+
+
 def get_table_info(db_connection_injection: Connection) -> dict:
     table_info = {}
     with db_connection_injection:
         cursor = db_connection_injection.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
-
         for table in tables:
             table_name = table[0]
             table_columns = {}
@@ -55,6 +76,57 @@ def get_table_info(db_connection_injection: Connection) -> dict:
     return table_info
 
 
+def get_words_by_profileid(connection: Connection, profileid: str) -> list[dict]:
+    query = f"SELECT * FROM WORDS WHERE profileid='{profileid}'"
+    return execute_query(connection, query)
+
+
+def get_book_info_by_asin(connection: Connection, asin: str) -> list[dict]:
+    query = f"SELECT * FROM BOOK_INFO WHERE asin='{asin}'"
+    return execute_query(connection, query)
+
+
+def get_dict_info_by_asin(connection: Connection, asin: str) -> list[dict]:
+    query = f"SELECT * FROM DICT_INFO WHERE asin='{asin}'"
+    return execute_query(connection, query)
+
+
+def get_metadata_by_dsname(connection: Connection, dsname: str) -> list[dict]:
+    query = f"SELECT * FROM METADATA WHERE dsname='{dsname}'"
+    return execute_query(connection, query)
+
+
+def get_words_and_lookups_by_book_key(connection: Connection, book_key: str) -> list[dict]:
+    query = f"""
+        SELECT w.*, l.pos, l.usage 
+        FROM LOOKUPS l 
+        JOIN WORDS w ON l.word_key = w.id 
+        WHERE l.book_key='{book_key}'
+    """
+    return execute_query(connection, query)
+
+
+def get_words_and_lookups_by_dict_key(connection: Connection, dict_key: str) -> list[dict]:
+    query = f"""
+        SELECT w.*, l.pos, l.usage 
+        FROM LOOKUPS l 
+        JOIN WORDS w ON l.word_key = w.id 
+        WHERE l.dict_key='{dict_key}'
+    """
+    return execute_query(connection, query)
+
+
+def execute_query(connection: Connection, query: str) -> list[dict]:
+    with connection:
+        cursor = connection.cursor()
+        cursor.execute(query)
+        columns = [column[0] for column in cursor.description]
+        results = []
+        for row in cursor.fetchall():
+            results.append(dict(zip(columns, row)))
+        return results
+
+
 # AUXILIARIES
 def ordinal_suffix(count: int) -> str:
     if 11 <= count <= 13:
@@ -67,4 +139,3 @@ def ordinal_suffix(count: int) -> str:
         return "rd"
     else:
         return "th"
-
