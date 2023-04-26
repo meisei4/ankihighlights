@@ -160,7 +160,7 @@ def update_anki_note(note_id: int, fields: dict, tag: str):
         "version": VERSION,
         "params": {
             "notes": [note_id],
-            "tag_to_replace": str(int(tag) - 1),
+            "tag_to_replace": str(int(tag) - 1),  # TODO ugly way to do this, but updateTags doesn't seem to work
             "replace_with_tag": tag
         }
     }
