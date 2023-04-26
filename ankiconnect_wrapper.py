@@ -1,5 +1,3 @@
-from typing import List
-
 import requests
 
 API_URL = "http://localhost:8765/"  # maybe this can be updated in the future
@@ -95,7 +93,7 @@ def get_anki_note_id_from_query(query: str) -> int:
     if note_ids:
         return note_ids[0]
     else:
-        return None
+        return -1
 
 
 def get_anki_notes_details(list_of_card_ids: list[int], remove_order_boolean: bool) -> list[dict]:

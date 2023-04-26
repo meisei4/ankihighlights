@@ -1,5 +1,4 @@
 import logging
-
 import ankiconnect_wrapper
 
 logger = logging.getLogger(__name__)
@@ -55,7 +54,7 @@ def add_notes_to_anki(clipping_notes: list[dict], deck_name: str, card_type: str
 
 def add_or_update_note(clipping_note: dict, deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
     existing_note_id = find_existing_note_id(clipping_note['word'], deck_name, ankiconnect_injection)
-    if existing_note_id:
+    if existing_note_id > 0:  # -1 id means note doesn't exist
         update_note_with_more_examples(existing_note_id, clipping_note['sentence'], ankiconnect_injection)
         return existing_note_id
     else:

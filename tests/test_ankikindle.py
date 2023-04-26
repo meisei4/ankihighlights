@@ -1,5 +1,4 @@
 import pytest
-
 import ankiconnect_wrapper
 from .. import ankikindle
 from unittest.mock import Mock
