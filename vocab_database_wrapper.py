@@ -94,6 +94,21 @@ def get_words_and_lookups_by_dict_key(connection: Connection, dict_key: str) -> 
     return execute_query(connection, query)
 
 
+def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int) -> list[dict]:
+    query = f"""
+        SELECT LOOKUPS.id, WORDS.word, LOOKUPS.usage, LOOKUPS.timestamp, BOOK_INFO.title, BOOK_INFO.authors
+        FROM LOOKUPS 
+        JOIN WORDS ON LOOKUPS.word_key = WORDS.id 
+        JOIN BOOK_INFO ON LOOKUPS.book_key = BOOK_INFO.id 
+        WHERE LOOKUPS.timestamp >= {timestamp}
+    """
+    return execute_query(connection, query)
+
+
+
+
+
+
 def execute_query(connection: Connection, query: str) -> list[dict]:
     with connection:
         cursor = connection.cursor()

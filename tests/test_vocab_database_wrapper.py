@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+from datetime import datetime
 from sqlite3 import Connection
 import pytest
 import vocab_database_wrapper
@@ -67,10 +68,36 @@ def test_get_book_info_by_asin(test_db_connection: Connection):
         assert results[0]["authors"] == "John Smith"
 
 
+def test_get_all_word_look_ups_after_timestamp(test_db_connection: Connection):
+    with test_db_connection:
+        cursor = test_db_connection.cursor()
+        cursor.execute("BEGIN")
+        cursor.execute(f"""
+            INSERT INTO WORDS (id, word, stem, lang, category, timestamp, profileid) 
+            VALUES ('1234', '日本語', '日本', 'ja', 1, {int(datetime(2030, 4, 25).timestamp())}, 'test')
+        """)
+        cursor.execute("""
+            INSERT INTO BOOK_INFO (id, asin, guid, lang, title, authors) 
+            VALUES ('1234', 'B123', 'G456', 'ja', '日本の本', '著者A')
+        """)
+        cursor.execute(f"""
+            INSERT INTO LOOKUPS (id, word_key, book_key, dict_key, pos, usage, timestamp) 
+            VALUES ('1234', '1234', '1234', '1', 'n', '日本語の例文', {int(datetime(2030, 4, 25).timestamp())})
+        """)
+        cursor.execute("COMMIT")
+        result = vocab_database_wrapper.get_all_word_look_ups_after_timestamp(test_db_connection, int(datetime(2030, 4, 25).timestamp()))
+
+        assert len(result) == 1
+        assert result[0]["word"] == "日本語"
+        assert result[0]["usage"] == "日本語の例文"
+        assert result[0]["title"] == "日本の本"
+        assert result[0]["authors"] == "著者A"
+
+
 def cleanup_test_data(connection: Connection):
     with connection:
         cursor = connection.cursor()
         cursor.execute("BEGIN")
-        cursor.execute("DELETE FROM BOOK_INFO WHERE asin = 'B123'")
+        cursor.execute("DELETE FROM BOOK_INFO WHERE asin='B123'")
         cursor.execute("DELETE FROM WORDS WHERE profileid='test'")
         cursor.execute("COMMIT")
