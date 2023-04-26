@@ -1,8 +1,9 @@
 import json
 import pytest
+import kindle_clippings_scraper
 from selenium import webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver
-import kindle_clippings_scraper
+
 
 email = "example@gmail.com"
 password = "something"
@@ -16,6 +17,7 @@ def test_driver():
     yield driver
 
 
+@pytest.mark.skip(reason="to run this test you must update the email and password to be valid login creds")
 def test_scrape_all_annotations_per_book(test_driver: WebDriver):
     kindle_clippings_scraper.connect_to_clippings(test_driver, email, password)
     expected_title = "Kindle: メモとハイライト"

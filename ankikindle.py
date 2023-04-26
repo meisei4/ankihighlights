@@ -1,5 +1,6 @@
 import logging
 import ankiconnect_wrapper
+import vocab_db_accessor_wrap
 
 logger = logging.getLogger(__name__)
 
@@ -7,39 +8,61 @@ PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
 
 
+def main():
+    do_the_thing_a_spike_lee_joint()
+
+
+def do_the_thing_a_spike_lee_joint():
+    connection = None
+    latest_timestamp = int("you're mom")  # TODO: no idea what this casts to, so unfortunate that im a comedic genius
+    count = 0
+    while True:
+        vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count)
+        try:
+            tmp_dir = vocab_db_accessor_wrap.try_to_get_tmp_db_path()
+            connection = vocab_db_accessor_wrap.try_to_establish_a_connection(tmp_dir)
+            latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection)
+        except FileNotFoundError as e:
+            logger.error(f"fuuckkkckcc, here you really messed up buttercup, here is your error: {e}")
+        except ConnectionError as e:
+            logger.info(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
+        vocab_highlights = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(connection, latest_timestamp)
+        add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict", ankiconnect_injection=ankiconnect_wrapper)
+
+
 # ANKI STUFF
-def add_notes_to_anki(clippings: list[dict], deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> list[int]:
-    logger.info("Adding notes to Anki...")
+def add_notes_to_anki(vocab_highlights: list[dict], deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> list[int]:
+    logger.info("adding notes to anki...")
     try:
         ankiconnect_request_permission(ankiconnect_injection)
         if deck_name not in ankiconnect_injection.get_all_deck_names():
-            raise ValueError(f"'{deck_name}' not found in remote Anki account")
+            raise ValueError(f"'{deck_name}' not found in remote anki account")
         if card_type not in ankiconnect_injection.get_all_card_type_names():
-            raise ValueError(f"'{card_type}' not found in remote Anki account")
+            raise ValueError(f"'{card_type}' not found in remote anki account")
         added_note_ids = []
-        for clipping_note in clippings:
-            note_id = add_or_update_note(clipping_note, deck_name, card_type, ankiconnect_injection)
+        for vocab_highlight in vocab_highlights:
+            note_id = add_or_update_note(vocab_highlight, deck_name, card_type, ankiconnect_injection)
             added_note_ids.append(note_id)
-        logger.info(f"Added {len(added_note_ids)} notes successfully.")
+        logger.info(f"added {len(added_note_ids)} notes successfully.")
         return added_note_ids
     except ValueError as e:
         logger.error(f"ValueError: {e}")
     except ConnectionError as e:
         logger.error(f"ConnectionError: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"unexpected error: {e}")
 
 
-def add_or_update_note(clipping_note: dict, deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
-    existing_note_id = find_existing_note_id(clipping_note['word'], deck_name, ankiconnect_injection)
+def add_or_update_note(word_highlight: dict, deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
+    existing_note_id = find_existing_note_id(word_highlight['word'], deck_name, ankiconnect_injection)
     if existing_note_id > 0:  # -1 id means note doesn't exist
-        logger.info(f"Note already exists for '{clipping_note['word']}' in '{deck_name}' deck. Updating note...")
-        update_note_with_more_examples(existing_note_id, clipping_note['sentence'], ankiconnect_injection)
-        logger.info(f"Note updated successfully.")
+        logger.info(f"note already exists for '{word_highlight['word']}' in '{deck_name}' deck; thus updating that note")
+        update_note_with_more_examples(existing_note_id, word_highlight['usage'], ankiconnect_injection)
+        logger.info(f"note updated successfully")
         return existing_note_id
     else:
-        logger.info(f"No existing note found for '{clipping_note['word']}' in '{deck_name}' deck. Adding new note...")
-        return add_new_note(clipping_note, deck_name, card_type, ankiconnect_injection)
+        logger.info(f"no existing note found for '{word_highlight['word']}' in '{deck_name}' deck; thus adding new note")
+        return add_new_note(word_highlight, deck_name, card_type, ankiconnect_injection)
 
 
 def find_existing_note_id(word: str, deck_name: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
@@ -73,11 +96,11 @@ def _update_example_sentences(example_sentences: str, new_example: str) -> str:
     return example_sentences
 
 
-def add_new_note(clipping: dict, deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
+def add_new_note(word_highlight: dict, deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
     fields = {
-        'Expression': clipping['sentence'],
-        'Furigana': clipping['word'],
-        'Sentence': clipping['sentence']
+        'Expression': word_highlight['usage'],
+        'Furigana': word_highlight['word'],
+        'Sentence': word_highlight['usage']
     }
     anki_note = {'deckName': deck_name, 'modelName': card_type, 'tags': ['1'], 'fields': fields}
     return ankiconnect_injection.add_anki_note(anki_note)
@@ -86,7 +109,7 @@ def add_new_note(clipping: dict, deck_name: str, card_type: str, ankiconnect_inj
 def ankiconnect_request_permission(ankiconnect_injection: ankiconnect_wrapper):
     result = ankiconnect_injection.request_connection_permission()
     if not result['permission'] == 'granted':
-        raise ConnectionError(f'Failed to authenticate with Anki; response: {result}')
+        raise ConnectionError(f'failed to authenticate with anki; response: {result}')
 
 
 # TODO only for recovery during unmocked connection testing purposes (adding unwanted cards). move somewhere else or
@@ -95,27 +118,4 @@ def remove_notes_from_anki(note_id_to_be_deleted: int, ankiconnect_injection: an
     ankiconnect_request_permission(ankiconnect_injection)
     ankiconnect_injection.delete_anki_note(note_id_to_be_deleted)
 
-
-# KINDLE STUFF (MADE UP)
-def parse_clippings(clippings_json: list[dict]) -> list[dict]:
-    clippings = []
-    for clipping in clippings_json:
-        clippings.append({
-            'asin': clipping['asin'],
-            'lastUpdatedDate': clipping['lastUpdatedDate'],
-            'authors': clipping['authors'],
-            'title': clipping['title'],
-            'notes': clipping['notes']
-        })
-    return clippings
-
-
-def build_notes(notes_dict: list[dict]) -> list[dict]:
-    return [build_single_note(note) for note in notes_dict]
-
-
-def build_single_note(note_contents: dict) -> dict:
-    sentence = note_contents['sentence']
-    word = note_contents['highlight']
-    return {'sentence': sentence, 'word': word}
 

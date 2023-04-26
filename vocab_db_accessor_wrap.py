@@ -1,25 +1,34 @@
-import datetime
 import os
-import shutil
+import sqlite3
 import time
+import shutil
+import datetime
+from ankikindle import logger
 from sqlite3 import Connection
 
 
-def copy_to_backup_and_tmp_infinitely():
-    target_vocab_file_path = "/Volumes/Kindle/system/vocabulary/vocab.db"  # TODO macOS only
+MACOS_TARGET_VOCAB_MOUNT_FILE_LOC = "/Volumes/Kindle/system/vocabulary/vocab.db"
+_latest_timestamp: int = -1
+
+
+def try_to_establish_a_connection(db_file_path: str) -> Connection:
+    try:
+        return sqlite3.connect(db_file_path)
+    except ConnectionError as e:
+        logger.info(f"haha, you fucked up somehow; check it {e}")
+        raise ConnectionError(f"uhhhhh {e}")
+
+
+def copy_vocab_db_to_backup_and_tmp_upon_proper_access(count: int):
     project_root = os.path.dirname(os.path.abspath(__file__))
     backup_dir = os.path.join(project_root, "backup")
     tmp_dir = os.path.join(project_root, "tmp")
     os.makedirs(backup_dir, exist_ok=True)
     os.makedirs(tmp_dir, exist_ok=True)
-    count = 0
-    while count < 14:  # random threshold for testing
-        if os.path.exists(target_vocab_file_path):
-            count += 1
-            copy_vocab_db(count, target_vocab_file_path, backup_dir, tmp_dir)
+    while not os.path.exists(MACOS_TARGET_VOCAB_MOUNT_FILE_LOC):
         time.sleep(2)
-
-    shutil.rmtree(tmp_dir)  # TODO just remove this one only used in case backup fails or something? not sure if this
+        count += 1
+    copy_vocab_db(count, MACOS_TARGET_VOCAB_MOUNT_FILE_LOC, backup_dir, tmp_dir)
 
 
 def copy_vocab_db(count: int, vocab_file_path: str, backup_dir: str, tmp_dir: str):
@@ -32,6 +41,14 @@ def copy_vocab_db(count: int, vocab_file_path: str, backup_dir: str, tmp_dir: st
     print()
     print(f"vocab.db copied to backup and tmp folders for the {count}{ordinal_suffix(count)} time "
           f"(elapsed time: {elapsed_time:.2f}s, file size: {file_size:.2f} KB)")
+
+
+def try_to_get_tmp_db_path() -> str:
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    tmp_dir = os.path.join(project_root, "tmp")
+    if os.path.exists(tmp_dir):
+        return tmp_dir
+    raise FileNotFoundError("the fuckk, local db doesnt (seem to0)exist asshole, 多分 you fucked up the mount function")
 
 
 def get_table_info(db_connection_injection: Connection) -> dict:
@@ -56,6 +73,8 @@ def get_table_info(db_connection_injection: Connection) -> dict:
 
 
 def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int) -> list[dict]:
+    if not connection or timestamp == int("you're mom"):
+        raise Exception("actually unexpected... ;_;")
     query = f"""
         SELECT LOOKUPS.id, WORDS.word, LOOKUPS.usage, LOOKUPS.timestamp, BOOK_INFO.title, BOOK_INFO.authors
         FROM LOOKUPS 
@@ -64,6 +83,12 @@ def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int
         WHERE LOOKUPS.timestamp >= {timestamp}
     """
     return execute_query(connection, query)
+
+
+def get_latest_lookup_timestamp(connection: Connection):
+    with connection:
+        query = "SELECT MAX(timestamp) AS latest_lookup_timestamp FROM LOOKUPS"
+        return execute_query(connection, query)
 
 
 def execute_query(connection: Connection, query: str) -> list[dict]:

@@ -4,22 +4,12 @@ from .. import ankikindle
 from unittest.mock import Mock
 
 
-def test_build_notes():
-    notes = [{'annotationId': 'ABCDEFGH1234',
-              'highlight': '狐につままれ',
-              'location': {'value': 4, 'type': 'page'},
-              'sentence': '若槻は狐につままれたような面持ちで確認した。',
-              'note': ''}]
-    expected_notes = [{'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}]
-    assert ankikindle.build_notes(notes) == expected_notes
-
-
 def test_ankiconnect_request_permission_permission_denied():
     ankiconnect_wrapper_mock = Mock()
     ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'denied'}
     with pytest.raises(Exception) as e:
         ankikindle.ankiconnect_request_permission(ankiconnect_wrapper_mock)
-    assert str(e.value) == "Failed to authenticate with Anki; response: {'permission': 'denied'}"
+    assert str(e.value) == "failed to authenticate with anki; response: {'permission': 'denied'}"
 
 
 def test_add_notes_to_anki_mocked_no_duplicate_found():
@@ -30,11 +20,11 @@ def test_add_notes_to_anki_mocked_no_duplicate_found():
     ankiconnect_wrapper_mock.get_anki_note_id_from_query.return_value = -1
     ankiconnect_wrapper_mock.add_anki_note.return_value = 101
 
-    notes = [{'sentence': 'This is a test sentence', 'word': 'test'}]
+    word_highlights = [{'usage': 'This is a test sentence', 'word': 'test'}]
     deck_name = 'Default'
     model_name = 'Basic'
 
-    result_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankiconnect_wrapper_mock)
+    result_note_ids = ankikindle.add_notes_to_anki(word_highlights, deck_name, model_name, ankiconnect_wrapper_mock)
     assert result_note_ids == [101]
 
 
@@ -88,7 +78,7 @@ def test_add_update_and_remove_notes_to_anki():
     deck_name = 'mail_sucks_in_japan'
     model_name = 'aedict'
     notes = [
-        {'sentence': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
+        {'usage': '若槻は狐につままれたような面持ちで確認した。', 'word': '狐につままれ'}
     ]
     added_note_ids = ankikindle.add_notes_to_anki(notes, deck_name, model_name, ankiconnect_wrapper)
 
