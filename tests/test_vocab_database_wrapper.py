@@ -28,7 +28,7 @@ def test_get_table_info():
 
 @pytest.fixture(scope='module')
 def test_db_connection():
-    with sqlite3.connect(TEST_VOCAB_DB_FILE, timeout=20, isolation_level=None, check_same_thread=False) as conn:
+    with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
         yield conn
         cleanup_test_data(conn)
 

@@ -33,28 +33,6 @@ def copy_vocab_db(count: int, vocab_file_path: str, backup_dir: str, tmp_dir: st
           f"(elapsed time: {elapsed_time:.2f}s, file size: {file_size:.2f} KB)")
 
 
-'''
-  "WORDS": {
-    "id": "TEXT",
-    "word": "TEXT",
-    "stem": "TEXT",
-    "lang": "TEXT",
-    "category": "INTEGER",
-    "timestamp": "INTEGER",
-    "profileid": "TEXT"
-  },
-  "LOOKUPS": {
-    "id": "TEXT",
-    "word_key": "TEXT",
-    "book_key": "TEXT",
-    "dict_key": "TEXT",
-    "pos": "TEXT",
-    "usage": "TEXT",
-    "timestamp": "INTEGER"
-  }
-'''
-
-
 def get_table_info(db_connection_injection: Connection) -> dict:
     table_info = {}
     with db_connection_injection:
