@@ -27,7 +27,7 @@ def test_add_notes_to_anki_mocked_no_duplicate_found():
     ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
     ankiconnect_wrapper_mock.get_all_deck_names.return_value = ['Default']
     ankiconnect_wrapper_mock.get_all_card_type_names.return_value = ['Basic']
-    ankiconnect_wrapper_mock.get_anki_note_id_from_query.return_value = None
+    ankiconnect_wrapper_mock.get_anki_note_id_from_query.return_value = -1
     ankiconnect_wrapper_mock.add_anki_note.return_value = 101
 
     notes = [{'sentence': 'This is a test sentence', 'word': 'test'}]
