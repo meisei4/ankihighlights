@@ -1,3 +1,4 @@
+import datetime
 import os
 import shutil
 import time
@@ -54,46 +55,6 @@ def get_table_info(db_connection_injection: Connection) -> dict:
     return table_info
 
 
-def get_words_by_profileid(connection: Connection, profileid: str) -> list[dict]:
-    query = f"SELECT * FROM WORDS WHERE profileid='{profileid}'"
-    return execute_query(connection, query)
-
-
-def get_book_info_by_asin(connection: Connection, asin: str) -> list[dict]:
-    query = f"SELECT * FROM BOOK_INFO WHERE asin='{asin}'"
-    return execute_query(connection, query)
-
-
-def get_dict_info_by_asin(connection: Connection, asin: str) -> list[dict]:
-    query = f"SELECT * FROM DICT_INFO WHERE asin='{asin}'"
-    return execute_query(connection, query)
-
-
-def get_metadata_by_dsname(connection: Connection, dsname: str) -> list[dict]:
-    query = f"SELECT * FROM METADATA WHERE dsname='{dsname}'"
-    return execute_query(connection, query)
-
-
-def get_words_and_lookups_by_book_key(connection: Connection, book_key: str) -> list[dict]:
-    query = f"""
-        SELECT w.*, l.pos, l.usage 
-        FROM LOOKUPS l 
-        JOIN WORDS w ON l.word_key = w.id 
-        WHERE l.book_key='{book_key}'
-    """
-    return execute_query(connection, query)
-
-
-def get_words_and_lookups_by_dict_key(connection: Connection, dict_key: str) -> list[dict]:
-    query = f"""
-        SELECT w.*, l.pos, l.usage 
-        FROM LOOKUPS l 
-        JOIN WORDS w ON l.word_key = w.id 
-        WHERE l.dict_key='{dict_key}'
-    """
-    return execute_query(connection, query)
-
-
 def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int) -> list[dict]:
     query = f"""
         SELECT LOOKUPS.id, WORDS.word, LOOKUPS.usage, LOOKUPS.timestamp, BOOK_INFO.title, BOOK_INFO.authors
@@ -103,10 +64,6 @@ def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int
         WHERE LOOKUPS.timestamp >= {timestamp}
     """
     return execute_query(connection, query)
-
-
-
-
 
 
 def execute_query(connection: Connection, query: str) -> list[dict]:
@@ -132,3 +89,8 @@ def ordinal_suffix(count: int) -> str:
         return "rd"
     else:
         return "th"
+
+
+def get_timestamp_ms(year, month, day):
+    dt = datetime.datetime(year=year, month=month, day=day)
+    return int(dt.timestamp() * 1000)
