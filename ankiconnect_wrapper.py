@@ -1,94 +1,96 @@
+from typing import List
+
 import requests
 
-api_url = "http://localhost:8765/"  # maybe this can be updated in the future
-glob_headers = {"Content-Type": "application/json"}
-version = 6
+API_URL = "http://localhost:8765/"  # maybe this can be updated in the future
+GLOB_HEADERS = {"Content-Type": "application/json"}
+VERSION = 6
 
 
-def request_connection_permission():
+def request_connection_permission() -> str:
     payload = {
         "action": "requestPermission",
-        "version": version
+        "version": VERSION
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
 
 
-def get_all_deck_names():
+def get_all_deck_names() -> list[str]:
     payload = {
         "action": "deckNames",
-        "version": version
+        "version": VERSION
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
 
 
-def get_all_card_type_names():
+def get_all_card_type_names() -> list[str]:
     payload = {
         "action": "modelNames",
-        "version": version
+        "version": VERSION
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
 
 
-def get_decks_containing_card(card_id):
+def get_decks_containing_card(card_id: int) -> list[str]:
     payload = {
         "action": "getDecks",
-        "version": version,
+        "version": VERSION,
         "params": {
             "cards": [card_id]
         }
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"].keys()
 
 
-def get_anki_card_ids_from_query(query):
+def get_anki_card_ids_from_query(query: str) -> list[int]:
     payload = {
         "action": "findCards",
-        "version": version,
+        "version": VERSION,
         "params": {"query": query}
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
 
 
-def get_anki_cards_details(array_of_card_ids, order_boolean):
+def get_anki_cards_details(list_of_card_ids: list[int], order_boolean: bool) -> list[dict]:
     payload = {
         "action": "cardsInfo",
-        "version": version,
-        "params": {"cards": array_of_card_ids}
+        "version": VERSION,
+        "params": {"cards": list_of_card_ids}
     }
-    result = requests.request("GET", api_url, json=payload, headers=glob_headers).json()["result"]
+    result = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS).json()["result"]
     if order_boolean:
         return remove_value_order_from_dict(result)
     return result
 
 
-def get_single_anki_card_details(card_id, remove_order_boolean):
+def get_single_anki_card_details(card_id: int, remove_order_boolean: bool) -> dict:
     payload = {
         "action": "cardsInfo",
-        "version": version,
+        "version": VERSION,
         "params": {"cards": [card_id]}
     }
-    result = requests.request("GET", api_url, json=payload, headers=glob_headers).json()["result"]
+    result = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS).json()["result"]
     if remove_order_boolean:
         return remove_value_order_from_dict(result)[0]
     return result
 
 
-def get_anki_note_ids_from_query(query):
+def get_anki_note_ids_from_query(query: str) -> list[int]:
     payload = {
         "action": "findNotes",
-        "version": version,
+        "version": VERSION,
         "params": {"query": query}
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
 
 
-def get_anki_note_id_from_query(query):
+def get_anki_note_id_from_query(query: str) -> int:
     note_ids = get_anki_note_ids_from_query(query)
     if note_ids:
         return note_ids[0]
@@ -96,58 +98,57 @@ def get_anki_note_id_from_query(query):
         return None
 
 
-def get_anki_notes_details(array_of_card_ids, remove_order_boolean):
+def get_anki_notes_details(list_of_card_ids: list[int], remove_order_boolean: bool) -> list[dict]:
     payload = {
         "action": "notesInfo",
-        "version": version,
-        "params": {"cards": array_of_card_ids}
+        "version": VERSION,
+        "params": {"cards": list_of_card_ids}
     }
-    result = requests.request("GET", api_url, json=payload, headers=glob_headers).json()["result"]
+    result = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS).json()["result"]
     if remove_order_boolean:
         return remove_value_order_from_dict(result)
     return result
 
 
-def get_single_anki_note_details(note_id, remove_order_boolean):
+def get_single_anki_note_details(note_id: int, remove_order_boolean: bool) -> dict:
     payload = {
         "action": "notesInfo",
-        "version": version,
+        "version": VERSION,
         "params": {"notes": [note_id]}
     }
-    result = requests.request("GET", api_url, json=payload, headers=glob_headers).json()["result"]
+    result = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS).json()["result"]
     if remove_order_boolean:
         return remove_value_order_from_dict(result)[0]
     return result[0]
 
 
-def add_anki_note(note):
+def add_anki_note(note: dict) -> int:
     payload = {
         "action": "addNote",
-        "version": version,
+        "version": VERSION,
         "params": {
             "note": note
         }
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
 
 
-def delete_anki_note(note_id):
+def delete_anki_note(note_id: int):
     payload = {
         "action": "deleteNotes",
-        "version": version,
+        "version": VERSION,
         "params": {
             "notes": [note_id]
         }
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
-    return response.json()["result"]
+    requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
 
 
-def update_anki_note(note_id, fields, tag):
+def update_anki_note(note_id: int, fields: dict, tag: str):
     payload_for_fields = {
         "action": "updateNoteFields",
-        "version": version,
+        "version": VERSION,
         "params": {
             "note": {
                 "id": note_id,
@@ -155,35 +156,34 @@ def update_anki_note(note_id, fields, tag):
             }
         }
     }
-    requests.request("GET", api_url, json=payload_for_fields, headers=glob_headers)
+    requests.request("GET", API_URL, json=payload_for_fields, headers=GLOB_HEADERS)
     payload_for_tag = {
         "action": "replaceTags",
-        "version": version,
+        "version": VERSION,
         "params": {
             "notes": [note_id],
             "tag_to_replace": str(int(tag) - 1),
             "replace_with_tag": tag
         }
     }
-    response = requests.request("GET", api_url, json=payload_for_tag, headers=glob_headers)
-    return response.json()["result"]
+    requests.request("GET", API_URL, json=payload_for_tag, headers=GLOB_HEADERS)
 
 
-def get_anki_note_from_card(card_id):
+def get_anki_note_from_card(card_id: int) -> int:
     payload = {
         "action": "cardsToNotes",
-        "version": version,
+        "version": VERSION,
         "params": {
             "cards": [card_id]
         }
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"][0]
 
 
 # AUXILIARIES
 # TODO now have to replace a lot of the card vs note api thing...
-def remove_value_order_from_dict(result):
+def remove_value_order_from_dict(result: list[dict]) -> list[dict]:
     updated_result = result
     for i in range(len(result)):
         fields_keys = result[i]["fields"].keys()
@@ -193,7 +193,7 @@ def remove_value_order_from_dict(result):
 
 
 # TODO figure this out, when trying to add a new card just create new deck if the user doesnt want to decide a deck name
-def add_new_deck_to_anki(deck_name):
+def add_new_deck_to_anki(deck_name: str):
     payload = {
         "action": "createDeck",
         "version": 6,
@@ -201,13 +201,13 @@ def add_new_deck_to_anki(deck_name):
             "deck": deck_name
         }
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
 
 
 # TODO figure this out (gonna have to create a specific card type at a some point,
 #  but remember to make it as customizable as possible according to anyone who will fork this project
-def add_new_card_type_to_anki(card_type_name):
+def add_new_card_type_to_anki(card_type_name: str):
     payload = {
         "action": "createModel",
         "version": 6,
@@ -225,5 +225,5 @@ def add_new_card_type_to_anki(card_type_name):
             ]
         }
     }
-    response = requests.request("GET", api_url, json=payload, headers=glob_headers)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]

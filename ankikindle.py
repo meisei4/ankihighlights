@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 import ankiconnect_wrapper
 
@@ -9,7 +8,7 @@ PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
 
 
-def parse_clippings(clippings_json: List[dict]) -> List[dict]:
+def parse_clippings(clippings_json: list[dict]) -> list[dict]:
     clippings = []
     for clipping in clippings_json:
         clippings.append({
@@ -22,7 +21,7 @@ def parse_clippings(clippings_json: List[dict]) -> List[dict]:
     return clippings
 
 
-def build_notes(notes_dict: List[dict]) -> List[dict]:
+def build_notes(notes_dict: list[dict]) -> list[dict]:
     return [build_single_note(note) for note in notes_dict]
 
 
@@ -32,7 +31,7 @@ def build_single_note(note_contents: dict) -> dict:
     return {'sentence': sentence, 'word': word}
 
 
-def add_notes_to_anki(clipping_notes: List[dict], deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> List[int]:
+def add_notes_to_anki(clipping_notes: list[dict], deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> list[int]:
     logger.info("Adding notes to Anki...")
     try:
         ankiconnect_request_permission(ankiconnect_injection)
