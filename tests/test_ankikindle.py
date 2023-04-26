@@ -64,24 +64,24 @@ def test_update_note_with_more_examples_mocked():
         'Meaning': '',
         'Pronunciation': ''
     }
-    ankiconnect_wrapper_mock.update_anki_note.assert_called_once_with(101, expected_fields, '2')
+    ankiconnect_wrapper_mock.update_anki_note.assert_called_once_with(101, expected_fields, 2)
 
 
-def test_check_and_update_example_sentences():
-    more_examples = ''
+def test_update_example_sentences():
+    example_sentences = ''
     new_example = 'Example 1.'
     expected_output = 'Example 1.</br>'
-    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
+    assert ankikindle._update_example_sentences(example_sentences, new_example) == expected_output
 
-    more_examples = 'Example 2.</br>Example 1.'
+    example_sentences = 'Example 2.</br>Example 1.'
     new_example = 'Example 3.'
     expected_output = 'Example 3.</br>Example 2.</br>Example 1.'
-    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
+    assert ankikindle._update_example_sentences(example_sentences, new_example) == expected_output
 
-    more_examples = 'Example 3.</br>Example 2.</br>Example 1.'
+    example_sentences = 'Example 3.</br>Example 2.</br>Example 1.'
     new_example = 'Example 4.'
     expected_output = 'Example 4.</br>Example 3.</br>Example 2.'
-    assert ankikindle._check_and_update_example_sentences(more_examples, new_example) == expected_output
+    assert ankikindle._update_example_sentences(example_sentences, new_example) == expected_output
 
 
 def test_add_update_and_remove_notes_to_anki():

@@ -1,6 +1,7 @@
 import os
 import shutil
 import time
+from sqlite3 import Connection
 
 
 def copy_to_backup_and_tmp_infinitely():
@@ -20,7 +21,7 @@ def copy_to_backup_and_tmp_infinitely():
     shutil.rmtree(tmp_dir)  # TODO just remove this one only used in case backup fails or something? not sure if this
 
 
-def copy_vocab_db(count, vocab_file_path, backup_dir, tmp_dir):
+def copy_vocab_db(count: int, vocab_file_path: str, backup_dir: str, tmp_dir: str):
     start_time = time.monotonic()
     shutil.copy(vocab_file_path, backup_dir)
     shutil.copy(vocab_file_path, tmp_dir)
@@ -32,20 +33,7 @@ def copy_vocab_db(count, vocab_file_path, backup_dir, tmp_dir):
           f"(elapsed time: {elapsed_time:.2f}s, file size: {file_size:.2f} KB)")
 
 
-def ordinal_suffix(count):
-    if 11 <= count <= 13:
-        return "th"
-    elif count % 10 == 1:
-        return "st"
-    elif count % 10 == 2:
-        return "nd"
-    elif count % 10 == 3:
-        return "rd"
-    else:
-        return "th"
-
-
-def get_table_info(db_connection_injection):
+def get_table_info(db_connection_injection: Connection) -> dict:
     table_info = {}
     with db_connection_injection:
         cursor = db_connection_injection.cursor()
@@ -65,3 +53,18 @@ def get_table_info(db_connection_injection):
             table_info[table_name] = table_columns
 
     return table_info
+
+
+# AUXILIARIES
+def ordinal_suffix(count: int) -> str:
+    if 11 <= count <= 13:
+        return "th"
+    elif count % 10 == 1:
+        return "st"
+    elif count % 10 == 2:
+        return "nd"
+    elif count % 10 == 3:
+        return "rd"
+    else:
+        return "th"
+

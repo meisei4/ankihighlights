@@ -143,7 +143,7 @@ def delete_anki_note(note_id: int):
     requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
 
 
-def update_anki_note(note_id: int, fields: dict, tag: str):
+def update_anki_note(note_id: int, fields: dict, tag: int):
     payload_for_fields = {
         "action": "updateNoteFields",
         "version": VERSION,
@@ -160,8 +160,8 @@ def update_anki_note(note_id: int, fields: dict, tag: str):
         "version": VERSION,
         "params": {
             "notes": [note_id],
-            "tag_to_replace": str(int(tag) - 1),  # TODO ugly way to do this, but updateTags doesn't seem to work
-            "replace_with_tag": tag
+            "tag_to_replace": str(tag - 1),  # TODO ugly way to do this, but updateTags doesn't seem to work
+            "replace_with_tag": str(tag)
         }
     }
     requests.request("GET", API_URL, json=payload_for_tag, headers=GLOB_HEADERS)
@@ -179,22 +179,11 @@ def get_anki_note_from_card(card_id: int) -> int:
     return response.json()["result"][0]
 
 
-# AUXILIARIES
-# TODO now have to replace a lot of the card vs note api thing...
-def remove_value_order_from_dict(result: list[dict]) -> list[dict]:
-    updated_result = result
-    for i in range(len(result)):
-        fields_keys = result[i]["fields"].keys()
-        for field_key in fields_keys:
-            updated_result[i]["fields"][field_key] = result[i]["fields"][field_key]["value"]
-    return updated_result
-
-
 # TODO figure this out, when trying to add a new card just create new deck if the user doesnt want to decide a deck name
 def add_new_deck_to_anki(deck_name: str):
     payload = {
         "action": "createDeck",
-        "version": 6,
+        "version": VERSION,
         "params": {
             "deck": deck_name
         }
@@ -208,7 +197,7 @@ def add_new_deck_to_anki(deck_name: str):
 def add_new_card_type_to_anki(card_type_name: str):
     payload = {
         "action": "createModel",
-        "version": 6,
+        "version": VERSION,
         "params": {
             "modelName": card_type_name,
             "inOrderFields": ["Field1", "Field2", "Field3"],
@@ -225,3 +214,13 @@ def add_new_card_type_to_anki(card_type_name: str):
     }
     response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
     return response.json()["result"]
+
+
+# AUXILIARIES
+def remove_value_order_from_dict(result: list[dict]) -> list[dict]:
+    updated_result = result
+    for i in range(len(result)):
+        fields_keys = result[i]["fields"].keys()
+        for field_key in fields_keys:
+            updated_result[i]["fields"][field_key] = result[i]["fields"][field_key]["value"]
+    return updated_result
