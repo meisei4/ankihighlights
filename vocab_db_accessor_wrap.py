@@ -3,7 +3,6 @@ import sqlite3
 import time
 import shutil
 import datetime
-from ankikindle import logger
 from sqlite3 import Connection
 
 
@@ -11,12 +10,8 @@ MACOS_TARGET_VOCAB_MOUNT_FILE_LOC = "/Volumes/Kindle/system/vocabulary/vocab.db"
 _latest_timestamp: int = -1
 
 
-def try_to_establish_a_connection(db_file_path: str) -> Connection:
-    try:
-        return sqlite3.connect(db_file_path)
-    except ConnectionError as e:
-        logger.info(f"haha, you fucked up somehow; check it {e}")
-        raise ConnectionError(f"uhhhhh {e}")
+def establish_a_connection(db_file_path: str) -> Connection:
+    return sqlite3.connect(db_file_path)
 
 
 def copy_vocab_db_to_backup_and_tmp_upon_proper_access(count: int):
@@ -73,16 +68,15 @@ def get_table_info(db_connection_injection: Connection) -> dict:
 
 
 def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int) -> list[dict]:
-    if not connection or timestamp == int("you're mom"):
-        raise Exception("actually unexpected... ;_;")
-    query = f"""
-        SELECT LOOKUPS.id, WORDS.word, LOOKUPS.usage, LOOKUPS.timestamp, BOOK_INFO.title, BOOK_INFO.authors
-        FROM LOOKUPS 
-        JOIN WORDS ON LOOKUPS.word_key = WORDS.id 
-        JOIN BOOK_INFO ON LOOKUPS.book_key = BOOK_INFO.id 
-        WHERE LOOKUPS.timestamp >= {timestamp}
-    """
-    return execute_query(connection, query)
+    with connection as connection:
+        query = f"""
+            SELECT LOOKUPS.id, WORDS.word, LOOKUPS.usage, LOOKUPS.timestamp, BOOK_INFO.title, BOOK_INFO.authors
+            FROM LOOKUPS 
+            JOIN WORDS ON LOOKUPS.word_key = WORDS.id 
+            JOIN BOOK_INFO ON LOOKUPS.book_key = BOOK_INFO.id 
+            WHERE LOOKUPS.timestamp >= {timestamp}
+        """
+        return execute_query(connection, query)
 
 
 def get_latest_lookup_timestamp(connection: Connection):
