@@ -16,10 +16,12 @@ def main():
 
 
 def do_the_thing_a_spike_lee_joint():
+    # TODO epoch thing for a timestamp that is intended to avoid adding all the highlights in the database, fix it
     latest_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 25)
     count = 0
+    # infinite loop w/ 2s sleep (see vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access function)
     while True:
-        vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count)  # This is an infinite loop until mount occurs
+        vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count)
         try:
             tmp_dir = vocab_db_accessor_wrap.try_to_get_tmp_db_path()
             connection = vocab_db_accessor_wrap.establish_a_connection(tmp_dir)
@@ -34,10 +36,9 @@ def do_the_thing_a_spike_lee_joint():
                               ankiconnect_injection=ankiconnect_wrapper)
             latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection)
         except FileNotFoundError as e:
-            logger.error(f"fuuckkkckcc, here you really messed up buttercup, here is your error: {e}")
+            logger.error(f"fuuckkkckcc, here you really messed up buttercup, here is your error: {e}")  # buttercup?
         except ConnectionError as e:
             logger.info(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
-
 
 
 # ANKI STUFF
