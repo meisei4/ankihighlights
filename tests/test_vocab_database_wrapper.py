@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 import threading
+import time
 
 import pytest
 import sqlite3
@@ -47,9 +48,11 @@ def test_get_all_word_look_ups_after_timestamp(test_db_connection: Connection):
     assert result[0]["authors"] == "著者A"
 
 
-def simulate_db_update(connection: Connection, dp_update_flag: threading.Event):
+def simulate_db_update(dp_update_flag: threading.Event):
+    time.sleep(1)
+    db_for_update = sqlite3.connect(TEST_VOCAB_DB_FILE)
     test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 4, 25)
-    with connection as connection:
+    with db_for_update as connection:
         cursor = connection.cursor()
         cursor.execute("BEGIN")
         cursor.execute(f"""

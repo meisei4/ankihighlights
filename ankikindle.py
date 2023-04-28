@@ -17,6 +17,7 @@ def run_ankikindle(db_path: str, connection_injection: Connection, ankiconnect_i
     latest_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
     count = 0
     # infinite loop w/ 2s sleep (see vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access function)
+    # TODO this needs to allow a stop event to happen and then the contents of the loop be ran one last time...
     while not stop_event.is_set():
         vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count, db_path)
         try:
