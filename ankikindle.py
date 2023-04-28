@@ -11,34 +11,31 @@ PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
 
 
-def main():
-    do_the_thing_a_spike_lee_joint()
-
-
-def do_the_thing_a_spike_lee_joint():
+def run_ankikindle(db_path: str, connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper):
     # TODO epoch thing for a timestamp that is intended to avoid adding all the highlights in the database, fix it
-    latest_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 25)
+    latest_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
     count = 0
     # infinite loop w/ 2s sleep (see vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access function)
     while True:
-        vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count)
+        vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count, db_path)
         try:
             tmp_dir = vocab_db_accessor_wrap.try_to_get_tmp_db_path()
-            connection = vocab_db_accessor_wrap.establish_a_connection(tmp_dir)
             logger.info(f"got connection to :{tmp_dir}")
-            logger.info(f"latest_timestamp is currently :{datetime.fromtimestamp(latest_timestamp)}")
-            vocab_highlights = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(connection,
+            vocab_highlights = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(connection_injection,
                                                                                             latest_timestamp)
             if not vocab_highlights:
                 continue  # this means that no new vocab_highlights exist
             logger.info(f"got highlights:{vocab_highlights}")
             add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",
-                              ankiconnect_injection=ankiconnect_wrapper)
-            latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection)
+                              ankiconnect_injection=ankiconnect_injection)
+            latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
+            logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp)}")
         except FileNotFoundError as e:
             logger.error(f"fuuckkkckcc, here you really messed up buttercup, here is your error: {e}")  # buttercup?
         except ConnectionError as e:
-            logger.info(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
+            logger.error(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
+        except Exception as e:
+            logger.error(f"unexpected error {e}")
 
 
 # ANKI STUFF

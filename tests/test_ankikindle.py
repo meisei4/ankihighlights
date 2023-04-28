@@ -1,14 +1,12 @@
 import sqlite3
-import threading
 import time
-from sqlite3 import Connection
-
 import pytest
+import threading
 import ankiconnect_wrapper
-import vocab_db_accessor_wrap
-from . import test_vocab_database_wrapper
 from .. import ankikindle
+from sqlite3 import Connection
 from unittest.mock import Mock
+from . import test_vocab_database_wrapper
 
 
 @pytest.fixture(scope='module')
@@ -18,40 +16,17 @@ def test_db_connection():
         test_vocab_database_wrapper.cleanup_test_data(conn)
 
 
-def simulate_db_update(test_db_connection: Connection):
-    test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 4, 25)
-    with test_db_connection as test_db_connection:
-        cursor = test_db_connection.cursor()
-        cursor.execute("BEGIN")
-        cursor.execute(f"""
-                    INSERT INTO WORDS (id, word, stem, lang, category, timestamp, profileid) 
-                    VALUES ('1234', '日本語', '日本', 'ja', 1, {test_timestamp}, 'test')
-                """)
-        cursor.execute("""
-                    INSERT INTO BOOK_INFO (id, asin, guid, lang, title, authors) 
-                    VALUES ('1234', 'B123', 'G456', 'ja', '日本の本', '著者A')
-                """)
-        cursor.execute(f"""
-                    INSERT INTO LOOKUPS (id, word_key, book_key, dict_key, pos, usage, timestamp) 
-                    VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {test_timestamp})
-                """)
-        cursor.execute("END")
-
-
-def thread_testing_thing():
+def test_update_database_while_main_program_is_running(test_db_connection: Connection):
     ankikindle_mock = Mock()
-    vocab_db_accessor_wrap_mock = Mock()
-    thread = threading.Thread(target=ankikindle.do_the_thing_a_spike_lee_joint)
+    db_path = test_vocab_database_wrapper.TEST_VOCAB_DB_FILE
+    thread = threading.Thread(target=ankikindle.run_ankikindle(db_path, test_db_connection, ankikindle_mock))
+    thread_db_update = threading.Thread(target=test_vocab_database_wrapper.simulate_db_update(test_db_connection))
     thread.start()
-
-    # wait for the function to start running before updating the database file
     time.sleep(1)
-
-    simulate_db_update()
-
+    thread_db_update.start()
     thread.join()
-    assert vocab_db_accessor_wrap_mock.copy_vocab_db_to_backup_and_tmp_upon_proper_access.call_count == 2
-    assert ankikindle_mock.add_notes_to_anki.call_count == 2
+    thread_db_update.join()
+    assert ankikindle_mock.add_notes_to_anki.call_count == 1
 
     expected_highlights = [
         {"word": "example", "sentence": "This is the first example sentence."},
@@ -59,7 +34,6 @@ def thread_testing_thing():
     ]
     ankikindle_mock.add_or_update_note.assert_called_once_with(expected_highlights[0], any, any, any)
     ankikindle_mock.add_or_update_note.assert_called_once_with(expected_highlights[1], any, any, any)
-    assert vocab_db_accessor_wrap_mock.get_latest_lookup_timestamp.call_count == 2
 
 
 def test_ankiconnect_request_permission_permission_denied():

@@ -10,20 +10,16 @@ MACOS_TARGET_VOCAB_MOUNT_FILE_LOC = "/Volumes/Kindle/system/vocabulary/vocab.db"
 _latest_timestamp: int = -1
 
 
-def establish_a_connection(db_file_path: str) -> Connection:
-    return sqlite3.connect(db_file_path)
-
-
-def copy_vocab_db_to_backup_and_tmp_upon_proper_access(count: int):
+def copy_vocab_db_to_backup_and_tmp_upon_proper_access(count: int, db_path: str):
     project_root = os.path.dirname(os.path.abspath(__file__))
     backup_dir = os.path.join(project_root, "backup")
     tmp_dir = os.path.join(project_root, "tmp")
     os.makedirs(backup_dir, exist_ok=True)
     os.makedirs(tmp_dir, exist_ok=True)
-    while not os.path.exists(MACOS_TARGET_VOCAB_MOUNT_FILE_LOC):
-        time.sleep(2)
-        count += 1
-    copy_vocab_db(count, MACOS_TARGET_VOCAB_MOUNT_FILE_LOC, backup_dir, tmp_dir)
+    while not os.path.exists(db_path):
+        time.sleep(2) # TODO add some time out maybe?
+    count += 1
+    copy_vocab_db(count, db_path, backup_dir, tmp_dir)
 
 
 def copy_vocab_db(count: int, vocab_file_path: str, backup_dir: str, tmp_dir: str):
@@ -79,10 +75,10 @@ def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int
         return execute_query(connection, query)
 
 
-def get_latest_lookup_timestamp(connection: Connection):
+def get_latest_lookup_timestamp(connection: Connection) -> int:
     with connection:
-        query = "SELECT MAX(timestamp) AS latest_lookup_timestamp FROM LOOKUPS"
-        return execute_query(connection, query)
+        query = "SELECT MAX(timestamp) AS timestamp FROM LOOKUPS"
+        return execute_query(connection, query)[0]['timestamp']
 
 
 def execute_query(connection: Connection, query: str) -> list[dict]:
