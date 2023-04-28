@@ -9,6 +9,7 @@ from unittest.mock import Mock
 from . import test_vocab_database_wrapper
 
 
+# TODO this test module and the test_vocab_database_wrapper test module crossover here so fix that
 @pytest.fixture(scope='module')
 def test_db_connection():
     with sqlite3.connect(test_vocab_database_wrapper.TEST_VOCAB_DB_FILE) as conn:
