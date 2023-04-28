@@ -1,6 +1,8 @@
 import os
 import json
 import shutil
+import threading
+
 import pytest
 import sqlite3
 import vocab_db_accessor_wrap
@@ -45,7 +47,7 @@ def test_get_all_word_look_ups_after_timestamp(test_db_connection: Connection):
     assert result[0]["authors"] == "著者A"
 
 
-def simulate_db_update(connection: Connection):
+def simulate_db_update(connection: Connection, dp_update_flag: threading.Event):
     test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 4, 25)
     with connection as connection:
         cursor = connection.cursor()
@@ -63,6 +65,7 @@ def simulate_db_update(connection: Connection):
                     VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {test_timestamp})
                 """)
         cursor.execute("END")
+        dp_update_flag.set()
 
 
 def cleanup_test_data(connection: Connection):

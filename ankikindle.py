@@ -1,4 +1,5 @@
 import logging
+import threading
 from datetime import datetime
 from sqlite3 import Connection
 
@@ -11,23 +12,21 @@ PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
 
 
-def run_ankikindle(db_path: str, connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper):
+def run_ankikindle(db_path: str, connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper, stop_event: threading.Event):
     # TODO epoch thing for a timestamp that is intended to avoid adding all the highlights in the database, fix it
     latest_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
     count = 0
     # infinite loop w/ 2s sleep (see vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access function)
-    while True:
+    while not stop_event.is_set():
         vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count, db_path)
         try:
             tmp_dir = vocab_db_accessor_wrap.try_to_get_tmp_db_path()
             logger.info(f"got connection to :{tmp_dir}")
-            vocab_highlights = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(connection_injection,
-                                                                                            latest_timestamp)
+            vocab_highlights = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(connection_injection, latest_timestamp)
             if not vocab_highlights:
                 continue  # this means that no new vocab_highlights exist
             logger.info(f"got highlights:{vocab_highlights}")
-            add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",
-                              ankiconnect_injection=ankiconnect_injection)
+            add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict", ankiconnect_injection=ankiconnect_injection)
             latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
             logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp)}")
         except FileNotFoundError as e:
@@ -36,6 +35,11 @@ def run_ankikindle(db_path: str, connection_injection: Connection, ankiconnect_i
             logger.error(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
         except Exception as e:
             logger.error(f"unexpected error {e}")
+
+
+def stop_ankikindle(stop_event: threading.Event, thread: threading.Thread):
+    stop_event.set()
+    thread.join()
 
 
 # ANKI STUFF

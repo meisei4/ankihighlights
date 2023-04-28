@@ -19,14 +19,26 @@ def test_db_connection():
 
 def test_update_database_while_main_program_is_running(test_db_connection: Connection):
     ankikindle_mock = Mock()
-    db_path = test_vocab_database_wrapper.TEST_VOCAB_DB_FILE
-    thread = threading.Thread(target=ankikindle.run_ankikindle(db_path, test_db_connection, ankikindle_mock))
-    thread_db_update = threading.Thread(target=test_vocab_database_wrapper.simulate_db_update(test_db_connection))
-    thread.start()
-    time.sleep(1)
-    thread_db_update.start()
-    thread.join()
-    thread_db_update.join()
+    # Create a flag to signal when the database update has been processed
+    db_updated_flag = threading.Event()
+
+    # Define the target function and its arguments for the database update thread
+    db_update_args = (test_db_connection, db_updated_flag)
+    db_update_thread = threading.Thread(target=test_vocab_database_wrapper.simulate_db_update, args=db_update_args)
+
+    # Define the target function and its arguments for the main thread
+    ankikindle_args = (test_vocab_database_wrapper.TEST_VOCAB_DB_FILE, test_db_connection, ankikindle_mock, db_updated_flag)
+    ankikindle_thread = threading.Thread(target=ankikindle.run_ankikindle, args=ankikindle_args)
+
+    # Start both threads
+    ankikindle_thread.start()
+    time.sleep(3)
+    db_update_thread.start()
+    # Wait for the database update thread to finish updating the database
+    db_updated_flag.wait()
+
+    # Wait for the main thread to finish
+    ankikindle_thread.join()
     assert ankikindle_mock.add_notes_to_anki.call_count == 1
 
     expected_highlights = [
