@@ -1,5 +1,4 @@
 import sqlite3
-import time
 import pytest
 import threading
 import ankiconnect_wrapper
@@ -7,47 +6,45 @@ import vocab_db_accessor_wrap
 from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
-from . import test_vocab_database_wrapper
+from . import test_vocab_db_wrapper
+from test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, simulate_db_update, TEST_FUTURE_TIMESTAMP
 
 
-# TODO this test module and the test_vocab_database_wrapper test module crossover here so fix that
+# TODO this test module and the test_vocab_database_wrapper test module crossover here so fix that. not just with import
+
+# this fixture thing is only used to establish the MAIN thread db connection
 @pytest.fixture(scope='module')
 def test_db_connection():
-    with sqlite3.connect(test_vocab_database_wrapper.TEST_VOCAB_DB_FILE) as conn:
+    with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
         yield conn
-        test_vocab_database_wrapper.cleanup_test_data(conn)
+        test_vocab_db_wrapper.cleanup_test_data(conn)
 
 
 def test_update_database_while_main_program_is_running(test_db_connection: Connection):
-    ankikindle_mock = Mock()
-    # Create a flag to signal when the database update has been processed
+    ankiconnect_wrapper_mock = Mock()
+
     db_updated_flag = threading.Event()
 
-    # TODO this is only updating the db and then causing the main loop in ankikindle to be stopped (doesnt get to see the update)
-    db_update_thread = threading.Thread(target=test_vocab_database_wrapper.simulate_db_update, args=(db_updated_flag, ))
-
+    db_update_thread = threading.Thread(target=simulate_db_update, args=(db_updated_flag,))
     db_update_thread.start()
-    # Define the target function and its arguments for the main thread
-    ankikindle.run_ankikindle(test_vocab_database_wrapper.TEST_VOCAB_DB_FILE, test_db_connection, ankikindle_mock, db_updated_flag)
 
-    # Wait for the database update thread to finish updating the database
+    ankikindle.run_ankikindle(TEST_VOCAB_DB_FILE, test_db_connection, ankiconnect_wrapper_mock, db_updated_flag)
+
     db_updated_flag.wait()
     db_update_thread.join()
 
-    expected_highlights = [
-        {"word": "example", "sentence": "This is the first example sentence."},
-        {"word": "example", "sentence": "This is the second example sentence."}
-    ]
-    test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
-    result = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(test_db_connection, test_timestamp)
+    word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(test_db_connection,
+                                                                                           TEST_FUTURE_TIMESTAMP)
+    assert len(word_lookups_after_timestamp) == 1
+    assert word_lookups_after_timestamp[0]["word"] == "日本語"
+    assert word_lookups_after_timestamp[0]["usage"] == "日本語の例文"
+    assert word_lookups_after_timestamp[0]["title"] == "日本の本"
+    assert word_lookups_after_timestamp[0]["authors"] == "著者A"
 
-    assert len(result) == 1
-    assert result[0]["word"] == "日本語"
-    assert result[0]["usage"] == "日本語の例文"
-    assert result[0]["title"] == "日本の本"
-    assert result[0]["authors"] == "著者A"
-
-    # TODO assert that the anki cards were made?
+    expected_vocab_highlights = {'usage': '日本語の例文', 'word': '日本語'}
+    ankiconnect_wrapper_mock.add_or_update_note.assert_called_once_with(expected_vocab_highlights,
+                                                                        "mail_sucks_in_japan", "aedict",
+                                                                        ankiconnect_wrapper_mock)
 
 
 def test_ankiconnect_request_permission_permission_denied():

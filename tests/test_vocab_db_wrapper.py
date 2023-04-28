@@ -14,7 +14,7 @@ from sqlite3 import Connection
 # __file__ is this file, so next command is: get path to this module file, hop out with cd .., then go cd
 # resource, then there's the file
 TEST_VOCAB_DB_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources', 'vocab.db'))
-
+TEST_FUTURE_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2080, 4, 25)   # TODO probability is i will be dead and thus not my problem
 
 @pytest.mark.skip(reason="test is for kindle mounting only")
 def test_copy_to_backup_and_tmp_infinitely():
@@ -39,7 +39,7 @@ def test_db_connection():
 def test_get_all_word_look_ups_after_timestamp(test_db_connection: Connection):
     test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 4, 25)
     simulate_db_update(test_db_connection)
-    result = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(test_db_connection, test_timestamp)
+    result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(test_db_connection, test_timestamp)
 
     assert len(result) == 1
     assert result[0]["word"] == "日本語"
@@ -49,15 +49,14 @@ def test_get_all_word_look_ups_after_timestamp(test_db_connection: Connection):
 
 
 def simulate_db_update(dp_update_flag: threading.Event):
-    time.sleep(1)
     db_for_update = sqlite3.connect(TEST_VOCAB_DB_FILE)
-    test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 4, 25)
+
     with db_for_update as connection:
         cursor = connection.cursor()
         cursor.execute("BEGIN")
         cursor.execute(f"""
                     INSERT INTO WORDS (id, word, stem, lang, category, timestamp, profileid) 
-                    VALUES ('1234', '日本語', '日本', 'ja', 1, {test_timestamp}, 'test')
+                    VALUES ('1234', '日本語', '日本', 'ja', 1, {TEST_FUTURE_TIMESTAMP}, 'test')
                 """)
         cursor.execute("""
                     INSERT INTO BOOK_INFO (id, asin, guid, lang, title, authors) 
@@ -65,7 +64,7 @@ def simulate_db_update(dp_update_flag: threading.Event):
                 """)
         cursor.execute(f"""
                     INSERT INTO LOOKUPS (id, word_key, book_key, dict_key, pos, usage, timestamp) 
-                    VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {test_timestamp})
+                    VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {TEST_FUTURE_TIMESTAMP})
                 """)
         cursor.execute("END")
         dp_update_flag.set()

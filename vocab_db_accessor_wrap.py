@@ -63,7 +63,7 @@ def get_table_info(db_connection_injection: Connection) -> dict:
     return table_info
 
 
-def get_all_word_look_ups_after_timestamp(connection: Connection, timestamp: int) -> list[dict]:
+def get_word_lookups_after_timestamp(connection: Connection, timestamp: int) -> list[dict]:
     with connection as connection:
         query = f"""
             SELECT LOOKUPS.id, WORDS.word, LOOKUPS.usage, LOOKUPS.timestamp, BOOK_INFO.title, BOOK_INFO.authors
