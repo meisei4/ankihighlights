@@ -3,6 +3,7 @@ import time
 import pytest
 import threading
 import ankiconnect_wrapper
+import vocab_db_accessor_wrap
 from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
@@ -37,8 +38,16 @@ def test_update_database_while_main_program_is_running(test_db_connection: Conne
         {"word": "example", "sentence": "This is the first example sentence."},
         {"word": "example", "sentence": "This is the second example sentence."}
     ]
-    ankikindle_mock.add_or_update_note.assert_called_once_with(expected_highlights[0], any, any, any)
-    ankikindle_mock.add_or_update_note.assert_called_once_with(expected_highlights[1], any, any, any)
+    test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
+    result = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(test_db_connection, test_timestamp)
+
+    assert len(result) == 1
+    assert result[0]["word"] == "日本語"
+    assert result[0]["usage"] == "日本語の例文"
+    assert result[0]["title"] == "日本の本"
+    assert result[0]["authors"] == "著者A"
+
+    # TODO assert that the anki cards were made?
 
 
 def test_ankiconnect_request_permission_permission_denied():

@@ -19,23 +19,22 @@ def run_ankikindle(db_path: str, connection_injection: Connection, ankiconnect_i
     # infinite loop w/ 2s sleep (see vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access function)
     # TODO this needs to allow a stop event to happen and then the contents of the loop be ran one last time...
     while not stop_event.is_set():
-        vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count, db_path)
-        try:
-            tmp_dir = vocab_db_accessor_wrap.try_to_get_tmp_db_path()
-            logger.info(f"got connection to :{tmp_dir}")
-            vocab_highlights = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(connection_injection, latest_timestamp)
-            if not vocab_highlights:
-                continue  # this means that no new vocab_highlights exist
+        continue
+
+    vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count, db_path)
+    try:
+        tmp_dir = vocab_db_accessor_wrap.try_to_get_tmp_db_path()
+        logger.info(f"got connection to :{tmp_dir}")
+        vocab_highlights = vocab_db_accessor_wrap.get_all_word_look_ups_after_timestamp(connection_injection, latest_timestamp)
+        if vocab_highlights:
             logger.info(f"got highlights:{vocab_highlights}")
             add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict", ankiconnect_injection=ankiconnect_injection)
             latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
-            logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp)}")
-        except FileNotFoundError as e:
-            logger.error(f"fuuckkkckcc, here you really messed up buttercup, here is your error: {e}")  # buttercup?
-        except ConnectionError as e:
-            logger.error(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
-        except Exception as e:
-            logger.error(f"unexpected error {e}")
+            logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp/1000)}")
+    except FileNotFoundError as e:
+        logger.error(f"fuuckkkckcc, here you really messed up buttercup, here is your error: {e}")  # buttercup?
+    except ConnectionError as e:
+        logger.error(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
 
 
 def stop_ankikindle(stop_event: threading.Event, thread: threading.Thread):
