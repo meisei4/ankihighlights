@@ -1,11 +1,9 @@
 import os
 import json
 import shutil
-import threading
-import time
-
 import pytest
 import sqlite3
+import threading
 import vocab_db_accessor_wrap
 from sqlite3 import Connection
 
@@ -18,7 +16,7 @@ TEST_FUTURE_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2080, 4, 25)   #
 
 @pytest.mark.skip(reason="test is for kindle mounting only")
 def test_copy_to_backup_and_tmp_infinitely():
-    vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access()
+    vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(0, "")
     shutil.rmtree(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backup')))
 
 
@@ -38,7 +36,7 @@ def test_db_connection():
 
 def test_get_all_word_look_ups_after_timestamp(test_db_connection: Connection):
     test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 4, 25)
-    simulate_db_update(test_db_connection)
+    simulate_db_update(threading.Event())
     result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(test_db_connection, test_timestamp)
 
     assert len(result) == 1

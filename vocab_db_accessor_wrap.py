@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import time
 import shutil
 import datetime
@@ -17,7 +16,7 @@ def copy_vocab_db_to_backup_and_tmp_upon_proper_access(count: int, db_path: str)
     os.makedirs(backup_dir, exist_ok=True)
     os.makedirs(tmp_dir, exist_ok=True)
     while not os.path.exists(db_path):
-        time.sleep(2) # TODO add some time out maybe?
+        time.sleep(2)  # TODO add some time out maybe?
     count += 1
     copy_vocab_db(count, db_path, backup_dir, tmp_dir)
 
