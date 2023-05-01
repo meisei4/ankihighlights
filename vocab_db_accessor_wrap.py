@@ -4,11 +4,11 @@ import shutil
 import datetime
 from sqlite3 import Connection
 
-
 MACOS_TARGET_VOCAB_MOUNT_FILE_LOC = "/Volumes/Kindle/system/vocabulary/vocab.db"
 _latest_timestamp: int = -1
 
 
+# TODO use this at somepoint in order to maybe allow for users to reset things??
 def copy_vocab_db_to_backup_and_tmp_upon_proper_access(count: int, db_path: str):
     project_root = os.path.dirname(os.path.abspath(__file__))
     backup_dir = os.path.join(project_root, "backup")
@@ -69,7 +69,7 @@ def get_word_lookups_after_timestamp(connection: Connection, timestamp: int) -> 
             FROM LOOKUPS 
             JOIN WORDS ON LOOKUPS.word_key = WORDS.id 
             JOIN BOOK_INFO ON LOOKUPS.book_key = BOOK_INFO.id 
-            WHERE LOOKUPS.timestamp >= {timestamp}
+            WHERE LOOKUPS.timestamp > {timestamp}
         """
         return execute_query(connection, query)
 

@@ -22,29 +22,37 @@ def test_db_connection():
 
 def test_update_database_while_main_program_is_running(test_db_connection: Connection):
     ankiconnect_wrapper_mock = Mock()
+    ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
+    ankiconnect_wrapper_mock.get_all_deck_names.return_value = ['mail_sucks_in_japan']
+    ankiconnect_wrapper_mock.get_all_card_type_names.return_value = ['aedict']
+    ankiconnect_wrapper_mock.get_anki_note_id_from_query.return_value = -1
 
-    db_updated_flag = threading.Event()
-
-    db_update_thread = threading.Thread(target=simulate_db_update, args=(db_updated_flag,))
+    db_update_stop_event = threading.Event()
+    db_update_thread = threading.Thread(target=simulate_db_update, args=(db_update_stop_event,))
     db_update_thread.start()
 
-    ankikindle.run_ankikindle(TEST_VOCAB_DB_FILE, test_db_connection, ankiconnect_wrapper_mock, db_updated_flag)
+    ankikindle.main(test_db_connection, ankiconnect_wrapper_mock, db_update_stop_event)
 
-    db_updated_flag.wait()
+    db_update_stop_event.wait()
     db_update_thread.join()
 
     word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(test_db_connection,
-                                                                                           TEST_FUTURE_TIMESTAMP)
+                                                                                           ankikindle.FIRST_DATE)
     assert len(word_lookups_after_timestamp) == 1
     assert word_lookups_after_timestamp[0]["word"] == "日本語"
     assert word_lookups_after_timestamp[0]["usage"] == "日本語の例文"
     assert word_lookups_after_timestamp[0]["title"] == "日本の本"
     assert word_lookups_after_timestamp[0]["authors"] == "著者A"
 
-    expected_vocab_highlights = {'usage': '日本語の例文', 'word': '日本語'}
-    ankiconnect_wrapper_mock.add_or_update_note.assert_called_once_with(expected_vocab_highlights,
-                                                                        "mail_sucks_in_japan", "aedict",
-                                                                        ankiconnect_wrapper_mock)
+    expected_note = {'deckName': 'mail_sucks_in_japan',
+                     'modelName': 'aedict',
+                     'tags': ['1'],
+                     'fields': {
+                         'Expression': '日本語の例文',
+                         'Furigana': '日本語',
+                         'Sentence': '日本語の例文'}
+                     }
+    ankiconnect_wrapper_mock.add_anki_note.assert_called_once_with(expected_note)
 
 
 def test_ankiconnect_request_permission_permission_denied():

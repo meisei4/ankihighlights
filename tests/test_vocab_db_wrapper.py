@@ -1,6 +1,8 @@
 import os
 import json
 import shutil
+import time
+
 import pytest
 import sqlite3
 import threading
@@ -13,6 +15,7 @@ from sqlite3 import Connection
 # resource, then there's the file
 TEST_VOCAB_DB_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources', 'vocab.db'))
 TEST_FUTURE_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2080, 4, 25)   # TODO probability is i will be dead and thus not my problem
+
 
 @pytest.mark.skip(reason="test is for kindle mounting only")
 def test_copy_to_backup_and_tmp_infinitely():
@@ -48,7 +51,6 @@ def test_get_all_word_look_ups_after_timestamp(test_db_connection: Connection):
 
 def simulate_db_update(dp_update_flag: threading.Event):
     db_for_update = sqlite3.connect(TEST_VOCAB_DB_FILE)
-
     with db_for_update as connection:
         cursor = connection.cursor()
         cursor.execute("BEGIN")
@@ -65,6 +67,9 @@ def simulate_db_update(dp_update_flag: threading.Event):
                     VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {TEST_FUTURE_TIMESTAMP})
                 """)
         cursor.execute("END")
+        # TODO not sure how to control this sleep since it relies heavy on how fast the ankikindle.main while loop
+        #  can run, so if that gets new sleeps then this needs to be updated
+        time.sleep(2)
         dp_update_flag.set()
 
 

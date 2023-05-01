@@ -1,43 +1,45 @@
 import logging
 import threading
+import time
+
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
 from datetime import datetime
 from sqlite3 import Connection
 
-
 logger = logging.getLogger(__name__)
 
 PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
+FIRST_DATE = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
 
 
-def run_ankikindle(db_path: str, connection_injection: Connection,
-                   ankiconnect_injection: ankiconnect_wrapper, stop_event: threading.Event):
-    # TODO epoch thing for a timestamp that is intended to avoid adding all the highlights in the database, fix it
-    latest_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
-    count = 0
-    # infinite loop w/ 2s sleep (see vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access function)
-    # TODO this needs to allow a stop event to happen and then the contents of the loop be ran one last time...
-    while not stop_event.is_set():
-        continue
-
-    vocab_db_accessor_wrap.copy_vocab_db_to_backup_and_tmp_upon_proper_access(count, db_path)
+def main(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper, stop_event: threading.Event):
     try:
-        tmp_dir = vocab_db_accessor_wrap.try_to_get_tmp_db_path()
-        logger.info(f"got connection to :{tmp_dir}")
-        vocab_highlights = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(connection_injection,
-                                                                                   latest_timestamp)
-        if vocab_highlights:
-            logger.info(f"got highlights:{vocab_highlights}")
-            add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",
-                              ankiconnect_injection=ankiconnect_injection)
-            latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
-            logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp/1000)}")
-    except FileNotFoundError as e:
-        logger.error(f"fuuckkkckcc, here you really messed up buttercup, here is your error: {e}")  # buttercup?
+        cursor = connection_injection.cursor()
+        # TODO allow for new db table (that gets added to each time. so instead of this weird initializer you just
+        #  get max of that table here (not the lookups table)
+        latest_timestamp = {'stamp': FIRST_DATE}
+        cursor.execute("PRAGMA journal_mode=WAL")  # enable write-ahead logging for WAL mode
+        cursor.execute("PRAGMA wal_autocheckpoint=1")  # auto-checkpoint every 1 page
+        while not stop_event.is_set():
+            check_database(latest_timestamp, connection_injection, ankiconnect_injection)
+
     except ConnectionError as e:
-        logger.error(f"ok uhhhhhh, something about connection litl gaybithc, check this error {e}")
+        logger.error(f"connection error occurred during ankikindle run{e}")
+
+
+def check_database(latest_timestamp: dict, connection_injection: Connection,
+                   ankiconnect_injection: ankiconnect_wrapper):
+    vocab_highlights = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(connection_injection,
+                                                                               latest_timestamp['stamp'])
+    if vocab_highlights:
+        logger.info(f"vocab_highlights:{vocab_highlights} were found")
+        # TODO allow for custom deck_name and card_type
+        add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",
+                          ankiconnect_injection=ankiconnect_injection)
+        latest_timestamp['stamp'] = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
+        logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp['stamp'] / 1000)}")
 
 
 def stop_ankikindle(stop_event: threading.Event, thread: threading.Thread):
@@ -52,9 +54,9 @@ def add_notes_to_anki(vocab_highlights: list[dict], deck_name: str, card_type: s
     try:
         ankiconnect_request_permission(ankiconnect_injection)
         if deck_name not in ankiconnect_injection.get_all_deck_names():
-            raise ValueError(f"'{deck_name}' not found in remote anki account")
+            raise ValueError(f"deck named: '{deck_name}' was not found in remote anki account")  # TODO provide usr info
         if card_type not in ankiconnect_injection.get_all_card_type_names():
-            raise ValueError(f"'{card_type}' not found in remote anki account")
+            raise ValueError(f"card type: '{card_type}' was not found in remote anki account")  # TODO provide usr info
         added_note_ids = []
         for vocab_highlight in vocab_highlights:
             note_id = add_or_update_note(vocab_highlight, deck_name, card_type, ankiconnect_injection)
@@ -69,15 +71,18 @@ def add_notes_to_anki(vocab_highlights: list[dict], deck_name: str, card_type: s
         logger.error(f"unexpected error: {e}")
 
 
-def add_or_update_note(word_highlight: dict, deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
+def add_or_update_note(word_highlight: dict, deck_name: str, card_type: str,
+                       ankiconnect_injection: ankiconnect_wrapper) -> int:
     existing_note_id = find_existing_note_id(word_highlight['word'], deck_name, ankiconnect_injection)
     if existing_note_id > 0:  # -1 id means note doesn't exist
-        logger.info(f"note already exists for '{word_highlight['word']}' in '{deck_name}' deck; thus updating that note")
+        logger.info(
+            f"note already exists for '{word_highlight['word']}' in '{deck_name}' deck; thus updating that note")
         update_note_with_more_examples(existing_note_id, word_highlight['usage'], ankiconnect_injection)
         logger.info(f"note updated successfully")
         return existing_note_id
     else:
-        logger.info(f"no existing note found for '{word_highlight['word']}' in '{deck_name}' deck; thus adding new note")
+        logger.info(
+            f"no existing note found for '{word_highlight['word']}' in '{deck_name}' deck; thus adding new note")
         return add_new_note(word_highlight, deck_name, card_type, ankiconnect_injection)
 
 
@@ -112,7 +117,8 @@ def _update_example_sentences(example_sentences: str, new_example: str) -> str:
     return example_sentences
 
 
-def add_new_note(word_highlight: dict, deck_name: str, card_type: str, ankiconnect_injection: ankiconnect_wrapper) -> int:
+def add_new_note(word_highlight: dict, deck_name: str, card_type: str,
+                 ankiconnect_injection: ankiconnect_wrapper) -> int:
     fields = {
         'Expression': word_highlight['usage'],
         'Furigana': word_highlight['word'],
@@ -133,5 +139,3 @@ def ankiconnect_request_permission(ankiconnect_injection: ankiconnect_wrapper):
 def remove_notes_from_anki(note_id_to_be_deleted: int, ankiconnect_injection: ankiconnect_wrapper):
     ankiconnect_request_permission(ankiconnect_injection)
     ankiconnect_injection.delete_anki_note(note_id_to_be_deleted)
-
-
