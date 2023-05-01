@@ -1,7 +1,5 @@
 import logging
 import threading
-import time
-
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
 from datetime import datetime
@@ -29,12 +27,11 @@ def main(connection_injection: Connection, ankiconnect_injection: ankiconnect_wr
         logger.error(f"connection error occurred during ankikindle run{e}")
 
 
-def check_database(latest_timestamp: dict, connection_injection: Connection,
-                   ankiconnect_injection: ankiconnect_wrapper):
+def check_database(latest_timestamp: dict, connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper):
     vocab_highlights = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(connection_injection,
                                                                                latest_timestamp['stamp'])
     if vocab_highlights:
-        logger.info(f"vocab_highlights:{vocab_highlights} were found")
+        logger.info(f"new vocab_highlights:{vocab_highlights} were found")
         # TODO allow for custom deck_name and card_type
         add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",
                           ankiconnect_injection=ankiconnect_injection)

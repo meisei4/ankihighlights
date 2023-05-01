@@ -2,7 +2,6 @@ import os
 import json
 import shutil
 import time
-
 import pytest
 import sqlite3
 import threading

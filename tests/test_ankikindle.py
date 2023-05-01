@@ -3,11 +3,11 @@ import pytest
 import threading
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
-from . import test_vocab_db_wrapper
-from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, simulate_db_update, TEST_FUTURE_TIMESTAMP
 from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
+from . import test_vocab_db_wrapper
+from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, simulate_db_update
 
 
 # TODO this test module and the test_vocab_database_wrapper test module crossover here so fix that. not just with import
