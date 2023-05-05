@@ -80,6 +80,21 @@ def get_latest_lookup_timestamp(connection: Connection) -> int:
         return execute_query(connection, query)[0]['timestamp']
 
 
+def set_latest_timestamp(connection: Connection, timestamp: int):
+    cursor = connection.cursor()
+    cursor.execute("INSERT OR REPLACE INTO latest_timestamp (id, timestamp) VALUES (1, ?)", (timestamp,))
+    connection.commit()
+
+
+def get_latest_timestamp(connection: Connection) -> int:
+    cursor = connection.cursor()
+    cursor.execute("SELECT timestamp FROM latest_timestamp WHERE id = 1")
+    row = cursor.fetchone()
+    if row:
+        return row[0]
+    return None
+
+
 def execute_query(connection: Connection, query: str) -> list[dict]:
     with connection:
         cursor = connection.cursor()

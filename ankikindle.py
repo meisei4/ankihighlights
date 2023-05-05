@@ -11,28 +11,29 @@ PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
 FIRST_DATE = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
 
+_running = False
+
 
 def main(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper, stop_event: threading.Event):
+    global _running
+    _running = True
     try:
-        cursor = connection_injection.cursor()
-        # TODO allow for new db table (that gets added to each time. so instead of this weird initializer you just
-        #  get max of that table here (not the lookups table)
         latest_timestamp = {'stamp': FIRST_DATE}
-        cursor.execute("PRAGMA journal_mode=WAL")  # enable write-ahead logging for WAL mode
-        cursor.execute("PRAGMA wal_autocheckpoint=1")  # auto-checkpoint every 1 page
         while not stop_event.is_set():
-            check_database(latest_timestamp, connection_injection, ankiconnect_injection)
+            process_new_vocab_highlights(latest_timestamp, connection_injection, ankiconnect_injection)
 
     except ConnectionError as e:
         logger.error(f"connection error occurred during ankikindle run{e}")
+    finally:
+        _running = False
 
 
-def check_database(latest_timestamp: dict, connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper):
+def process_new_vocab_highlights(latest_timestamp: dict, connection_injection: Connection,
+                                 ankiconnect_injection: ankiconnect_wrapper):
     vocab_highlights = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(connection_injection,
                                                                                latest_timestamp['stamp'])
     if vocab_highlights:
         logger.info(f"new vocab_highlights:{vocab_highlights} were found")
-        # TODO allow for custom deck_name and card_type
         add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",
                           ankiconnect_injection=ankiconnect_injection)
         latest_timestamp['stamp'] = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
@@ -42,6 +43,11 @@ def check_database(latest_timestamp: dict, connection_injection: Connection, ank
 def stop_ankikindle(stop_event: threading.Event, thread: threading.Thread):
     stop_event.set()
     thread.join()
+
+
+def is_running():
+    global _running
+    return _running
 
 
 # ANKI STUFF
