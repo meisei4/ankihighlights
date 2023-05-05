@@ -62,8 +62,27 @@ def get_table_info(db_connection_injection: Connection) -> dict:
     return table_info
 
 
+def check_and_create_latest_timestamp_table(connection: Connection):
+    with connection:
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='latest_timestamp'
+        """)
+        table_exists = cursor.fetchone() is not None
+
+        if not table_exists:
+            cursor.execute("""
+                CREATE TABLE latest_timestamp (
+                    id INTEGER PRIMARY KEY,
+                    timestamp INTEGER
+                )
+            """)
+            connection.commit()
+
+
 def get_word_lookups_after_timestamp(connection: Connection, timestamp: int) -> list[dict]:
-    with connection as connection:
+    with connection:
         query = f"""
             SELECT LOOKUPS.id, WORDS.word, LOOKUPS.usage, LOOKUPS.timestamp, BOOK_INFO.title, BOOK_INFO.authors
             FROM LOOKUPS 
@@ -81,18 +100,24 @@ def get_latest_lookup_timestamp(connection: Connection) -> int:
 
 
 def set_latest_timestamp(connection: Connection, timestamp: int):
-    cursor = connection.cursor()
-    cursor.execute("INSERT OR REPLACE INTO latest_timestamp (id, timestamp) VALUES (1, ?)", (timestamp,))
-    connection.commit()
+    with connection:
+        cursor = connection.cursor()
+        cursor.execute("""
+            INSERT INTO latest_timestamp (id, timestamp) 
+            VALUES ((SELECT COALESCE(MAX(id), 0) + 1 FROM latest_timestamp), ?)
+        """, (timestamp,))
+        connection.commit()
 
 
 def get_latest_timestamp(connection: Connection) -> int:
-    cursor = connection.cursor()
-    cursor.execute("SELECT timestamp FROM latest_timestamp WHERE id = 1")
-    row = cursor.fetchone()
-    if row:
-        return row[0]
-    return None
+    with connection:
+        check_and_create_latest_timestamp_table(connection)
+        cursor = connection.cursor()
+        cursor.execute("SELECT timestamp FROM latest_timestamp ORDER BY timestamp DESC LIMIT 1")
+        row = cursor.fetchone()
+        if row:
+            return row[0]
+        return None
 
 
 def execute_query(connection: Connection, query: str) -> list[dict]:

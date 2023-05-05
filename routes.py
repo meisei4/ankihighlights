@@ -1,7 +1,13 @@
 import threading
+import vocab_db_accessor_wrap
 from flask import jsonify, request
 
-import vocab_db_accessor_wrap
+
+def register_routes(app, ankikindle_module, ankiconnect_module, connection, stop_event, main_thread):
+    register_start_route(app, ankikindle_module, connection, ankiconnect_module, stop_event, main_thread)
+    register_stop_route(app, ankikindle_module, stop_event, main_thread)
+    register_note_route(app, ankikindle_module, ankiconnect_module)
+    register_process_new_vocab_highlights_route(app, ankikindle_module, connection, ankiconnect_module)
 
 
 def register_start_route(app, ankikindle_module, connection_injection, ankiconnect_injection, stop_event, main_thread):
@@ -59,13 +65,8 @@ def register_note_route(app, ankikindle_module, ankiconnect_injection):
 def register_process_new_vocab_highlights_route(app, ankikindle_module, connection_injection, ankiconnect_injection):
     @app.route('/process_new_vocab_highlights', methods=['POST'])
     def process_new_vocab_highlights_route():
-        latest_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(connection_injection)
-        if latest_timestamp is None:
-            latest_timestamp = {'stamp': ankikindle_module.FIRST_DATE}
-        else:
-            latest_timestamp = {'stamp': latest_timestamp}
-        ankikindle_module.process_new_vocab_highlights(latest_timestamp, connection_injection, ankiconnect_injection)
-        vocab_db_accessor_wrap.set_latest_timestamp(connection_injection, latest_timestamp['stamp'])
-        return jsonify({"message": "New vocab highlights processed", "latest_timestamp": latest_timestamp['stamp']})
+        latest_timestamp = ankikindle_module.process_new_vocab_highlights(connection_injection, ankiconnect_injection)
+
+        return jsonify({"message": "New vocab highlights processed", "latest_timestamp": latest_timestamp})
 
     return process_new_vocab_highlights_route

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
-FIRST_DATE = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
+DEFAULT_FIRST_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
 
 _running = False
 
@@ -18,26 +18,13 @@ def main(connection_injection: Connection, ankiconnect_injection: ankiconnect_wr
     global _running
     _running = True
     try:
-        latest_timestamp = {'stamp': FIRST_DATE}
         while not stop_event.is_set():
-            process_new_vocab_highlights(latest_timestamp, connection_injection, ankiconnect_injection)
+            process_new_vocab_highlights(connection_injection, ankiconnect_injection)
 
     except ConnectionError as e:
         logger.error(f"connection error occurred during ankikindle run{e}")
     finally:
         _running = False
-
-
-def process_new_vocab_highlights(latest_timestamp: dict, connection_injection: Connection,
-                                 ankiconnect_injection: ankiconnect_wrapper):
-    vocab_highlights = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(connection_injection,
-                                                                               latest_timestamp['stamp'])
-    if vocab_highlights:
-        logger.info(f"new vocab_highlights:{vocab_highlights} were found")
-        add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",
-                          ankiconnect_injection=ankiconnect_injection)
-        latest_timestamp['stamp'] = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
-        logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp['stamp'] / 1000)}")
 
 
 def stop_ankikindle(stop_event: threading.Event, thread: threading.Thread):
@@ -48,6 +35,22 @@ def stop_ankikindle(stop_event: threading.Event, thread: threading.Thread):
 def is_running():
     global _running
     return _running
+
+
+def process_new_vocab_highlights(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper) -> int:
+    latest_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(connection_injection)
+    if latest_timestamp is None:
+        latest_timestamp = DEFAULT_FIRST_TIMESTAMP
+        logger.info(f"latest timestamp not found in the timestamp table, initializing to default: {DEFAULT_FIRST_TIMESTAMP}")
+    vocab_highlights = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(connection_injection, latest_timestamp)
+    if vocab_highlights:
+        logger.info(f"new vocab_highlights:{vocab_highlights} were found")
+        add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",  # TODO fix this to use custom deck
+                          ankiconnect_injection=ankiconnect_injection)
+        latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
+        vocab_db_accessor_wrap.set_latest_timestamp(connection_injection, latest_timestamp)
+        logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp / 1000)}")
+    return latest_timestamp
 
 
 # ANKI STUFF

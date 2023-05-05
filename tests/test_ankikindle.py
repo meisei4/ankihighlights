@@ -37,7 +37,7 @@ def test_update_database_while_main_program_is_running(test_db_connection: Conne
     db_update_thread.join()
 
     word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(test_db_connection,
-                                                                                           ankikindle.FIRST_DATE)
+                                                                                           ankikindle.DEFAULT_FIRST_TIMESTAMP)
     assert len(word_lookups_after_timestamp) == 1
     assert word_lookups_after_timestamp[0]["word"] == "日本語"
     assert word_lookups_after_timestamp[0]["usage"] == "日本語の例文"

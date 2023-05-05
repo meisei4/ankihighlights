@@ -1,35 +1,24 @@
 import threading
-import ankikindle as ankikindle_injection
-import ankiconnect_wrapper as ankiconnect_wrapper_injection
 from flask import Flask
 from sqlite3 import Connection
-from routes import register_start_route, register_stop_route, register_note_route, register_process_new_vocab_highlights_route
-
-app = Flask(__name__)
-
-stop_event = threading.Event()
-thread = None
-connection_injection = Connection("your_database_file.db")  # Replace with your actual database file path
-
-register_start_route(app, ankikindle_injection, connection_injection, ankiconnect_wrapper_injection, stop_event, thread)
-register_stop_route(app, ankikindle_injection, stop_event, thread)
-register_note_route(app, ankikindle_injection, ankiconnect_wrapper_injection)
-register_process_new_vocab_highlights_route(app, ankikindle_injection, connection_injection, ankikindle_injection, )
+from routes import register_routes
 
 
-def check_and_create_latest_timestamp_table(connection: Connection):
-    cursor = connection.cursor()
-    cursor.execute("""
-            CREATE TABLE IF NOT EXISTS latest_timestamp (
-                id INTEGER PRIMARY KEY,
-                timestamp INTEGER
-            )
-    """)
-    connection.commit()
+def create_app(connection_injection, ankikindle_injection, ankiconnect_wrapper_injection):
+    app = Flask(__name__)
+
+    stop_event = threading.Event()
+    thread = None
+    register_routes(app, ankikindle_injection, ankiconnect_wrapper_injection, connection_injection, stop_event, thread)
+    return app
 
 
 if __name__ == '__main__':
-    check_and_create_latest_timestamp_table(connection_injection)
-    app.run(host='0.0.0.0', port=5000)
+    import ankikindle as main_ankikindle_injection
+    import ankiconnect_wrapper as main_ankiconnect_wrapper_injection
 
+    main_connection_injection = Connection("your_database_file.db")  # Replace with your actual database file path
 
+    main_app = create_app(main_connection_injection, main_ankikindle_injection, main_ankiconnect_wrapper_injection)
+
+    main_app.run(host='0.0.0.0', port=5000)
