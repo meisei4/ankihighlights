@@ -1,5 +1,4 @@
 import threading
-import vocab_db_accessor_wrap
 from flask import jsonify, request
 
 

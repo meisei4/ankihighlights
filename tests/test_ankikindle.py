@@ -7,20 +7,34 @@ from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
 from . import test_vocab_db_wrapper
-from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, simulate_db_update
+from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, add_word_lookups_to_db
 
 
 # TODO this test module and the test_vocab_database_wrapper test module crossover here so fix that. not just with import
 
 # this fixture thing is only used to establish the MAIN thread db connection
-@pytest.fixture(scope='module')
-def test_db_connection():
+@pytest.fixture(scope='function')
+def test_db_connection_main_thread():
     with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
+        conn.execute("BEGIN")
         yield conn
-        test_vocab_db_wrapper.cleanup_test_data(conn)
+        conn.rollback()
 
 
-def test_update_database_while_main_program_is_running(test_db_connection: Connection):
+@pytest.fixture(scope='function')
+def test_db_connection_db_update_thread():
+    with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
+        conn.execute("BEGIN")
+        yield conn
+        conn.rollback()
+
+
+def test_is_running():
+    assert not ankikindle.is_running()
+
+
+def test_update_database_while_main_program_is_running(test_db_connection_main_thread: Connection,
+                                                       test_db_connection_db_update_thread: Connection):
     ankiconnect_wrapper_mock = Mock()
     ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
     ankiconnect_wrapper_mock.get_all_deck_names.return_value = ['mail_sucks_in_japan']
@@ -28,16 +42,23 @@ def test_update_database_while_main_program_is_running(test_db_connection: Conne
     ankiconnect_wrapper_mock.get_anki_note_id_from_query.return_value = -1
 
     db_update_stop_event = threading.Event()
-    db_update_thread = threading.Thread(target=simulate_db_update, args=(db_update_stop_event,))
+    sync_condition = threading.Condition()
+
+    db_update_thread = threading.Thread(target=add_word_lookups_to_db, args=(
+        test_db_connection_db_update_thread, db_update_stop_event, sync_condition,))
     db_update_thread.start()
 
-    ankikindle.main(test_db_connection, ankiconnect_wrapper_mock, db_update_stop_event)
+    with sync_condition:
+        sync_condition.wait()
+
+    ankikindle.main(test_db_connection_main_thread, ankiconnect_wrapper_mock, db_update_stop_event)
 
     db_update_stop_event.wait()
     db_update_thread.join()
 
-    word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(test_db_connection,
-                                                                                           ankikindle.DEFAULT_FIRST_TIMESTAMP)
+    word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(
+        test_db_connection_main_thread,
+        ankikindle.DEFAULT_FIRST_TIMESTAMP)
     assert len(word_lookups_after_timestamp) == 1
     assert word_lookups_after_timestamp[0]["word"] == "日本語"
     assert word_lookups_after_timestamp[0]["usage"] == "日本語の例文"

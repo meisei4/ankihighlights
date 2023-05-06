@@ -1,15 +1,12 @@
-# test_routes.py
 import json
-import sqlite3
-
 import pytest
+import sqlite3
 from flask import Flask
 from unittest.mock import Mock
-
-import ankikindle
+from tests import test_vocab_db_wrapper
 from routes import (register_start_route, register_stop_route, register_note_route,
                     register_process_new_vocab_highlights_route)
-from tests import test_vocab_db_wrapper
+
 
 ankikindle_module_mock = Mock()
 connection_injection_mock = Mock()
@@ -83,8 +80,9 @@ def test_add_or_update(client, app_context):
 
 def test_process_new_vocab_highlights(client, app_context):
     connection_injection = sqlite3.Connection(test_vocab_db_wrapper.TEST_VOCAB_DB_FILE)
-    register_process_new_vocab_highlights_route(app_context, ankikindle, connection_injection, ankiconnect_injection_mock)
+    ankikindle_module_mock.process_new_vocab_highlights.return_value = 1234
+    register_process_new_vocab_highlights_route(app_context, ankikindle_module_mock, connection_injection, ankiconnect_injection_mock)
 
     response = client.post('/process_new_vocab_highlights')
     assert response.status_code == 200
-    assert json.loads(response.data) == {"message": "New vocab highlights processed", "latest_timestamp": ankikindle.DEFAULT_FIRST_TIMESTAMP}
+    assert json.loads(response.data) == {"message": "New vocab highlights processed", "latest_timestamp": 1234}
