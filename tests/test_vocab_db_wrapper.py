@@ -1,7 +1,6 @@
 import os
 import json
 import shutil
-import time
 import pytest
 import sqlite3
 import threading
@@ -32,18 +31,23 @@ def test_get_table_info():
 
 
 @pytest.fixture(scope='function')
-def test_db_connection_main_thread():
+def main_thread_test_db_connection():
     with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
-        conn.execute("BEGIN")
         vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(conn)
         yield conn
-        conn.rollback()
+        remove_latest_timestamp_table(conn)
+        remove_vocab_lookup_insert(conn)
 
 
-def test_get_all_word_look_ups_after_timestamp(test_db_connection_main_thread):
-    test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 4, 25)
-    add_word_lookups_to_db(threading.Event())
-    result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(test_db_connection_main_thread, test_timestamp)
+def test_get_all_word_look_ups_after_timestamp(main_thread_test_db_connection: Connection):
+    test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
+    db_update_ready_event = threading.Event()
+    db_update_ready_event.set()
+    db_update_processed_event = threading.Event()
+    db_update_processed_event.set()
+    stop_event = threading.Event()
+    add_word_lookups_to_db(db_update_ready_event, db_update_processed_event, stop_event)
+    result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(main_thread_test_db_connection, test_timestamp)
 
     assert len(result) == 1
     assert result[0]["word"] == "日本語"
@@ -52,18 +56,18 @@ def test_get_all_word_look_ups_after_timestamp(test_db_connection_main_thread):
     assert result[0]["authors"] == "著者A"
 
 
-def test_set_latest_timestamp(test_db_connection_main_thread):
-    with test_db_connection_main_thread:
+def test_set_latest_timestamp(main_thread_test_db_connection: Connection):
+    with main_thread_test_db_connection:
         first_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2035, 5, 5)
-        vocab_db_accessor_wrap.set_latest_timestamp(test_db_connection_main_thread, first_timestamp)
-        cursor = test_db_connection_main_thread.cursor()
+        vocab_db_accessor_wrap.set_latest_timestamp(main_thread_test_db_connection, first_timestamp)
+        cursor = main_thread_test_db_connection.cursor()
         cursor.execute("SELECT timestamp FROM latest_timestamp ORDER BY timestamp DESC LIMIT 1")
         row = cursor.fetchone()
         assert row[0] == first_timestamp
 
         second_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 5, 5)
-        vocab_db_accessor_wrap.set_latest_timestamp(test_db_connection_main_thread, second_timestamp)
-        cursor = test_db_connection_main_thread.cursor()
+        vocab_db_accessor_wrap.set_latest_timestamp(main_thread_test_db_connection, second_timestamp)
+        cursor = main_thread_test_db_connection.cursor()
         cursor.execute("SELECT count(*) FROM latest_timestamp")
         row = cursor.fetchone()
         assert row[0] == 2  # the second timestamp gets added
@@ -74,45 +78,45 @@ def test_set_latest_timestamp(test_db_connection_main_thread):
         assert row[0] == first_timestamp
 
 
-def test_get_latest_timestamp(test_db_connection_main_thread):
-    with test_db_connection_main_thread:
-        test_db_connection_main_thread.execute("DROP TABLE IF EXISTS latest_timestamp")
-        zeroth_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(test_db_connection_main_thread)
+def test_get_latest_timestamp(main_thread_test_db_connection: Connection):
+    with main_thread_test_db_connection:
+        remove_latest_timestamp_table(main_thread_test_db_connection)
+        zeroth_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(main_thread_test_db_connection)
         assert not zeroth_timestamp
 
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(test_db_connection_main_thread)
+        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(main_thread_test_db_connection)
         first_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2035, 5, 5)
-        vocab_db_accessor_wrap.set_latest_timestamp(test_db_connection_main_thread, first_timestamp)
-        actual_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(test_db_connection_main_thread)
+        vocab_db_accessor_wrap.set_latest_timestamp(main_thread_test_db_connection, first_timestamp)
+        actual_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(main_thread_test_db_connection)
         assert actual_timestamp == first_timestamp
 
         second_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2030, 5, 5)
-        vocab_db_accessor_wrap.set_latest_timestamp(test_db_connection_main_thread, second_timestamp)
-        cursor = test_db_connection_main_thread.cursor()
+        vocab_db_accessor_wrap.set_latest_timestamp(main_thread_test_db_connection, second_timestamp)
+        cursor = main_thread_test_db_connection.cursor()
         cursor.execute("SELECT count(*) FROM latest_timestamp")
         row = cursor.fetchone()
         assert row[0] == 2  # the second timestamp gets added
 
-        actual_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(test_db_connection_main_thread)
+        actual_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(main_thread_test_db_connection)
         # second timestamp was inserted after but since first timestamp is later chronologically, first is still fetched
         assert actual_timestamp == first_timestamp
 
         third_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2038, 5, 5)
-        vocab_db_accessor_wrap.set_latest_timestamp(test_db_connection_main_thread, third_timestamp)
-        cursor = test_db_connection_main_thread.cursor()
+        vocab_db_accessor_wrap.set_latest_timestamp(main_thread_test_db_connection, third_timestamp)
+        cursor = main_thread_test_db_connection.cursor()
         cursor.execute("SELECT count(*) FROM latest_timestamp")
         row = cursor.fetchone()
         assert row[0] == 3  # the third timestamp gets added
 
-        actual_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(test_db_connection_main_thread)
+        actual_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(main_thread_test_db_connection)
         # third timestamp is later chronologically than both first ands second, thus third is fetched
         assert actual_timestamp == third_timestamp
 
 
-def test_check_and_create_latest_timestamp_table():
-    with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(conn)
-        cursor = conn.cursor()
+def test_check_and_create_latest_timestamp_table(main_thread_test_db_connection: Connection):
+    with main_thread_test_db_connection:
+        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(main_thread_test_db_connection)
+        cursor = main_thread_test_db_connection.cursor()
         cursor.execute("""
             SELECT name FROM sqlite_master 
             WHERE type='table' AND name='latest_timestamp'
@@ -120,19 +124,36 @@ def test_check_and_create_latest_timestamp_table():
         table_exists = cursor.fetchone() is not None
         assert table_exists
 
+        remove_latest_timestamp_table(main_thread_test_db_connection)
+        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(main_thread_test_db_connection)
+        cursor.execute("""
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='latest_timestamp'
+        """)
+        table_exists = cursor.fetchone() is not None
+        assert table_exists
+
+
+def remove_latest_timestamp_table(main_thread_test_db_connection: Connection):
+    with main_thread_test_db_connection:
+        cursor = main_thread_test_db_connection.cursor()
         cursor.execute("DROP TABLE IF EXISTS latest_timestamp")
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(conn)
-        cursor.execute("""
-            SELECT name FROM sqlite_master 
-            WHERE type='table' AND name='latest_timestamp'
-        """)
-        table_exists = cursor.fetchone() is not None
-        assert table_exists
+        main_thread_test_db_connection.commit()
 
 
-def add_word_lookups_to_db(connection: Connection, dp_update_flag: threading.Event, sync_condition: threading.Condition):
-    with connection:
-        cursor = connection.cursor()
+def remove_vocab_lookup_insert(main_thread_test_db_connection: Connection):
+    with main_thread_test_db_connection:
+        cursor = main_thread_test_db_connection.cursor()
+        cursor.execute("DELETE FROM WORDS WHERE id = '1234'")
+        cursor.execute("DELETE FROM BOOK_INFO WHERE id = '1234'")
+        cursor.execute("DELETE FROM LOOKUPS WHERE id = '1351'")
+        main_thread_test_db_connection.commit()
+
+
+def add_word_lookups_to_db(db_update_ready_event: threading.Event, db_update_processed_event: threading.Event, stop_event: threading.Event):
+    with sqlite3.connect(TEST_VOCAB_DB_FILE) as db_update_thread_test_db_connection:
+        db_update_ready_event.wait()
+        cursor = db_update_thread_test_db_connection.cursor()
         cursor.execute("BEGIN")
         cursor.execute(f"""
                     INSERT INTO WORDS (id, word, stem, lang, category, timestamp, profileid) 
@@ -146,11 +167,7 @@ def add_word_lookups_to_db(connection: Connection, dp_update_flag: threading.Eve
                     INSERT INTO LOOKUPS (id, word_key, book_key, dict_key, pos, usage, timestamp) 
                     VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {TEST_FUTURE_TIMESTAMP})
                 """)
-        with sync_condition:
-            cursor.execute("END")
-            sync_condition.notify_all()
-
-        time.sleep(1)
-        dp_update_flag.set()
-        # TODO not sure how to control this sleep since it relies heavy on how fast the ankikindle.main while loop
-        #  can run, so if that gets new sleeps then this needs to be updated
+        cursor.execute("END")
+        db_update_thread_test_db_connection.commit()
+        db_update_processed_event.wait()
+        stop_event.set()

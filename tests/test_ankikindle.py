@@ -3,10 +3,10 @@ import pytest
 import threading
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
+from . import test_vocab_db_wrapper
 from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
-from . import test_vocab_db_wrapper
 from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, add_word_lookups_to_db
 
 
@@ -14,50 +14,38 @@ from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, add_word_lookups_to_db
 
 # this fixture thing is only used to establish the MAIN thread db connection
 @pytest.fixture(scope='function')
-def test_db_connection_main_thread():
+def main_thread_test_db_connection():
     with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
-        conn.execute("BEGIN")
         yield conn
-        conn.rollback()
+        test_vocab_db_wrapper.remove_latest_timestamp_table(conn)
+        test_vocab_db_wrapper.remove_vocab_lookup_insert(conn)
 
 
-@pytest.fixture(scope='function')
-def test_db_connection_db_update_thread():
-    with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
-        conn.execute("BEGIN")
-        yield conn
-        conn.rollback()
-
-
-def test_is_running():
-    assert not ankikindle.is_running()
-
-
-def test_update_database_while_main_program_is_running(test_db_connection_main_thread: Connection,
-                                                       test_db_connection_db_update_thread: Connection):
+def test_update_database_while_main_program_is_running(main_thread_test_db_connection: Connection):
     ankiconnect_wrapper_mock = Mock()
     ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
     ankiconnect_wrapper_mock.get_all_deck_names.return_value = ['mail_sucks_in_japan']
     ankiconnect_wrapper_mock.get_all_card_type_names.return_value = ['aedict']
     ankiconnect_wrapper_mock.get_anki_note_id_from_query.return_value = -1
 
-    db_update_stop_event = threading.Event()
-    sync_condition = threading.Condition()
+    db_update_ready_event = threading.Event()
+    db_update_processed_event = threading.Event()
+    main_thread_stop_event = threading.Event()
 
-    db_update_thread = threading.Thread(target=add_word_lookups_to_db, args=(
-        test_db_connection_db_update_thread, db_update_stop_event, sync_condition,))
+    db_update_thread = threading.Thread(target=add_word_lookups_to_db, args=(db_update_ready_event,
+                                                                             db_update_processed_event,
+                                                                             main_thread_stop_event))
     db_update_thread.start()
 
-    with sync_condition:
-        sync_condition.wait()
+    ankikindle_main_function_wrapper(main_thread_test_db_connection, ankiconnect_wrapper_mock,
+                                     db_update_ready_event,
+                                     db_update_processed_event,
+                                     main_thread_stop_event)
 
-    ankikindle.main(test_db_connection_main_thread, ankiconnect_wrapper_mock, db_update_stop_event)
-
-    db_update_stop_event.wait()
     db_update_thread.join()
 
     word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(
-        test_db_connection_main_thread,
+        main_thread_test_db_connection,
         ankikindle.DEFAULT_FIRST_TIMESTAMP)
     assert len(word_lookups_after_timestamp) == 1
     assert word_lookups_after_timestamp[0]["word"] == "日本語"
@@ -74,6 +62,19 @@ def test_update_database_while_main_program_is_running(test_db_connection_main_t
                          'Sentence': '日本語の例文'}
                      }
     ankiconnect_wrapper_mock.add_anki_note.assert_called_once_with(expected_note)
+
+
+def ankikindle_main_function_wrapper(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper,
+                                     db_update_ready_event: threading.Event,
+                                     db_update_processed_event: threading.Event,
+                                     stop_event: threading.Event):
+    while not stop_event.is_set():
+        processed_new_vocab_highlights = ankikindle.process_new_vocab_highlights(connection_injection,
+                                                                                 ankiconnect_injection)
+        if processed_new_vocab_highlights:
+            db_update_processed_event.set()
+
+        db_update_ready_event.set()
 
 
 def test_ankiconnect_request_permission_permission_denied():

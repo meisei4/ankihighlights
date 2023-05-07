@@ -1,6 +1,4 @@
 # Ignore backup and temporary files
 backup/
 tmp/
-resources/vocab.db
-resources/vocab.db-shm
-resources/vocab.db-wal
+resources/

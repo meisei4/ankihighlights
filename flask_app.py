@@ -17,7 +17,7 @@ if __name__ == '__main__':
     import ankikindle as main_ankikindle_injection
     import ankiconnect_wrapper as main_ankiconnect_wrapper_injection
 
-    main_connection_injection = Connection("your_database_file.db")  # Replace with your actual database file path
+    main_connection_injection = Connection("")  # Replace with your actual database file path
 
     main_app = create_app(main_connection_injection, main_ankikindle_injection, main_ankiconnect_wrapper_injection)
 
