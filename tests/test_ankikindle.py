@@ -10,8 +10,6 @@ from unittest.mock import Mock
 from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, add_word_lookups_to_db
 
 
-# TODO this test module and the test_vocab_database_wrapper test module crossover here so fix that. not just with import
-
 # this fixture thing is only used to establish the MAIN thread db connection
 @pytest.fixture(scope='function')
 def main_thread_test_db_connection():

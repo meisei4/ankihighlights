@@ -5,6 +5,7 @@ import vocab_db_accessor_wrap
 from datetime import datetime
 from sqlite3 import Connection
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 PRIORITY_DECK_NAME = 'Priority Deck'
@@ -138,7 +139,7 @@ def add_new_note(word_highlight: dict, deck_name: str, card_type: str,
 def ankiconnect_request_permission(ankiconnect_injection: ankiconnect_wrapper):
     result = ankiconnect_injection.request_connection_permission()
     if not result['permission'] == 'granted':
-        raise ConnectionError(f'failed to authenticate with anki; response: {result}')
+        raise ConnectionError(f"failed to authenticate with anki; response: {result}")
 
 
 # TODO only for recovery during unmocked connection testing purposes (adding unwanted cards). move somewhere else or

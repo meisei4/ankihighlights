@@ -9,7 +9,6 @@ from sqlite3 import Connection
 
 # TODO figure out the remote db thing, and how to have that be reflected
 
-# TODO This only works when running the suite alone (not during a full run of all the tests in the test directory
 
 # __file__ is this file, so next command is: get path to this module file, hop out with cd .., then go cd
 # resource, then there's the file
@@ -23,20 +22,20 @@ def test_copy_to_backup_and_tmp_infinitely():
     shutil.rmtree(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backup')))
 
 
-def test_get_table_info():
-    db_connection = sqlite3.connect(TEST_VOCAB_DB_FILE)
-    table_info = vocab_db_accessor_wrap.get_table_info(db_connection)
-    print(json.dumps(table_info, indent=2))
-    assert table_info is not None
-
-
 @pytest.fixture(scope='function')
 def main_thread_test_db_connection():
     with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(conn)
+        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(conn)
         yield conn
         remove_latest_timestamp_table(conn)
         remove_vocab_lookup_insert(conn)
+
+
+def test_get_table_info(main_thread_test_db_connection: Connection):
+    with main_thread_test_db_connection:
+        table_info = vocab_db_accessor_wrap.get_table_info(main_thread_test_db_connection)
+        print(json.dumps(table_info, indent=2))
+        assert table_info is not None
 
 
 def test_get_all_word_look_ups_after_timestamp(main_thread_test_db_connection: Connection):
@@ -84,7 +83,7 @@ def test_get_latest_timestamp(main_thread_test_db_connection: Connection):
         zeroth_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(main_thread_test_db_connection)
         assert not zeroth_timestamp
 
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(main_thread_test_db_connection)
+        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(main_thread_test_db_connection)
         first_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2035, 5, 5)
         vocab_db_accessor_wrap.set_latest_timestamp(main_thread_test_db_connection, first_timestamp)
         actual_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(main_thread_test_db_connection)
@@ -115,7 +114,7 @@ def test_get_latest_timestamp(main_thread_test_db_connection: Connection):
 
 def test_check_and_create_latest_timestamp_table(main_thread_test_db_connection: Connection):
     with main_thread_test_db_connection:
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(main_thread_test_db_connection)
+        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(main_thread_test_db_connection)
         cursor = main_thread_test_db_connection.cursor()
         cursor.execute("""
             SELECT name FROM sqlite_master 
@@ -125,7 +124,7 @@ def test_check_and_create_latest_timestamp_table(main_thread_test_db_connection:
         assert table_exists
 
         remove_latest_timestamp_table(main_thread_test_db_connection)
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table(main_thread_test_db_connection)
+        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(main_thread_test_db_connection)
         cursor.execute("""
             SELECT name FROM sqlite_master 
             WHERE type='table' AND name='latest_timestamp'
