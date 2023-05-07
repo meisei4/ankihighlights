@@ -1,80 +1,100 @@
-# ankikindle
-experiment in developing alongside gpt. 
+# README: ankikindle 
 
-original chat 抜粋 with gpt (it doesn't actually do this🤮🤮🤮):
+ankikindle is a Python project that integrates Kindle vocabulary highlights with the Anki flashcard system. This project scans for new vocabulary highlights, processes them, and automatically adds them to a specified Anki deck as flashcards. The project utilizes the AnkiConnect API to interact with Anki.
+
+## Table of Contents
+
+- [Features](#features)
+- [Database Structure](#database-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+
+## Features
+
+- Automatically processes new vocabulary highlights
+- Adds new flashcards to a specified Anki deck
+- Updates existing flashcards with additional example sentences (upon duplicate highlights/lookups to kindle vocab db)
+- Supports custom deck and card type configurations (not yet)
+- Provides a priority deck for frequent vocabulary (vocab words that are encountered more than a certain threshold while reading on kindle)
 
 
-This will be an app that listens to a users kindle clippings(highlight) file and upon any update to that file parses the update and generates an anki card(note) from it and adds it to that users anki app. This will be used to allow for better studying of encountered words during reading in a foreign language.
+## Database Structure
 
-explanation of the current code：
-Python script that reads Kindle clippings from the user's Kindle account and then adds them as notes to the Anki app using the Anki Connect API.
+The database used in this script is an SQLite database containing the following tables (these are the only important ones):
 
-Here's a brief summary of the steps involved in the script:
+1. `LOOKUPS`
+2. `WORDS`
+3. `BOOK_INFO`
+4. `latest_timestamp` --this table is actually added during the running on the app in order to keep track of user's latest_timestamp for a highlight
 
-1. somehow gets kindle vocab.db 🤮🤮🤮🤮🤮
+### Table: LOOKUPS
 
-2. loops over each clipping (highlight) and converts it into an Anki note format.
+| Column     | Data Type |
+|------------|-----------|
+| id         | INTEGER   |
+| word_key   | INTEGER   |
+| book_key   | INTEGER   |
+| usage      | TEXT      |
+| timestamp  | INTEGER   |
 
-3. checks if the note already exists in Anki by searching for it using the Anki Connect API findNotes action. If it exists, it updates the note with more example sentences. Otherwise, it adds a new note to the specified deck and model (model is dumb, need ot figure out how to make it work for a specific card type i design later).
+### Table: WORDS
 
-4. assigns tags to the note based on the number of times the same word appears in the user's clippings (this is to be able to mark the word if its seen too many times, then will be sent to a new deck of higher study priority).
+| Column     | Data Type |
+|------------|-----------|
+| id         | INTEGER   |
+| word       | TEXT      |
+
+### Table: BOOK_INFO
+
+| Column     | Data Type |
+|------------|-----------|
+| id         | INTEGER   |
+| title      | TEXT      |
+| authors    | TEXT      |
+
+### Table: latest_timestamp
+
+| Column     | Data Type |
+|------------|-----------|
+| id         | INTEGER   |
+| timestamp  | INTEGER   |
 
 
-**__JSON stuff:**__
 
-**KINDLE** 
-(Note: I am going to probably have to make some fake API wrapper that just queries the local database)
-- idea1 first implement everything assuming that some day there will be a proper RESTApi to get kindle metadata
-- idea2 implement so that some script can be run whenever kindle device (with local files) is mounted, that this works 🤮🤮🤮
+## Installation
 
-potential JSON responses from the amazon Kindle clippings (highlights) file (completely made up):
-```json
-[
-    {
-        "asin": "B08KPXKVRV",
-        "authors": "Haruki Murakami",
-        "title": "1Q84 BOOK1",
-        "lastUpdatedDate": "2022-04-15T05:26:11.000Z",
-        "highlights": [
-            {
-                "text": "君は、この世で会った全ての女性の中で、その顔を覚えている女性は何人くらいいるだろうか。",
-                "location": {
-                    "page": 191
-                },
-                "timestamp": "2022-04-15T05:27:12.027Z",
-                "note": "Highlight"
-            },
-            {
-                "word": "自分",
-                "text": "どんな仕事をしていようと、いつだって、こうやって机に向かって仕事をしている自分がいる。",
-                "location": {
-                    "page": 498
-                },
-                "timestamp": "2022-04-15T05:29:12.027Z",
-                "note": "VocabWord"
-            }
-        ]
-    }
-]
+1. Ensure you have Python 3.8 or higher installed on your system.
+2. Install the required packages (so far):
+
+```bash
+pip install requests pytest flask selenium
 ```
 
+3. Install the AnkiConnect add-on in Anki by following the instructions on [anki-connect's GitHub page](https://github.com/FooSoft/anki-connect).
 
-**ANKI**
+## Usage
 
-example anki based JSON request for the word "自分" and the sentences it was originally highlight in.
+1. Start the Anki application and ensure the AnkiConnect add-on is running.
 
-```json
-{
-    "deckName": "words from kindle",
-    "modelName": "aedict",
-    "fields": {
-        "Furigana": "自分[じぶん]",
-        "Expression": "こうやって机に向かって仕事をしている自分がいる",
-        "Sentence": [ "こうやって机に向かって仕事をしている自分がいる", "分の能力を信じて、夢に向かって努力しましょう"]
-    },
-    "tags": ["2"]
-}
-```
+2. This project includes two main test modules: `test_ankikindle.py` and `test_vocab_db_wrapper.py`.
 
-Stupid : notes and cards (anki) and highlights and clippings (kindle) are pretty much the same thing... but the apis decided to make it complicated for some reaosn
+### Test Module: test_ankikindle.py
 
+The `test_ankikindle.py` module tests the main functionality of the ankikindle script (recognizing listesned to DB updates, creating and or updating cards). Some tests include:
+
+1. `test_update_database_while_main_program_is_running(main_thread_test_db_connection: Connection)`: Tests whether the database is updated correctly while the main program is running.
+2. `ankikindle_main_function_wrapper(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper, db_update_ready_event: threading.Event, db_update_processed_event: threading.Event, stop_event: threading.Event)`: Wraps the main Ankikindle function for testing purposes.
+3. `test_add_update_and_remove_notes_to_anki()`: Tests adding, updating, and removing notes in Anki.
+
+### Test Module: test_vocab_db_wrapper.py
+
+The `test_vocab_db_wrapper.py` module tests the functions related to the vocabulary database. Some tests include:
+
+1. `test_get_all_word_look_ups_after_timestamp(main_thread_test_db_connection: Connection)`: Tests whether all word lookups after a specific timestamp are retrieved correctly.
+2. `add_word_lookups_to_db(db_update_ready_event: threading.Event, db_update_processed_event: threading.Event, stop_event: threading.Event)`: Adds word lookups to the test database.
+
+
+## Contributing
+
+Contributions are welcome! Please submit a pull request or create an issue if you have suggestions for improvements or bug fixes.
