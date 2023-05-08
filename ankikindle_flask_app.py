@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 
+# TODO this is probably doing nothing
 def on_mounted(flask_app: Flask):
     with flask_app.test_client() as client:
         headers = {'Content-type': 'application/json'}
