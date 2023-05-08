@@ -1,44 +1,44 @@
 import os
+import logging
 import threading
-import requests
-from flask import Flask
-
+import ankikindle
+import ankiconnect_wrapper
 import vocab_db_accessor_wrap
+from flask import Flask
 from ankikindle_flask_routes import register_process_new_vocab_highlights_route
 
-
-def create_app(ankikindle_injection, ankiconnect_wrapper_injection):
-    app = Flask(__name__)
-    register_process_new_vocab_highlights_route(app, ankikindle_injection, ankiconnect_wrapper_injection)
-    return app
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
 
 
-def on_mounted():
-    url = "http://localhost:5000/process_new_vocab_highlights"
-    headers = {'Content-type': 'application/json'}
-    r = requests.post(url, json={}, headers=headers)
-    r.raise_for_status()
+def on_mounted(flask_app: Flask):
+    with flask_app.test_client() as client:
+        headers = {'Content-type': 'application/json'}
+        client.post("/process_new_vocab_highlights", json={}, headers=headers)
 
 
-def watch_for_kindle_mount():
+def watch_for_kindle_mount(flask_app: Flask):
     mounted = False
     while True:
         dirs = [d for d in os.listdir("/Volumes") if os.path.isdir(os.path.join("/Volumes", d))]
         if "Kindle" in dirs and not mounted:
             if os.path.exists(vocab_db_accessor_wrap.MACOS_TARGET_VOCAB_MOUNT_FILE_LOC):
-                on_mounted()
+                on_mounted(flask_app)
                 mounted = True
+                logger.info('Kindle mounted')
         elif "Kindle" not in dirs and mounted:
             mounted = False
+            logger.info('Kindle unmounted')
+
+
+def register_flask_routes(flask_app: Flask, ankikindle_injection: ankikindle,
+                          ankiconnect_wrapper_injection: ankiconnect_wrapper):
+    register_process_new_vocab_highlights_route(flask_app, ankikindle_injection, ankiconnect_wrapper_injection)
 
 
 if __name__ == '__main__':
-    import ankikindle as main_ankikindle_injection
-    import ankiconnect_wrapper as main_ankiconnect_wrapper_injection
-
-    main_app = create_app(main_ankikindle_injection, main_ankiconnect_wrapper_injection)
-
+    app = Flask(__name__)
+    register_flask_routes(app, ankikindle, ankiconnect_wrapper)
     thread = threading.Thread(target=watch_for_kindle_mount)
     thread.start()
-
-    main_app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)
