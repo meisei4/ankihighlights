@@ -1,10 +1,24 @@
+import time
 import typing
-
+import logging
 import requests
 
-API_URL = "http://localhost:8765/"  # maybe this can be updated in the future
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
+
+API_URL = "http://localhost:8765/"
 GLOB_HEADERS = {"Content-Type": "application/json"}
 VERSION = 6
+
+
+def log_request_info(response, action, elapsed_time=None):
+    status_code = response.status_code
+    response_text = response.text
+    if elapsed_time is not None:
+        logger.info(f"AnkiConnect: {action} request elapsed time: {elapsed_time:.3f}s")
+    logger.info(f"AnkiConnect: {action} request status code: {status_code}")
+    logger.info(f"AnkiConnect: {action} request response: {response_text}")
 
 
 def request_connection_permission() -> str:
@@ -12,7 +26,10 @@ def request_connection_permission() -> str:
         "action": "requestPermission",
         "version": VERSION
     }
-    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    start_time = time.time()
+    response = requests.get(API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "requestPermission", elapsed_time)
     return response.json()["result"]
 
 
@@ -21,7 +38,10 @@ def get_all_deck_names() -> list[str]:
         "action": "deckNames",
         "version": VERSION
     }
-    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    start_time = time.time()
+    response = requests.get(API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "deckNames", elapsed_time)
     return response.json()["result"]
 
 
@@ -30,7 +50,10 @@ def get_all_card_type_names() -> list[str]:
         "action": "modelNames",
         "version": VERSION
     }
-    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    start_time = time.time()
+    response = requests.get(API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "modelNames", elapsed_time)
     return response.json()["result"]
 
 
@@ -42,7 +65,10 @@ def get_decks_containing_card(card_id: int) -> list[str]:
             "cards": [card_id]
         }
     }
-    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    start_time = time.time()
+    response = requests.get(API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "getDecks", elapsed_time)
     return response.json()["result"].keys()
 
 
@@ -52,7 +78,10 @@ def get_anki_card_ids_from_query(query: str) -> list[int]:
         "version": VERSION,
         "params": {"query": query}
     }
-    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    start_time = time.time()
+    response = requests.get(API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "findCards", elapsed_time)
     return response.json()["result"]
 
 
@@ -62,7 +91,10 @@ def get_anki_note_ids_from_query(query: str) -> list[int]:
         "version": VERSION,
         "params": {"query": query}
     }
-    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    start_time = time.time()
+    response = requests.get(API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "findNotes", elapsed_time)
     return response.json()["result"]
 
 
@@ -80,14 +112,19 @@ def get_anki_cards_details(list_of_card_ids: list[int], order_boolean: bool) -> 
         "version": VERSION,
         "params": {"cards": list_of_card_ids}
     }
-    result = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS).json()["result"]
+    start_time = time.time()
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    response_json = response.json()["result"]
     if order_boolean:
-        return remove_value_order_from_dict(result)
-    return result
+        response_json = remove_value_order_from_dict(response_json)
+    log_request_info(response, "cardsInfo", elapsed_time)
+    return response_json
 
 
 def get_single_anki_card_details(card_id: int, remove_order_boolean: bool) -> dict:
-    return get_anki_cards_details([card_id], remove_order_boolean)[0]
+    response = get_anki_cards_details([card_id], remove_order_boolean)
+    return response[0]
 
 
 def get_anki_notes_details(list_of_note_ids: list[int], remove_order_boolean: bool) -> list[dict]:
@@ -96,14 +133,19 @@ def get_anki_notes_details(list_of_note_ids: list[int], remove_order_boolean: bo
         "version": VERSION,
         "params": {"notes": list_of_note_ids}
     }
-    result = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS).json()["result"]
+    start_time = time.time()
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    response_json = response.json()["result"]
     if remove_order_boolean:
-        return remove_value_order_from_dict(result)
-    return result
+        response_json = remove_value_order_from_dict(response_json)
+    log_request_info(response, "notesInfo", elapsed_time)
+    return response_json
 
 
 def get_single_anki_note_details(note_id: int, remove_order_boolean: bool) -> dict:
-    return get_anki_notes_details([note_id], remove_order_boolean)[0]
+    response = get_anki_notes_details([note_id], remove_order_boolean)
+    return response[0]
 
 
 def add_anki_note(note: dict) -> int:
@@ -114,7 +156,10 @@ def add_anki_note(note: dict) -> int:
             "note": note
         }
     }
+    start_time = time.time()
     response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "addNote", elapsed_time)
     return response.json()["result"]
 
 
@@ -126,11 +171,14 @@ def delete_anki_note(note_id: int):
             "notes": [note_id]
         }
     }
-    requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    start_time = time.time()
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    elapsed_time = time.time() - start_time
+    log_request_info(response, "deleteNotes", elapsed_time)
 
 
-def update_anki_note(note_id: int, fields: dict, tag: int):
-    payload_for_fields = {
+def update_anki_note(note_id: int, fields: dict, tag: int) -> None:
+    payload = {
         "action": "updateNoteFields",
         "version": VERSION,
         "params": {
@@ -140,8 +188,9 @@ def update_anki_note(note_id: int, fields: dict, tag: int):
             }
         }
     }
-    requests.request("GET", API_URL, json=payload_for_fields, headers=GLOB_HEADERS)
-    payload_for_tag = {
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    log_request_info(response, "updateNoteFields")
+    payload = {
         "action": "replaceTags",
         "version": VERSION,
         "params": {
@@ -150,23 +199,22 @@ def update_anki_note(note_id: int, fields: dict, tag: int):
             "replace_with_tag": str(tag)
         }
     }
-    requests.request("GET", API_URL, json=payload_for_tag, headers=GLOB_HEADERS)
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
+    log_request_info(response, "replaceTags")
 
 
 def get_anki_note_from_card(card_id: int) -> int:
     payload = {
-        "action": "cardsToNotes",
+        "action": "cardsInfo",
         "version": VERSION,
-        "params": {
-            "cards": [card_id]
-        }
+        "params": {"cards": [card_id]}
     }
-    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
-    return response.json()["result"][0]
+    response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS).json()["result"]
+    note_id = response[0]["noteId"]
+    return note_id
 
 
-# TODO figure this out, when trying to add a new card just create new deck if the user doesnt want to decide a deck name
-def add_new_deck_to_anki(deck_name: str):
+def add_new_deck_to_anki(deck_name: str) -> int:
     payload = {
         "action": "createDeck",
         "version": VERSION,
@@ -175,31 +223,24 @@ def add_new_deck_to_anki(deck_name: str):
         }
     }
     response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
-    return response.json()["result"]
+    log_request_info(response, "createDeck")
+    deck_id = response.json()["result"]
+    return deck_id
 
 
-# TODO figure this out (gonna have to create a specific card type at a some point,
-#  but remember to make it as customizable as possible according to anyone who will fork this project
-def add_new_card_type_to_anki(card_type_name: str):
+def add_new_card_type_to_anki(card_type_name: str, fields: list[str], templates: list[dict], css: str = "") -> None:
     payload = {
         "action": "createModel",
         "version": VERSION,
         "params": {
             "modelName": card_type_name,
-            "inOrderFields": ["Field1", "Field2", "Field3"],
-            "css": "Optional CSS with default to builtin css", # ????
-            "isCloze": False, #????
-            "cardTemplates": [
-                {
-                    "Name": "My Card 1",
-                    "Front": "Front html {{Field1}}",
-                    "Back": "Back html  {{Field2}}"
-                }
-            ]
+            "inOrderFields": fields,
+            "css": css,
+            "cardTemplates": templates
         }
     }
     response = requests.request("GET", API_URL, json=payload, headers=GLOB_HEADERS)
-    return response.json()["result"]
+    log_request_info(response, "createModel")
 
 
 # AUXILIARIES

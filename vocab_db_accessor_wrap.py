@@ -1,31 +1,32 @@
 import os
 import time
 import shutil
-import datetime
 import typing
+import logging
+import datetime
 from sqlite3 import Connection
 
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger(__name__)
 MACOS_TARGET_VOCAB_MOUNT_FILE_LOC = "/Volumes/Kindle/system/vocabulary/vocab.db"
 _latest_timestamp: int = -1
 
 
-def check_and_create_latest_timestamp_table_if_not_exists(connection_injection: Connection):
-    with connection_injection:
-        cursor = connection_injection.cursor()
-        cursor.execute("""
-            SELECT name FROM sqlite_master 
-            WHERE type='table' AND name='latest_timestamp'
-        """)
-        table_exists = cursor.fetchone() is not None
-
-        if not table_exists:
-            cursor.execute("""
-                CREATE TABLE latest_timestamp (
-                    id INTEGER PRIMARY KEY,
-                    timestamp INTEGER
-                )
-            """)
-            connection_injection.commit()
+def check_and_create_latest_timestamp_table_if_not_exists(connection_injection: Connection) -> list[dict]:
+    query = """
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='latest_timestamp'
+    """
+    table_exists = execute_query(connection_injection, query)
+    if not table_exists:
+        query = """
+            CREATE TABLE latest_timestamp (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER
+            )
+        """
+        return execute_query(connection_injection, query)
 
 
 def get_word_lookups_after_timestamp(connection_injection: Connection, timestamp: int) -> list[dict]:
@@ -46,35 +47,38 @@ def get_latest_lookup_timestamp(connection_injection: Connection) -> int:
         return execute_query(connection_injection, query)[0]['timestamp']
 
 
-def set_latest_timestamp(connection_injection: Connection, timestamp: int):
-    with connection_injection:
-        cursor = connection_injection.cursor()
-        cursor.execute("""
-            INSERT INTO latest_timestamp (id, timestamp) 
-            VALUES ((SELECT COALESCE(MAX(id), 0) + 1 FROM latest_timestamp), ?)
-        """, (timestamp,))
-        connection_injection.commit()
+def set_latest_timestamp(connection_injection: Connection, timestamp: int) -> list[dict]:
+    query = f"""
+        INSERT INTO latest_timestamp (id, timestamp) 
+        VALUES ((SELECT COALESCE(MAX(id), 0) + 1 FROM latest_timestamp), {timestamp})
+    """
+    return execute_query(connection_injection, query)
 
 
 def get_latest_timestamp(connection_injection: Connection) -> typing.Optional:
-    with connection_injection:
-        check_and_create_latest_timestamp_table_if_not_exists(connection_injection)
-        cursor = connection_injection.cursor()
-        cursor.execute("SELECT timestamp FROM latest_timestamp ORDER BY timestamp DESC LIMIT 1")
-        row = cursor.fetchone()
-        if row:
-            return row[0]
-        return None
+    check_and_create_latest_timestamp_table_if_not_exists(connection_injection)
+    query = "SELECT timestamp FROM latest_timestamp ORDER BY timestamp DESC LIMIT 1"
+    rows = execute_query(connection_injection, query)
+    if rows:
+        return rows[0]['timestamp']
+    return None
 
 
 def execute_query(connection: Connection, query: str) -> list[dict]:
     with connection:
         cursor = connection.cursor()
+        logger.info(f"Executing query: {query}")
         cursor.execute(query)
+
+        if cursor.description is None:
+            logger.debug("Query results: None")
+            return []
+
         columns = [column[0] for column in cursor.description]
         results = []
         for row in cursor.fetchall():
             results.append(dict(zip(columns, row)))
+        logger.info(f"Query results: {results}")
         return results
 
 

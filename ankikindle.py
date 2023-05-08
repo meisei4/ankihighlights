@@ -5,6 +5,7 @@ import vocab_db_accessor_wrap
 from datetime import datetime
 from sqlite3 import Connection
 
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -58,25 +59,27 @@ def process_new_vocab_highlights(connection_injection: Connection, ankiconnect_i
 # ANKI STUFF
 def add_notes_to_anki(vocab_highlights: list[dict], deck_name: str, card_type: str,
                       ankiconnect_injection: ankiconnect_wrapper) -> list[int]:
-    logger.info("adding notes to anki...")
+    logger.info("Adding notes to Anki...")
     try:
         ankiconnect_request_permission(ankiconnect_injection)
         if deck_name not in ankiconnect_injection.get_all_deck_names():
-            raise ValueError(f"deck named: '{deck_name}' was not found in remote anki account")  # TODO provide usr info
+            raise ValueError(f"Deck named: '{deck_name}' was not found in local Anki account")
         if card_type not in ankiconnect_injection.get_all_card_type_names():
-            raise ValueError(f"card type: '{card_type}' was not found in remote anki account")  # TODO provide usr info
+            raise ValueError(f"Card type: '{card_type}' was not found in local Anki account")
         added_note_ids = []
-        for vocab_highlight in vocab_highlights:
+        for index, vocab_highlight in enumerate(vocab_highlights):
             note_id = add_or_update_note(vocab_highlight, deck_name, card_type, ankiconnect_injection)
             added_note_ids.append(note_id)
-        logger.info(f"added {len(added_note_ids)} notes successfully.")
+            logger.info(f"Added note {index + 1}/{len(vocab_highlights)}: {vocab_highlight['word']} (Note ID: {note_id})")
+
+        logger.info(f"Successfully added {len(added_note_ids)} notes to Anki.")
         return added_note_ids
     except ValueError as e:
         logger.error(f"ValueError: {e}")
     except ConnectionError as e:
         logger.error(f"ConnectionError: {e}")
     except Exception as e:
-        logger.error(f"unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
 
 
 def add_or_update_note(word_highlight: dict, deck_name: str, card_type: str,
@@ -100,12 +103,16 @@ def find_existing_note_id(word: str, deck_name: str, ankiconnect_injection: anki
 
 
 def update_note_with_more_examples(note_id: int, new_example: str, ankiconnect_injection: ankiconnect_wrapper):
+    logger.info(f"Updating note with ID {note_id} by adding new example: '{new_example}'")
+
     note = ankiconnect_injection.get_single_anki_note_details(note_id, True)
     note_fields = note['fields']
     example_sentences = note_fields['Sentence']
-    example_sentences = _update_example_sentences(example_sentences, new_example)
-    note_fields['Sentence'] = example_sentences
-    # TODO figure out if this works with cards, sometimes cards and notes have different ids
+
+    updated_example_sentences = _update_example_sentences(example_sentences, new_example)
+    note_fields['Sentence'] = updated_example_sentences
+    logger.debug(f"Updated example sentences: '{updated_example_sentences}'")
+
     containing_decks = ankiconnect_injection.get_decks_containing_card(note_id)
     if PRIORITY_DECK_NAME not in containing_decks:
         current_tags = note['tags']
@@ -113,7 +120,9 @@ def update_note_with_more_examples(note_id: int, new_example: str, ankiconnect_i
         counter_tag += 1
         if counter_tag >= 3:
             note['deckName'] = PRIORITY_DECK_NAME  # TODO this wont work, u hav to upd8 the note deck differently
+            logger.info(f"Note with ID {note_id} now belongs to the '{PRIORITY_DECK_NAME}' deck")
         ankiconnect_injection.update_anki_note(note_id, note_fields, counter_tag)
+        logger.info(f"Note with ID {note_id} updated successfully")
 
 
 def _update_example_sentences(example_sentences: str, new_example: str) -> str:
@@ -145,5 +154,8 @@ def ankiconnect_request_permission(ankiconnect_injection: ankiconnect_wrapper):
 # TODO only for recovery during unmocked connection testing purposes (adding unwanted cards). move somewhere else or
 #  figure out it being needed later
 def remove_notes_from_anki(note_id_to_be_deleted: int, ankiconnect_injection: ankiconnect_wrapper):
+    logger.info(f"removing cards...")
     ankiconnect_request_permission(ankiconnect_injection)
     ankiconnect_injection.delete_anki_note(note_id_to_be_deleted)
+    logger.info(f"Note with ID {note_id_to_be_deleted} has been removed successfully")
+
