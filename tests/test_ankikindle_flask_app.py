@@ -1,15 +1,15 @@
 import os
-import sqlite3
 import pytest
+import sqlite3
 import logging
 import threading
-from flask import Flask
-import ankiconnect_wrapper
 import ankikindle
+import ankiconnect_wrapper
 import ankikindle_flask_app
-from unittest.mock import patch, Mock
-
 import vocab_db_accessor_wrap
+from flask import Flask
+from unittest.mock import patch
+
 
 logging.basicConfig(filename='test_app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def test_integration_with_flask():
     flask_app.run()
 
 
-def watch_for_kindle_mount_TEST_wrapper():
+def watch_for_kindle_mount_TEST_wrapper(ankikindle_injection: ankikindle, ankiconnect_wrapper_injection: ankiconnect_wrapper):
     mounted = False
     while True:
         dirs = [d for d in os.listdir("/Volumes") if os.path.isdir(os.path.join("/Volumes", d))]
@@ -39,7 +39,7 @@ def watch_for_kindle_mount_TEST_wrapper():
                 mounted = True
                 logger.info('Kindle mounted')
                 connection_injection = sqlite3.Connection(vocab_db_accessor_wrap.MACOS_TARGET_VOCAB_MOUNT_FILE_LOC)
-                ankikindle.process_new_vocab_highlights(connection_injection, ankiconnect_wrapper)
+                ankikindle_injection.process_new_vocab_highlights(connection_injection, ankiconnect_wrapper_injection)
 
                 #  TODO APPARENTLY THIS FUCKING process FUNCTION DOESNT EXIST (imprto of some shit)"!!!!! __I DONT BELIEVE IT!!!!
         elif "Kindle" not in dirs and mounted:

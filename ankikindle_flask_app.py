@@ -36,10 +36,11 @@ def register_flask_routes(flask_app: Flask, ankikindle_injection: ankikindle,
                           ankiconnect_wrapper_injection: ankiconnect_wrapper):
     register_process_new_vocab_highlights_route(flask_app, ankikindle_injection, ankiconnect_wrapper_injection)
 
-
+'''
 if __name__ == '__main__':
     app = Flask(__name__)
     register_flask_routes(app, ankikindle, ankiconnect_wrapper)
     thread = threading.Thread(target=watch_for_kindle_mount)
     thread.start()
     app.run(host='0.0.0.0', port=5000)
+'''
