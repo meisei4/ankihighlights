@@ -1,7 +1,5 @@
 import os
 import logging
-import threading
-import ankikindle
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
 from flask import Flask
@@ -32,7 +30,7 @@ def watch_for_kindle_mount(flask_app: Flask):
             logger.info('Kindle unmounted')
 
 
-def register_flask_routes(flask_app: Flask, ankikindle_injection: ankikindle,
+def register_flask_routes(flask_app: Flask, ankikindle_injection,
                           ankiconnect_wrapper_injection: ankiconnect_wrapper):
     register_process_new_vocab_highlights_route(flask_app, ankikindle_injection, ankiconnect_wrapper_injection)
 

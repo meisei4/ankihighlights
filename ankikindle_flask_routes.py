@@ -1,12 +1,10 @@
 import sqlite3
-
 import ankiconnect_wrapper
-import ankikindle
 import vocab_db_accessor_wrap
 from flask import jsonify, Flask
 
 
-def register_process_new_vocab_highlights_route(flask_app: Flask, ankikindle_injection: ankikindle,
+def register_process_new_vocab_highlights_route(flask_app: Flask, ankikindle_injection,
                                                 ankiconnect_injection: ankiconnect_wrapper):
     @flask_app.route('/process_new_vocab_highlights', methods=['POST'])
     def process_new_vocab_highlights_route():
