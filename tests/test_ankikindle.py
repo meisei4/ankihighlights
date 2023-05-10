@@ -1,37 +1,17 @@
-import os
-import shutil
-import sqlite3
-import tempfile
-
 import pytest
 import threading
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
-from . import test_vocab_db_wrapper
 from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
-from .test_vocab_db_wrapper import TEST_VOCAB_DB_FILE, add_word_lookups_to_db
-
-
-@pytest.fixture(scope='function')
-def temp_db_directory():
-    with tempfile.TemporaryDirectory() as temp_dir:
-        yield temp_dir
-
-
-@pytest.fixture(scope='function')
-def main_thread_test_db_connection(temp_db_directory: str):
-    shutil.copy(TEST_VOCAB_DB_FILE, os.path.join(temp_db_directory, 'vocab.db'))
-    with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
-        yield conn
-        test_vocab_db_wrapper.remove_latest_timestamp_table(conn)
-        test_vocab_db_wrapper.remove_vocab_lookup_insert(conn)
+from .test_util import add_word_lookups_to_db
 
 
 # TODO this test is passing its just the fixture stuff and the tear down involved with tempfile thats failing
 def test_update_database_while_main_program_is_running(temp_db_directory: str,
                                                        main_thread_test_db_connection: Connection):
+
     ankiconnect_wrapper_mock = Mock()
     ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
     ankiconnect_wrapper_mock.get_all_deck_names.return_value = ['mail_sucks_in_japan']

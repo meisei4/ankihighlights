@@ -103,31 +103,6 @@ def get_table_info(db_connection_injection: Connection) -> dict:
     return table_info
 
 
-# TODO use this at somepoint in order to maybe allow for users to reset things??
-def copy_vocab_db_to_backup_and_tmp_upon_proper_access(count: int, db_path: str):
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    backup_dir = os.path.join(project_root, "backup")
-    tmp_dir = os.path.join(project_root, "tmp")
-    os.makedirs(backup_dir, exist_ok=True)
-    os.makedirs(tmp_dir, exist_ok=True)
-    while not os.path.exists(db_path):
-        time.sleep(2)  # TODO add some time out maybe?
-    count += 1
-    copy_vocab_db(count, db_path, backup_dir, tmp_dir)
-
-
-def copy_vocab_db(count: int, vocab_file_path: str, backup_dir: str, tmp_dir: str):
-    start_time = time.monotonic()
-    shutil.copy(vocab_file_path, backup_dir)
-    shutil.copy(vocab_file_path, tmp_dir)
-    end_time = time.monotonic()
-    elapsed_time = end_time - start_time
-    file_size = os.path.getsize(vocab_file_path) / 1024  # Get file size in KB
-    print()
-    print(f"vocab.db copied to backup and tmp folders for the {count}{ordinal_suffix(count)} time "
-          f"(elapsed time: {elapsed_time:.2f}s, file size: {file_size:.2f} KB)")
-
-
 def try_to_get_tmp_db_path() -> str:
     project_root = os.path.dirname(os.path.abspath(__file__))
     tmp_dir = os.path.join(project_root, "tmp")

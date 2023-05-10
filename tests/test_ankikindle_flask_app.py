@@ -9,7 +9,7 @@ import ankiconnect_wrapper
 import ankikindle_flask_app
 from .. import ankikindle
 from unittest.mock import patch
-from tests.test_vocab_db_wrapper import TEST_VOCAB_DB_FILE
+from .test_util import TEST_VOCAB_DB_FILE
 
 logging.basicConfig(filename='test_app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
