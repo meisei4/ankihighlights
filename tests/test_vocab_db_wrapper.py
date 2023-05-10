@@ -1,6 +1,8 @@
 import os
 import json
 import shutil
+import tempfile
+
 import pytest
 import sqlite3
 import threading
@@ -45,7 +47,7 @@ def test_get_all_word_look_ups_after_timestamp(main_thread_test_db_connection: C
     db_update_processed_event = threading.Event()
     db_update_processed_event.set()
     stop_event = threading.Event()
-    add_word_lookups_to_db(db_update_ready_event, db_update_processed_event, stop_event)
+    add_word_lookups_to_db(db_update_ready_event, db_update_processed_event, stop_event) #TODO also fix this to use the tempfile thing
     result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(main_thread_test_db_connection, test_timestamp)
 
     assert len(result) == 1
@@ -149,8 +151,9 @@ def remove_vocab_lookup_insert(main_thread_test_db_connection: Connection):
         main_thread_test_db_connection.commit()
 
 
-def add_word_lookups_to_db(db_update_ready_event: threading.Event, db_update_processed_event: threading.Event, stop_event: threading.Event):
-    with sqlite3.connect(TEST_VOCAB_DB_FILE) as db_update_thread_test_db_connection:
+def add_word_lookups_to_db(test_db_dir: tempfile.TemporaryDirectory, db_update_ready_event: threading.Event,
+                           db_update_processed_event: threading.Event, stop_event: threading.Event):
+    with sqlite3.connect(os.path.join(test_db_dir.name, 'vocab.db')) as db_update_thread_test_db_connection:
         db_update_ready_event.wait()
         cursor = db_update_thread_test_db_connection.cursor()
         cursor.execute("BEGIN")
