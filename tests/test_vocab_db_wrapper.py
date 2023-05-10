@@ -25,9 +25,15 @@ def test_copy_to_backup_and_tmp_infinitely():
 
 
 @pytest.fixture(scope='function')
-def main_thread_test_db_connection():
-    with sqlite3.connect(TEST_VOCAB_DB_FILE) as conn:
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(conn)
+def temp_db_directory():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        yield temp_dir
+
+
+@pytest.fixture(scope='function')
+def main_thread_test_db_connection(temp_db_directory: str):
+    shutil.copy(TEST_VOCAB_DB_FILE, os.path.join(temp_db_directory, 'vocab.db'))
+    with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
         yield conn
         remove_latest_timestamp_table(conn)
         remove_vocab_lookup_insert(conn)
@@ -40,14 +46,16 @@ def test_get_table_info(main_thread_test_db_connection: Connection):
         assert table_info is not None
 
 
-def test_get_all_word_look_ups_after_timestamp(main_thread_test_db_connection: Connection):
+# TODO this test is passing its just the fixture stuff and the tear down involved with tempfile thats failing
+def test_get_all_word_look_ups_after_timestamp(temp_db_directory: str,
+                                               main_thread_test_db_connection: Connection):
     test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
     db_update_ready_event = threading.Event()
     db_update_ready_event.set()
     db_update_processed_event = threading.Event()
     db_update_processed_event.set()
     stop_event = threading.Event()
-    add_word_lookups_to_db(db_update_ready_event, db_update_processed_event, stop_event) #TODO also fix this to use the tempfile thing
+    add_word_lookups_to_db(temp_db_directory, db_update_ready_event, db_update_processed_event, stop_event) #TODO also fix this to use the tempfile thing
     result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(main_thread_test_db_connection, test_timestamp)
 
     assert len(result) == 1
@@ -55,6 +63,32 @@ def test_get_all_word_look_ups_after_timestamp(main_thread_test_db_connection: C
     assert result[0]["usage"] == "日本語の例文"
     assert result[0]["title"] == "日本の本"
     assert result[0]["authors"] == "著者A"
+
+
+def add_word_lookups_to_db(test_db_directory: str,
+                           db_update_ready_event: threading.Event,
+                           db_update_processed_event: threading.Event,
+                           stop_event: threading.Event):
+    with sqlite3.connect(os.path.join(test_db_directory, 'vocab.db')) as db_update_thread_test_db_connection:
+        db_update_ready_event.wait()
+        cursor = db_update_thread_test_db_connection.cursor()
+        cursor.execute("BEGIN")
+        cursor.execute(f"""
+                    INSERT INTO WORDS (id, word, stem, lang, category, timestamp, profileid) 
+                    VALUES ('1234', '日本語', '日本', 'ja', 1, {TEST_FUTURE_TIMESTAMP}, 'test')
+                """)
+        cursor.execute("""
+                    INSERT INTO BOOK_INFO (id, asin, guid, lang, title, authors) 
+                    VALUES ('1234', 'B123', 'G456', 'ja', '日本の本', '著者A')
+                """)
+        cursor.execute(f"""
+                    INSERT INTO LOOKUPS (id, word_key, book_key, dict_key, pos, usage, timestamp) 
+                    VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {TEST_FUTURE_TIMESTAMP})
+                """)
+        cursor.execute("END")
+        db_update_thread_test_db_connection.commit()
+        db_update_processed_event.wait()
+        stop_event.set()
 
 
 def test_set_latest_timestamp(main_thread_test_db_connection: Connection):
@@ -151,25 +185,3 @@ def remove_vocab_lookup_insert(main_thread_test_db_connection: Connection):
         main_thread_test_db_connection.commit()
 
 
-def add_word_lookups_to_db(test_db_dir: tempfile.TemporaryDirectory, db_update_ready_event: threading.Event,
-                           db_update_processed_event: threading.Event, stop_event: threading.Event):
-    with sqlite3.connect(os.path.join(test_db_dir.name, 'vocab.db')) as db_update_thread_test_db_connection:
-        db_update_ready_event.wait()
-        cursor = db_update_thread_test_db_connection.cursor()
-        cursor.execute("BEGIN")
-        cursor.execute(f"""
-                    INSERT INTO WORDS (id, word, stem, lang, category, timestamp, profileid) 
-                    VALUES ('1234', '日本語', '日本', 'ja', 1, {TEST_FUTURE_TIMESTAMP}, 'test')
-                """)
-        cursor.execute("""
-                    INSERT INTO BOOK_INFO (id, asin, guid, lang, title, authors) 
-                    VALUES ('1234', 'B123', 'G456', 'ja', '日本の本', '著者A')
-                """)
-        cursor.execute(f"""
-                    INSERT INTO LOOKUPS (id, word_key, book_key, dict_key, pos, usage, timestamp) 
-                    VALUES ('1351', '1234', '1234', '1', 'n', '日本語の例文', {TEST_FUTURE_TIMESTAMP})
-                """)
-        cursor.execute("END")
-        db_update_thread_test_db_connection.commit()
-        db_update_processed_event.wait()
-        stop_event.set()

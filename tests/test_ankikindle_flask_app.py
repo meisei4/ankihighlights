@@ -18,10 +18,12 @@ logger = logging.getLogger(__name__)
 @pytest.mark.skip("this test is only to test the speed in which the os mounts and unmounts the kindle")
 def test_continuous_mount_unmount_logging(client):
     with patch('ankikindle_flask_app.on_mounted'):
-        ankikindle_flask_app.watch_for_kindle_mount(client, "/Volumes", "Kindle")  # TODO figure out how to organize this mounting thing between os
+        ankikindle_flask_app.watch_for_kindle_mount(client, "/Volumes",
+                                                    "Kindle")  # TODO figure out how to organize this mounting thing between os
 
 
-def simulate_kindle_device_mounting(temp_dir: tempfile.TemporaryDirectory, ready_for_mount_event: threading.Event, db_temp_file_copy_finished_event: threading.Event()):
+def simulate_kindle_device_mounting(temp_dir: tempfile.TemporaryDirectory, ready_for_mount_event: threading.Event,
+                                    db_temp_file_copy_finished_event: threading.Event()):
     ready_for_mount_event.wait()
     shutil.copy(TEST_VOCAB_DB_FILE, os.path.join(temp_dir.name, 'vocab.db'))
     db_temp_file_copy_finished_event.set()
@@ -29,10 +31,10 @@ def simulate_kindle_device_mounting(temp_dir: tempfile.TemporaryDirectory, ready
 
 
 def monitor_kindle_mount_status_for_tests(ankiconnect_injection: ankiconnect_wrapper,
-                                        ready_for_mount_event: threading.Event,
-                                        db_temp_file_copy_finished_event: threading.Event,
-                                        processed_new_vocab_highlights_event: threading.Event,
-                                        temp_dir: tempfile.TemporaryDirectory):
+                                          ready_for_mount_event: threading.Event,
+                                          db_temp_file_copy_finished_event: threading.Event,
+                                          processed_new_vocab_highlights_event: threading.Event,
+                                          temp_dir: tempfile.TemporaryDirectory):
     mounted = False
     while not processed_new_vocab_highlights_event.is_set():
         if db_temp_file_copy_finished_event.is_set() and os.path.exists(temp_dir.name) and not mounted:

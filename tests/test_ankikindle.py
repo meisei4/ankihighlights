@@ -21,17 +21,16 @@ def temp_db_directory():
 
 
 @pytest.fixture(scope='function')
-def main_thread_test_db_connection(temp_db_directory):
-    temp_db_file_path = os.path.join(temp_db_directory, 'vocab.db')
-    shutil.copy(TEST_VOCAB_DB_FILE, temp_db_file_path)
-    with sqlite3.connect(temp_db_file_path) as conn:
+def main_thread_test_db_connection(temp_db_directory: str):
+    shutil.copy(TEST_VOCAB_DB_FILE, os.path.join(temp_db_directory, 'vocab.db'))
+    with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
         yield conn
         test_vocab_db_wrapper.remove_latest_timestamp_table(conn)
         test_vocab_db_wrapper.remove_vocab_lookup_insert(conn)
 
 
-@pytest.mark.skip("inifintely doing stuff, fix it TODO ")
-def test_update_database_while_main_program_is_running(temp_db_directory: tempfile.TemporaryDirectory,
+# TODO this test is passing its just the fixture stuff and the tear down involved with tempfile thats failing
+def test_update_database_while_main_program_is_running(temp_db_directory: str,
                                                        main_thread_test_db_connection: Connection):
     ankiconnect_wrapper_mock = Mock()
     ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
