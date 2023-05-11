@@ -27,11 +27,11 @@ def remove_temp_db_directory(temp_dir: str) -> None:
     logger.info(f"Removed temporary directory: {temp_dir}")
 
 
-def add_word_lookups_to_db(db_update_ready_event: threading.Event,
+def add_word_lookups_to_db(temp_db_directory: str,
+                           db_update_ready_event: threading.Event,
                            db_update_processed_event: threading.Event,
                            stop_event: threading.Event):
 
-    temp_db_directory = create_temp_db_directory()
     with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
         db_update_ready_event.wait()
         cursor = conn.cursor()
