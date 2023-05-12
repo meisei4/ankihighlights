@@ -2,7 +2,6 @@ import logging
 import os
 import shutil
 import sqlite3
-import tempfile
 import threading
 import vocab_db_accessor_wrap
 
@@ -11,19 +10,23 @@ import vocab_db_accessor_wrap
 TEST_VOCAB_DB_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'resources', 'vocab.db'))
 TEST_FUTURE_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2080, 4, 25)   #  TODO probability is i will be dead and thus not my problem
 
-logging.basicConfig(filename='test_app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 
-def create_temp_db_directory() -> str:
-    temp_dir = tempfile.mkdtemp()
+def create_temp_db_directory_and_file() -> str:
+    temp_dir = os.path.join(os.path.dirname(__file__), 'tests_tmp')
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+
     shutil.copy(TEST_VOCAB_DB_FILE, os.path.join(temp_dir, 'vocab.db'))
-    logger.info(f"Created temporary directory: {temp_dir}")
     return temp_dir
 
 
 def remove_temp_db_directory(temp_dir: str) -> None:
-    shutil.rmtree(temp_dir)
+    db_file = os.path.join(temp_dir, 'vocab.db')
+    os.remove(db_file)
+    os.rmdir(temp_dir)
     logger.info(f"Removed temporary directory: {temp_dir}")
 
 

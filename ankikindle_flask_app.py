@@ -5,7 +5,7 @@ from flask import Flask
 from ankikindle_flask_routes import register_process_new_vocab_highlights_route
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 

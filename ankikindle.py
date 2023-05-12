@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlite3 import Connection
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 PRIORITY_DECK_NAME = 'Priority Deck'

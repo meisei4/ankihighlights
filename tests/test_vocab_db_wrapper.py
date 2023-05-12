@@ -1,37 +1,21 @@
 import os
 import json
-import pytest
 import sqlite3
 import threading
 import vocab_db_accessor_wrap
-from tests import test_util
 from sqlite3 import Connection
-from tests.test_util import create_temp_db_directory, add_word_lookups_to_db
+from tests.test_util import create_temp_db_directory_and_file, add_word_lookups_to_db
 
 
-# TODO figure out the remote db thing, and how to have that be reflected
-
-
-# TODO figure out how to clean up with out file access issues
-@pytest.fixture(scope="module")
-def db_connection():
-    temp_dir = test_util.create_temp_db_directory()
-    db_file = os.path.join(temp_dir, 'vocab.db')
-    with sqlite3.connect(db_file) as conn:
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(conn)
-        yield conn
-
-
-def test_get_all_word_look_ups_after_timestamp():
+def test_get_all_word_look_ups_after_timestamp(db_connection: Connection, temp_db_directory):
     test_timestamp = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
     db_update_ready_event = threading.Event()
     db_update_ready_event.set()
     db_update_processed_event = threading.Event()
     db_update_processed_event.set()
     stop_event = threading.Event()
-    temp_db_directory = create_temp_db_directory()
     add_word_lookups_to_db(temp_db_directory, db_update_ready_event, db_update_processed_event, stop_event)
-    with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
+    with db_connection as conn:
         result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(conn, test_timestamp)
         assert len(result) == 1
         assert result[0]["word"] == "日本語"
@@ -41,7 +25,7 @@ def test_get_all_word_look_ups_after_timestamp():
 
 
 def test_get_table_info():
-    temp_db_directory = create_temp_db_directory()
+    temp_db_directory = create_temp_db_directory_and_file()
     with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
         table_info = vocab_db_accessor_wrap.get_table_info(conn)
         print(json.dumps(table_info, indent=2))

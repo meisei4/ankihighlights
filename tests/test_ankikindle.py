@@ -1,29 +1,16 @@
 import os
-import sqlite3
-
 import pytest
+import sqlite3
 import threading
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
-from . import test_util
 from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
 from .test_util import add_word_lookups_to_db
 
-temp_dir = test_util.create_temp_db_directory()
 
-
-# TODO figure out clean up of temp stuff
-@pytest.fixture(scope="module")
-def db_connection():
-    db_file = os.path.join(temp_dir, 'vocab.db')
-    with sqlite3.connect(db_file) as conn:
-        vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(conn)
-        yield conn
-
-
-def test_update_database_while_main_program_is_running(db_connection: Connection):
+def test_update_database_while_main_program_is_running(db_connection: Connection, temp_db_directory: str):
     ankiconnect_wrapper_mock = Mock()
     ankiconnect_wrapper_mock.request_connection_permission.return_value = {'permission': 'granted'}
     ankiconnect_wrapper_mock.get_all_deck_names.return_value = ['mail_sucks_in_japan']
@@ -35,7 +22,7 @@ def test_update_database_while_main_program_is_running(db_connection: Connection
     main_thread_stop_event = threading.Event()
 
     # TODO this is bad to just pass in the temp_dir from global varaiable but it works for now, fix it later please
-    db_update_thread = threading.Thread(target=add_word_lookups_to_db, args=(temp_dir,
+    db_update_thread = threading.Thread(target=add_word_lookups_to_db, args=(temp_db_directory,
                                                                              db_update_ready_event,
                                                                              db_update_processed_event,
                                                                              main_thread_stop_event))

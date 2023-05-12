@@ -1,13 +1,10 @@
-import os
-import time
-import shutil
 import typing
 import logging
 import datetime
 from sqlite3 import Connection
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 logger = logging.getLogger(__name__)
 _latest_timestamp: int = -1
 
@@ -66,7 +63,7 @@ def get_latest_timestamp(connection_injection: Connection) -> typing.Optional:
 def execute_query(connection: Connection, query: str) -> list[dict]:
     with connection:
         cursor = connection.cursor()
-        logger.info(f"Executing query: {query}")
+        logger.debug(f"Executing query: {query}")
         cursor.execute(query)
 
         if cursor.description is None:
@@ -77,7 +74,7 @@ def execute_query(connection: Connection, query: str) -> list[dict]:
         results = []
         for row in cursor.fetchall():
             results.append(dict(zip(columns, row)))
-        logger.info(f"Query results: {results}")
+        logger.debug(f"Query results: {results}")
         return results
 
 
@@ -101,14 +98,6 @@ def get_table_info(db_connection_injection: Connection) -> dict:
             table_info[table_name] = table_columns
 
     return table_info
-
-
-def try_to_get_tmp_db_path() -> str:
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    tmp_dir = os.path.join(project_root, "tmp")
-    if os.path.exists(tmp_dir):
-        return tmp_dir
-    raise FileNotFoundError("the fuckk, local db doesnt (seem to0)exist asshole, 多分 you fucked up the mount function")
 
 
 def ordinal_suffix(count: int) -> str:
