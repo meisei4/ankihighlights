@@ -7,11 +7,17 @@ from sqlite3 import Connection
 
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
-logger = logging.getLogger(__name__)
+ankikindle_main_logger = logging.getLogger(__name__)
 
 PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
-DEFAULT_FIRST_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
+# TODO figure out a good practice here: how could this be impemented to work for first time users in general
+#  initial idea:
+#  provide config allowing for an initial timestamp to designate where the user wants to try to generate cards
+#  from ALL vocab highlights theyve made up until using this app
+
+
+DEFAULT_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
 
 _running = False
 
@@ -24,42 +30,32 @@ def main(connection_injection: Connection, ankiconnect_injection: ankiconnect_wr
             process_new_vocab_highlights(connection_injection, ankiconnect_injection)
 
     except ConnectionError as e:
-        logger.error(f"connection error occurred during ankikindle run{e}")
+        ankikindle_main_logger.error(f"connection error occurred during ankikindle run{e}")
     finally:
         _running = False
-
-
-def stop_ankikindle(stop_event: threading.Event, thread: threading.Thread):
-    stop_event.set()
-    thread.join()
-
-
-def is_running():
-    global _running
-    return _running
 
 
 def process_new_vocab_highlights(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper) -> list[dict]:
     latest_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(connection_injection)
     if latest_timestamp is None:
-        latest_timestamp = DEFAULT_FIRST_TIMESTAMP
-        logger.info(f"latest timestamp not found in the timestamp table, initializing to default: {DEFAULT_FIRST_TIMESTAMP}")
+        latest_timestamp = DEFAULT_TIMESTAMP
+        ankikindle_main_logger.info(f"latest timestamp not found in the timestamp table, initializing to default: {latest_timestamp}")
         vocab_db_accessor_wrap.set_latest_timestamp(connection_injection, latest_timestamp)
     vocab_highlights = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(connection_injection, latest_timestamp)
     if vocab_highlights:
-        logger.info(f"new vocab_highlights:{vocab_highlights} were found")
+        ankikindle_main_logger.info(f"new vocab_highlights:{vocab_highlights} were found")
         add_notes_to_anki(vocab_highlights, deck_name="mail_sucks_in_japan", card_type="aedict",  # TODO fix this to use custom deck
                           ankiconnect_injection=ankiconnect_injection)
         latest_timestamp = vocab_db_accessor_wrap.get_latest_lookup_timestamp(connection_injection)
         vocab_db_accessor_wrap.set_latest_timestamp(connection_injection, latest_timestamp)
-        logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp / 1000)}")
+        ankikindle_main_logger.info(f"latest_timestamp is now :{datetime.fromtimestamp(latest_timestamp / 1000)}")
     return vocab_highlights
 
 
 # ANKI STUFF
 def add_notes_to_anki(vocab_highlights: list[dict], deck_name: str, card_type: str,
                       ankiconnect_injection: ankiconnect_wrapper) -> list[int]:
-    logger.info("Adding notes to Anki...")
+    ankikindle_main_logger.info("Adding notes to Anki...")
     try:
         ankiconnect_request_permission(ankiconnect_injection)
         if deck_name not in ankiconnect_injection.get_all_deck_names():
@@ -70,29 +66,29 @@ def add_notes_to_anki(vocab_highlights: list[dict], deck_name: str, card_type: s
         for index, vocab_highlight in enumerate(vocab_highlights):
             note_id = add_or_update_note(vocab_highlight, deck_name, card_type, ankiconnect_injection)
             added_note_ids.append(note_id)
-            logger.info(f"Added note {index + 1}/{len(vocab_highlights)}: {vocab_highlight['word']} (Note ID: {note_id})")
+            ankikindle_main_logger.info(f"Added note {index + 1}/{len(vocab_highlights)}: {vocab_highlight['word']} (Note ID: {note_id})")
 
-        logger.info(f"Successfully added {len(added_note_ids)} notes to Anki.")
+        ankikindle_main_logger.info(f"Successfully added {len(added_note_ids)} notes to Anki.")
         return added_note_ids
     except ValueError as e:
-        logger.error(f"ValueError: {e}")
+        ankikindle_main_logger.error(f"ValueError: {e}")
     except ConnectionError as e:
-        logger.error(f"ConnectionError: {e}")
+        ankikindle_main_logger.error(f"ConnectionError: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        ankikindle_main_logger.error(f"Unexpected error: {e}")
 
 
 def add_or_update_note(word_highlight: dict, deck_name: str, card_type: str,
                        ankiconnect_injection: ankiconnect_wrapper) -> int:
     existing_note_id = find_existing_note_id(word_highlight['word'], deck_name, ankiconnect_injection)
     if existing_note_id > 0:  # -1 id means note doesn't exist
-        logger.info(
+        ankikindle_main_logger.info(
             f"note already exists for '{word_highlight['word']}' in '{deck_name}' deck; thus updating that note")
         update_note_with_more_examples(existing_note_id, word_highlight['usage'], ankiconnect_injection)
-        logger.info(f"note updated successfully")
+        ankikindle_main_logger.info(f"note updated successfully")
         return existing_note_id
     else:
-        logger.info(
+        ankikindle_main_logger.info(
             f"no existing note found for '{word_highlight['word']}' in '{deck_name}' deck; thus adding new note")
         return add_new_note(word_highlight, deck_name, card_type, ankiconnect_injection)
 
@@ -103,7 +99,7 @@ def find_existing_note_id(word: str, deck_name: str, ankiconnect_injection: anki
 
 
 def update_note_with_more_examples(note_id: int, new_example: str, ankiconnect_injection: ankiconnect_wrapper):
-    logger.info(f"Updating note with ID {note_id} by adding new example: '{new_example}'")
+    ankikindle_main_logger.info(f"Updating note with ID {note_id} by adding new example: '{new_example}'")
 
     note = ankiconnect_injection.get_single_anki_note_details(note_id, True)
     note_fields = note['fields']
@@ -111,7 +107,7 @@ def update_note_with_more_examples(note_id: int, new_example: str, ankiconnect_i
 
     updated_example_sentences = _update_example_sentences(example_sentences, new_example)
     note_fields['Sentence'] = updated_example_sentences
-    logger.debug(f"Updated example sentences: '{updated_example_sentences}'")
+    ankikindle_main_logger.debug(f"Updated example sentences: '{updated_example_sentences}'")
 
     containing_decks = ankiconnect_injection.get_decks_containing_card(note_id)
     if PRIORITY_DECK_NAME not in containing_decks:
@@ -120,9 +116,9 @@ def update_note_with_more_examples(note_id: int, new_example: str, ankiconnect_i
         counter_tag += 1
         if counter_tag >= 3:
             note['deckName'] = PRIORITY_DECK_NAME  # TODO this wont work, u hav to upd8 the note deck differently
-            logger.info(f"Note with ID {note_id} now belongs to the '{PRIORITY_DECK_NAME}' deck")
+            ankikindle_main_logger.info(f"Note with ID {note_id} now belongs to the '{PRIORITY_DECK_NAME}' deck")
         ankiconnect_injection.update_anki_note(note_id, note_fields, counter_tag)
-        logger.info(f"Note with ID {note_id} updated successfully")
+        ankikindle_main_logger.info(f"Note with ID {note_id} updated successfully")
 
 
 def _update_example_sentences(example_sentences: str, new_example: str) -> str:
@@ -154,8 +150,8 @@ def ankiconnect_request_permission(ankiconnect_injection: ankiconnect_wrapper):
 # TODO only for recovery during unmocked connection testing purposes (adding unwanted cards). move somewhere else or
 #  figure out it being needed later
 def remove_notes_from_anki(note_id_to_be_deleted: int, ankiconnect_injection: ankiconnect_wrapper):
-    logger.info(f"removing cards...")
+    ankikindle_main_logger.info(f"removing cards...")
     ankiconnect_request_permission(ankiconnect_injection)
     ankiconnect_injection.delete_anki_note(note_id_to_be_deleted)
-    logger.info(f"Note with ID {note_id_to_be_deleted} has been removed successfully")
+    ankikindle_main_logger.info(f"Note with ID {note_id_to_be_deleted} has been removed successfully")
 

@@ -2,24 +2,20 @@ import os
 import shutil
 import pytest
 import sqlite3
-import logging
 import tempfile
 import threading
 import ankiconnect_wrapper
 import ankikindle_flask_app
 from .. import ankikindle
+from .conftest import logger
 from unittest.mock import patch
 from .test_util import TEST_VOCAB_DB_FILE
-
-logging.basicConfig(filename='test_app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skip("this test is only to test the speed in which the os mounts and unmounts the kindle")
 def test_continuous_mount_unmount_logging(client):
     with patch('ankikindle_flask_app.on_mounted'):
-        ankikindle_flask_app.watch_for_kindle_mount(client, "/Volumes",
-                                                    "Kindle")  # TODO figure out how to organize this mounting thing between os
+        ankikindle_flask_app.watch_for_kindle_mount(client, "/Volumes", "Kindle")
 
 
 def simulate_kindle_device_mounting(temp_dir: tempfile.TemporaryDirectory, ready_for_mount_event: threading.Event,
@@ -70,11 +66,9 @@ def test_basic_integration_with_kindle_mounting_and_db_processing():
     simulate_kindle_device_mounting(temp_dir, ready_for_mount_event, db_temp_file_copy_finished_event)
 
     processed_new_vocab_highlights_event.wait()
-
     watch_kindle_mounting_event_thread.join()
 
     assert os.path.exists(os.path.join(temp_dir.name, 'vocab.db'))
-
     assert not watch_kindle_mounting_event_thread.is_alive()
 
     # TODO add more asserts about the state of the database after processing

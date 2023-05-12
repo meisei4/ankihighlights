@@ -3,8 +3,9 @@ import json
 import sqlite3
 import threading
 import vocab_db_accessor_wrap
+from .conftest import logger
 from sqlite3 import Connection
-from tests.test_util import create_temp_db_directory_and_file, add_word_lookups_to_db
+from .test_util import create_temp_db_directory_and_file, add_word_lookups_to_db
 
 
 def test_get_all_word_look_ups_after_timestamp(db_connection: Connection, temp_db_directory):
@@ -15,20 +16,19 @@ def test_get_all_word_look_ups_after_timestamp(db_connection: Connection, temp_d
     db_update_processed_event.set()
     stop_event = threading.Event()
     add_word_lookups_to_db(temp_db_directory, db_update_ready_event, db_update_processed_event, stop_event)
-    with db_connection as conn:
-        result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(conn, test_timestamp)
-        assert len(result) == 1
-        assert result[0]["word"] == "日本語"
-        assert result[0]["usage"] == "日本語の例文"
-        assert result[0]["title"] == "日本の本"
-        assert result[0]["authors"] == "著者A"
+    result = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(db_connection, test_timestamp)
+    assert len(result) == 1
+    assert result[0]["word"] == "日本語"
+    assert result[0]["usage"] == "日本語の例文"
+    assert result[0]["title"] == "日本の本"
+    assert result[0]["authors"] == "著者A"
 
 
 def test_get_table_info():
     temp_db_directory = create_temp_db_directory_and_file()
     with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
         table_info = vocab_db_accessor_wrap.get_table_info(conn)
-        print(json.dumps(table_info, indent=2))
+        logger.info(json.dumps(table_info, indent=2))
         assert table_info is not None
 
 
@@ -124,5 +124,3 @@ def remove_vocab_lookup_insert(db_connection: Connection):
         cursor.execute("DELETE FROM BOOK_INFO WHERE id = '1234'")
         cursor.execute("DELETE FROM LOOKUPS WHERE id = '1351'")
         db_connection.commit()
-
-

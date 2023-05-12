@@ -1,6 +1,6 @@
 import json
 import pytest
-import kindle_clippings_scraper
+from misc_unused_code_study import kindle_clippings_scraper
 from selenium import webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver
 

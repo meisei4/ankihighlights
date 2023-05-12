@@ -1,9 +1,7 @@
-import logging
 import os
-import sqlite3
-
 import pytest
-
+import logging
+import sqlite3
 import vocab_db_accessor_wrap
 from tests import test_util
 
@@ -12,6 +10,8 @@ def pytest_configure():
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 
 
+logger = logging.getLogger(__name__)  # TODO figure out best practices for package level logger vs module level loggers
+
 
 @pytest.fixture(scope="module")
 def temp_db_directory():
@@ -19,7 +19,7 @@ def temp_db_directory():
     yield temp_dir
 
 
-# TODO figure out clean up of temp stuff, gpt is unable to figure out why the Permission error happens
+# TODO figure out clean up: gpt is unable to help explain why the Permission error happens when trying to remove db dir
 @pytest.fixture(scope="function")
 def db_connection(temp_db_directory: str):
     db_file = os.path.join(temp_db_directory, 'vocab.db')

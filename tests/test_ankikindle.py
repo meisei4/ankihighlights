@@ -1,6 +1,4 @@
-import os
 import pytest
-import sqlite3
 import threading
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
@@ -21,23 +19,23 @@ def test_update_database_while_main_program_is_running(db_connection: Connection
     db_update_processed_event = threading.Event()
     main_thread_stop_event = threading.Event()
 
-    # TODO this is bad to just pass in the temp_dir from global varaiable but it works for now, fix it later please
-    db_update_thread = threading.Thread(target=add_word_lookups_to_db, args=(temp_db_directory,
-                                                                             db_update_ready_event,
-                                                                             db_update_processed_event,
-                                                                             main_thread_stop_event))
+    db_update_thread = threading.Thread(target=add_word_lookups_to_db,
+                                        args=(temp_db_directory,
+                                              db_update_ready_event,
+                                              db_update_processed_event,
+                                              main_thread_stop_event))
     db_update_thread.start()
 
-    ankikindle_main_function_wrapper(db_connection, ankiconnect_wrapper_mock,
+    ankikindle_main_function_wrapper(db_connection,
+                                     ankiconnect_wrapper_mock,
                                      db_update_ready_event,
                                      db_update_processed_event,
                                      main_thread_stop_event)
 
     db_update_thread.join()
 
-    word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(
-        db_connection,
-        ankikindle.DEFAULT_FIRST_TIMESTAMP)
+    word_lookups_after_timestamp = vocab_db_accessor_wrap.get_word_lookups_after_timestamp(db_connection,
+                                                                                           ankikindle.DEFAULT_TIMESTAMP)
     assert len(word_lookups_after_timestamp) == 1
     assert word_lookups_after_timestamp[0]["word"] == "日本語"
     assert word_lookups_after_timestamp[0]["usage"] == "日本語の例文"
@@ -55,6 +53,8 @@ def test_update_database_while_main_program_is_running(db_connection: Connection
     ankiconnect_wrapper_mock.add_anki_note.assert_called_once_with(expected_note)
 
 
+# TODO figure out how to make this wrapper more vulnerable to change. since it doesnt actually call the code that its
+#  intended to test: the {ankikindle.main(...)} method
 def ankikindle_main_function_wrapper(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper,
                                      db_update_ready_event: threading.Event,
                                      db_update_processed_event: threading.Event,

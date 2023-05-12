@@ -71,7 +71,7 @@ The database used in this script is an SQLite database containing the following 
 pip install requests pytest flask selenium
 ```
 
-3. Install the AnkiConnect add-on in Anki by following the instructions on [anki-connect's GitHub page](https://github.com/FooSoft/anki-connect).
+1. Install the AnkiConnect add-on in Anki by following the instructions on [anki-connect's GitHub page](https://github.com/FooSoft/anki-connect).
 
 ## Usage
 
