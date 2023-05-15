@@ -2,13 +2,27 @@
 
 ankikindle is a Python project that integrates Kindle vocabulary highlights with the Anki flashcard system. This project scans for new vocabulary highlights, processes them, and automatically adds them to a specified Anki deck as flashcards. The project utilizes the AnkiConnect API to interact with Anki.
 
+### How it Works
+
+The application uses SQLite to access the Kindle's vocabulary database, extracts the words and their usage, and then uses AnkiConnect to add these words to an Anki deck. The Kindle's vocabulary database is a SQLite file named `vocab.db` (e.g. for macOS located at the system path `/Volumes/Kindle/system/vocabulary/vocab.db` when the Kindle device is mounted.
+
+The `vocab.db` database consists of several tables, among which the `LOOKUPS` and `WORDS` tables are most relevant. The `LOOKUPS` table contains the word usage and its metadata, and the `WORDS` table contains the words.
+
+
 ## Table of Contents
 
 - [Features](#features)
+- [Limitations](#limitations)
 - [Database Structure](#database-structure)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
+
+### Testing
+
+The application includes a set of tests to ensure its proper functioning. You can run these tests using pytest:
+
+
 
 ## Features
 
@@ -17,6 +31,11 @@ ankikindle is a Python project that integrates Kindle vocabulary highlights with
 - Updates existing flashcards with additional example sentences (upon duplicate highlights/lookups to kindle vocab db)
 - Supports custom deck and card type configurations (not yet)
 - Provides a priority deck for frequent vocabulary (vocab words that are encountered more than a certain threshold while reading on kindle)
+
+
+## Limitations
+
+The application assumes that the AnkiConnect server is running on the default port, and that the SQLite database file is located at the default path on the Kindle device. The integration test doesn't check the state of the database after processing. Also there is not custom deck or confif yet, the plan is to use a standardized card type.
 
 
 ## Database Structure
@@ -83,16 +102,13 @@ pip install requests pytest flask selenium
 
 The `test_ankikindle.py` module tests the main functionality of the ankikindle script (recognizing listesned to DB updates, creating and or updating cards). Some tests include:
 
-1. `test_update_database_while_main_program_is_running(main_thread_test_db_connection: Connection)`: Tests whether the database is updated correctly while the main program is running.
-2. `ankikindle_main_function_wrapper(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper, db_update_ready_event: threading.Event, db_update_processed_event: threading.Event, stop_event: threading.Event)`: Wraps the main Ankikindle function for testing purposes.
-3. `test_add_update_and_remove_notes_to_anki()`: Tests adding, updating, and removing notes in Anki.
+Tests include:
 
-### Test Module: test_vocab_db_wrapper.py
+- Unit tests for individual functions.
+- Mock tests that simulate interactions with AnkiConnect and SQLite.
+- Integration test that simulates the mounting of a Kindle device, and checks the processing of the vocabulary database.
 
-The `test_vocab_db_wrapper.py` module tests the functions related to the vocabulary database. Some tests include:
-
-1. `test_get_all_word_look_ups_after_timestamp(main_thread_test_db_connection: Connection)`: Tests whether all word lookups after a specific timestamp are retrieved correctly.
-2. `add_word_lookups_to_db(db_update_ready_event: threading.Event, db_update_processed_event: threading.Event, stop_event: threading.Event)`: Adds word lookups to the test database.
+The tests also include an integration test (`test_basic_integration_with_kindle_mounting_and_db_processing`) which simulates Kindle device mounting and vocabulary database processing. 
 
 
 ## Contributing
