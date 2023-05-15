@@ -11,10 +11,10 @@ ankikindle_main_logger = logging.getLogger(__name__)
 
 PRIORITY_DECK_NAME = 'Priority Deck'
 MAX_EXAMPLE_SENTENCES = 3
-# TODO figure out a good practice here: how could this be impemented to work for first time users in general
-#  initial idea:
-#  provide config allowing for an initial timestamp to designate where the user wants to try to generate cards
-#  from ALL vocab highlights theyve made up until using this app
+# TODO figure out a good practice here: how could this be implemented to work for first time users in general
+#  initial ideas:
+#  ア）provide config allowing for an initial timestamp to designate where the user wants to try to generate cards
+#  イ）just initially target all ALL vocab highlights they've made up until using the app
 
 
 DEFAULT_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)

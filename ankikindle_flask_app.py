@@ -19,7 +19,7 @@ def watch_for_kindle_mount(flask_app: Flask, mount_dir_root: str, kindle_device_
     while True:
         dirs = [d for d in os.listdir(mount_dir_root) if os.path.isdir(os.path.join(mount_dir_root, d))]
         if kindle_device_name in dirs and not mounted:
-            # TODO figure out how to allow for an OS independant mount location
+            # TODO figure out how to allow for an OS independent mount location
             #   例えば MacOS default mount location: "/Volumes/Kindle/system/vocabulary/vocab.db"
             vocab_db_path = os.path.join(mount_dir_root, kindle_device_name, 'system', 'vocabulary', 'vocab.db')
             if os.path.exists(vocab_db_path):
