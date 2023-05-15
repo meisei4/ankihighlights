@@ -1,7 +1,4 @@
 # README: ankikindle 
-
-ankikindle is a Python project that integrates Kindle vocabulary highlights with the Anki flashcard system. This project scans for new vocabulary highlights, processes them, and automatically adds them to a specified Anki deck as flashcards. The project utilizes the AnkiConnect API to interact with Anki.
-
 ### How it Works
 
 The application uses SQLite to access the Kindle's vocabulary database, extracts the words and their usage, and then uses AnkiConnect to add these words to an Anki deck. The Kindle's vocabulary database is a SQLite file named `vocab.db` (e.g. for macOS located at the system path `/Volumes/Kindle/system/vocabulary/vocab.db` when the Kindle device is mounted.
@@ -17,12 +14,6 @@ The `vocab.db` database consists of several tables, among which the `LOOKUPS` an
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
-
-### Testing
-
-The application includes a set of tests to ensure its proper functioning. You can run these tests using pytest:
-
-
 
 ## Features
 
@@ -96,11 +87,9 @@ pip install requests pytest flask selenium
 
 1. Start the Anki application and ensure the AnkiConnect add-on is running.
 
-2. This project includes two main test modules: `test_ankikindle.py` and `test_vocab_db_wrapper.py`.
+2. just run the tests and stuff so far, running the module has not fully been tested
 
 ### Test Module: test_ankikindle.py
-
-The `test_ankikindle.py` module tests the main functionality of the ankikindle script (recognizing listesned to DB updates, creating and or updating cards). Some tests include:
 
 Tests include:
 
