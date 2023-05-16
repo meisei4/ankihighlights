@@ -21,9 +21,13 @@ def create_temp_db_directory_and_file() -> str:
     return temp_dir
 
 
-def remove_temp_db_directory(temp_dir: str) -> None:
+def remove_temp_db_file(temp_dir: str):
     db_file = os.path.join(temp_dir, 'vocab.db')
     os.remove(db_file)
+
+
+def remove_temp_db_directory(temp_dir: str) -> None:
+    remove_temp_db_file(temp_dir)
     os.rmdir(temp_dir)
     logger.info(f"Removed temporary directory: {temp_dir}")
 
@@ -32,8 +36,8 @@ def add_word_lookups_to_db(temp_db_directory: str,
                            db_update_ready_event: threading.Event,
                            db_update_processed_event: threading.Event,
                            stop_event: threading.Event):
-
-    with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
+    conn = sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db'))
+    try:
         db_update_ready_event.wait()
         cursor = conn.cursor()
         cursor.execute("BEGIN")
@@ -53,3 +57,5 @@ def add_word_lookups_to_db(temp_db_directory: str,
         conn.commit()
         db_update_processed_event.wait()
         stop_event.set()
+    finally:
+        conn.close()

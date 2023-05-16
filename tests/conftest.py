@@ -20,7 +20,7 @@ def temp_db_directory():
 
 
 # TODO figure out clean up: gpt is unable to help explain why the Permission error happens when trying to remove db dir
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def db_connection(temp_db_directory: str):
     db_file = os.path.join(temp_db_directory, 'vocab.db')
     conn = sqlite3.connect(db_file)
@@ -30,4 +30,4 @@ def db_connection(temp_db_directory: str):
     finally:
         conn.close()
 
-    # test_util.remove_temp_db_directory(temp_db_directory)
+    test_util.remove_temp_db_directory(temp_db_directory)

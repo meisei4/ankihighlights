@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 _latest_timestamp: int = -1
 
 
-def check_and_create_latest_timestamp_table_if_not_exists(connection_injection: Connection) -> list[dict]:
+def check_and_create_latest_timestamp_table_if_not_exists(connection_injection: Connection) -> None:
     query = """
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='latest_timestamp'
@@ -22,7 +22,10 @@ def check_and_create_latest_timestamp_table_if_not_exists(connection_injection: 
                 timestamp INTEGER
             )
         """
-        return execute_query(connection_injection, query)
+        execute_query(connection_injection, query)
+        logger.info("Table 'latest_timestamp' created.")
+    else:
+        logger.info("Table 'latest_timestamp' already exists.")
 
 
 def get_word_lookups_after_timestamp(connection_injection: Connection, timestamp: int) -> list[dict]:
@@ -43,7 +46,9 @@ def get_latest_lookup_timestamp(connection_injection: Connection) -> int:
         return execute_query(connection_injection, query)[0]['timestamp']
 
 
+# TODO the new fixture update in conftest is removing the db at the module scope so this is no longer working,
 def set_latest_timestamp(connection_injection: Connection, timestamp: int) -> list[dict]:
+    check_and_create_latest_timestamp_table_if_not_exists(connection_injection)
     query = f"""
         INSERT INTO latest_timestamp (id, timestamp) 
         VALUES ((SELECT COALESCE(MAX(id), 0) + 1 FROM latest_timestamp), {timestamp})
