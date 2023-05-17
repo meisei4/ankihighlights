@@ -44,6 +44,18 @@ def simulate_kindle_device_mounting_with_db_update(temp_dir: tempfile.TemporaryD
     logger.info(f"Kindle directory created and test vocab.db copied to {temp_dir.name}/vocab.db (simulated mount)")
 
 
+def connect_to_db_and_process_potential_new_vocab_lookups(ankiconnect_injection,
+                                                          temp_dir_name,
+                                                          db_temp_file_ready_for_processing_event):
+    connection_injection = sqlite3.connect(os.path.join(temp_dir_name, 'vocab.db'))
+    try:
+        ankikindle.process_new_vocab_highlights(connection_injection, ankiconnect_injection)
+    finally:
+        connection_injection.close()
+        test_util.remove_temp_db_file(temp_dir_name)
+        db_temp_file_ready_for_processing_event.clear()  # unset the event after first process
+
+
 def monitor_kindle_mount_status_for_tests(ankiconnect_injection: ankiconnect_wrapper,
                                           ready_for_mount_event: threading.Event,
                                           db_temp_file_ready_for_processing_event: threading.Event,
@@ -54,28 +66,22 @@ def monitor_kindle_mount_status_for_tests(ankiconnect_injection: ankiconnect_wra
     mounted = False
     processed_mounts = 0
     while processed_mounts < number_of_mounts_to_be_tested:
-        if db_temp_file_ready_for_processing_event.is_set() and os.path.exists(os.path.join(temp_dir.name, 'vocab.db')) and not mounted:
+        vocab_db_path = os.path.join(temp_dir.name, 'vocab.db')
+        if db_temp_file_ready_for_processing_event.is_set() and os.path.exists(vocab_db_path) and not mounted:
             mounted = True
             logger.info('Kindle mounted')
             log_messages.append('Kindle mounted')
-            connection_injection = sqlite3.connect(os.path.join(temp_dir.name, 'vocab.db'))
-            try:
-                # TODO do not mock the ankiconnect_injection and instead do a full addition to anki and then remove the card
-                ankikindle.process_new_vocab_highlights(connection_injection, ankiconnect_injection)
-                processed_mounts += 1
-                logger.info(f"processed mount event {processed_mounts}")
-                log_messages.append(f"processed mount event {processed_mounts}")
-            finally:
-                connection_injection.close()
-                test_util.remove_temp_db_file(temp_dir.name)
-                db_temp_file_ready_for_processing_event.clear()  # unset the event after first process
+            connect_to_db_and_process_potential_new_vocab_lookups(ankiconnect_injection, temp_dir.name,
+                                                                  db_temp_file_ready_for_processing_event)
+            processed_mounts += 1
+            logger.info(f"processed mount event {processed_mounts}")
+            log_messages.append(f"processed mount event {processed_mounts}")
 
-        elif not os.path.exists(os.path.join(temp_dir.name, 'vocab.db')) and mounted:
+        elif not os.path.exists(vocab_db_path) and mounted:
             mounted = False
             logger.info('Kindle unmounted')
             log_messages.append('Kindle unmounted')
         ready_for_mount_event.set()
-    logger.info("watch_for_kindle_mount_TEST_wrapper thread stopped")
 
 
 #@pytest.mark.skip("t")
@@ -107,6 +113,7 @@ def test_basic_integration_with_kindle_mounting_and_db_processing():
                             'Kindle mounted', 'Processed mount event 2', 'Kindle unmounted']
 
     watch_kindle_mounting_event_thread.join()
+    logger.info("monitor_kindle_mount_status_for_tests thread stopped")
 
     assert os.path.exists(os.path.join(temp_dir.name, 'vocab.db'))
     assert not watch_kindle_mounting_event_thread.is_alive()
