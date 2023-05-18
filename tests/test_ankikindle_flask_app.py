@@ -1,5 +1,4 @@
 import os
-import time
 import shutil
 import pytest
 import sqlite3
@@ -20,78 +19,6 @@ def test_continuous_mount_unmount_logging(client):
         ankikindle_flask_app.watch_for_kindle_mount_flask(client, "/Volumes", "Kindle")
 
 
-def test_continuous_mount_unmount_with_db_processing():
-    ankikindle_flask_app.watch_for_kindle_mount_nonflask(ankikindle, ankiconnect_wrapper, "/Volumes", "Kindle")
-
-
-def simulate_kindle_device_mounting(temp_db_file_path: str,
-                                    db_temp_file_ready_for_processing_event: threading.Event):
-    shutil.copy(TEST_VOCAB_DB_FILE, temp_db_file_path)
-    db_temp_file_ready_for_processing_event.set()
-    logger.info(f"Kindle directory created and test vocab.db copied to {temp_db_file_path} (simulated mount)")
-
-
-def simulate_kindle_device_mounting_with_db_update(temp_db_file_path: str,
-                                                   db_temp_file_ready_for_processing_event: threading.Event):
-    shutil.copy(TEST_VOCAB_DB_FILE, temp_db_file_path)
-    db_update_ready_event = threading.Event()
-    db_update_ready_event.set()
-    db_update_processed_event = threading.Event()
-    db_update_processed_event.set()
-    # TODO figure out good practice for optional method parameters and the add word lookups method
-    test_util.add_word_lookups_to_db(temp_db_file_path, db_update_ready_event, db_update_processed_event,
-                                     threading.Event())
-    db_temp_file_ready_for_processing_event.set()
-    logger.info(
-        f"Kindle directory created and test vocab.db copied to {temp_db_file_path} (simulated mount and db update)")
-
-
-def connect_to_db_and_process_potential_new_vocab_lookups_then_disconnect_and_delete_db(
-        ankiconnect_injection: ankiconnect_wrapper,
-        temp_db_file_path: str,
-        db_temp_file_ready_for_processing_event: threading.Event):
-    connection_injection = sqlite3.connect(temp_db_file_path)
-    try:
-        ankikindle.process_new_vocab_highlights(connection_injection, ankiconnect_injection)
-    finally:
-        connection_injection.close()
-        test_util.remove_temp_db_file(temp_db_file_path)
-        db_temp_file_ready_for_processing_event.clear()  # unset the event after first process
-
-
-def monitor_kindle_mount_status_for_tests(ankiconnect_injection: ankiconnect_wrapper,
-                                          ready_for_first_mount_event: threading.Event,
-                                          ready_for_following_mount_events: threading.Event,
-                                          db_temp_file_ready_for_processing_event: threading.Event,
-                                          all_kindle_mounts_finished_event: threading.Event,
-                                          temp_db_file_path: str,
-                                          log_messages: list,
-                                          number_of_mounts_to_be_tested: int,
-                                          is_a_real_mount: bool):
-    mounted = False
-    processed_mounts = 0
-    while processed_mounts < number_of_mounts_to_be_tested:
-        if db_temp_file_ready_for_processing_event.is_set() and os.path.exists(temp_db_file_path) and not mounted:
-            mounted = True
-            logger.info('Kindle mounted')
-            log_messages.append('Kindle mounted')
-            connect_to_db_and_process_potential_new_vocab_lookups_then_disconnect_and_delete_db(ankiconnect_injection,
-                                                                                                temp_db_file_path,
-                                                                                                db_temp_file_ready_for_processing_event)
-            processed_mounts += 1
-            logger.info(f"processed mount event {processed_mounts}")
-            log_messages.append(f"processed mount event {processed_mounts}")
-
-        elif not os.path.exists(temp_db_file_path) and mounted:
-            mounted = False
-            logger.info('Kindle unmounted')
-            log_messages.append('Kindle unmounted')
-            ready_for_following_mount_events.set()
-        ready_for_first_mount_event.set()
-    all_kindle_mounts_finished_event.set()
-
-
-# @pytest.mark.skip("t")
 def test_basic_integration_with_kindle_mounting_and_db_processing():
     ready_for_first_mount_event = threading.Event()
     ready_for_following_mount_events = threading.Event()
@@ -138,3 +65,70 @@ def test_basic_integration_with_kindle_mounting_and_db_processing():
     # TODO add more asserts about the state of the database after processing
 
     logger.info("full end to end basic integration test completed")
+
+
+def monitor_kindle_mount_status_for_tests(ankiconnect_injection: ankiconnect_wrapper,
+                                          ready_for_first_mount_event: threading.Event,
+                                          ready_for_following_mount_events: threading.Event,
+                                          db_temp_file_ready_for_processing_event: threading.Event,
+                                          all_kindle_mounts_finished_event: threading.Event,
+                                          temp_db_file_path: str,
+                                          log_messages: list,
+                                          number_of_mounts_to_be_tested: int,
+                                          is_a_real_mount: bool):
+    mounted = False
+    processed_mounts = 0
+    while processed_mounts < number_of_mounts_to_be_tested:
+        if db_temp_file_ready_for_processing_event.is_set() and os.path.exists(temp_db_file_path) and not mounted:
+            mounted = True
+            logger.info('Kindle mounted')
+            log_messages.append('Kindle mounted')
+            connect_to_db_and_process_potential_new_vocab_lookups_then_disconnect_and_delete_db(ankiconnect_injection,
+                                                                                                temp_db_file_path,
+                                                                                                db_temp_file_ready_for_processing_event)
+            processed_mounts += 1
+            logger.info(f"processed mount event {processed_mounts}")
+            log_messages.append(f"processed mount event {processed_mounts}")
+
+        elif not os.path.exists(temp_db_file_path) and mounted:
+            mounted = False
+            logger.info('Kindle unmounted')
+            log_messages.append('Kindle unmounted')
+            ready_for_following_mount_events.set()
+        ready_for_first_mount_event.set()
+    all_kindle_mounts_finished_event.set()
+
+
+def simulate_kindle_device_mounting(temp_db_file_path: str,
+                                    db_temp_file_ready_for_processing_event: threading.Event):
+    shutil.copy(TEST_VOCAB_DB_FILE, temp_db_file_path)
+    db_temp_file_ready_for_processing_event.set()
+    logger.info(f"Kindle directory created and test vocab.db copied to {temp_db_file_path} (simulated mount)")
+
+
+def simulate_kindle_device_mounting_with_db_update(temp_db_file_path: str,
+                                                   db_temp_file_ready_for_processing_event: threading.Event):
+    shutil.copy(TEST_VOCAB_DB_FILE, temp_db_file_path)
+    db_update_ready_event = threading.Event()
+    db_update_ready_event.set()
+    db_update_processed_event = threading.Event()
+    db_update_processed_event.set()
+    # TODO figure out good practice for optional method parameters and the add word lookups method
+    test_util.add_word_lookups_to_db(temp_db_file_path, db_update_ready_event, db_update_processed_event,
+                                     threading.Event())
+    db_temp_file_ready_for_processing_event.set()
+    logger.info(
+        f"Kindle directory created and test vocab.db copied to {temp_db_file_path} (simulated mount and db update)")
+
+
+def connect_to_db_and_process_potential_new_vocab_lookups_then_disconnect_and_delete_db(
+        ankiconnect_injection: ankiconnect_wrapper,
+        temp_db_file_path: str,
+        db_temp_file_ready_for_processing_event: threading.Event):
+    connection_injection = sqlite3.connect(temp_db_file_path)
+    try:
+        ankikindle.process_new_vocab_highlights(connection_injection, ankiconnect_injection)
+    finally:
+        connection_injection.close()
+        test_util.remove_temp_db_file(temp_db_file_path)
+        db_temp_file_ready_for_processing_event.clear()  # unset the event after first process
