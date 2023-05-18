@@ -1,20 +1,20 @@
 import os
 import logging
+import sqlite3
+from sqlite3 import Connection
+
 import ankiconnect_wrapper
 from flask import Flask
+
+import ankikindle
 from ankikindle_flask_routes import register_process_new_vocab_highlights_route
+from tests import test_util
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 
-def on_mounted(flask_app: Flask):
-    with flask_app.test_client() as client:
-        headers = {'Content-type': 'application/json'}
-        client.post("/process_new_vocab_highlights", json={}, headers=headers)
-
-
-def watch_for_kindle_mount(flask_app: Flask, mount_dir_root: str, kindle_device_name: str):
+def watch_for_kindle_mount_flask(flask_app: Flask, mount_dir_root: str, kindle_device_name: str):
     mounted = False
     while True:
         dirs = [d for d in os.listdir(mount_dir_root) if os.path.isdir(os.path.join(mount_dir_root, d))]
@@ -29,6 +29,39 @@ def watch_for_kindle_mount(flask_app: Flask, mount_dir_root: str, kindle_device_
         elif kindle_device_name not in dirs and mounted:
             mounted = False
             logger.info(f"{kindle_device_name} unmounted")
+
+
+def on_mounted(flask_app: Flask):
+    with flask_app.test_client() as client:
+        headers = {'Content-type': 'application/json'}
+        client.post("/process_new_vocab_highlights", json={}, headers=headers)
+
+
+def watch_for_kindle_mount_nonflask(ankikindle_injection: ankikindle, ankiconnect_injection: ankiconnect_wrapper,
+                                    mount_dir_root: str, kindle_device_name: str):
+    mounted = False
+    while True:
+        dirs = [d for d in os.listdir(mount_dir_root) if os.path.isdir(os.path.join(mount_dir_root, d))]
+        if kindle_device_name in dirs and not mounted:
+            # TODO figure out how to allow for an OS independent mount location
+            #   例えば MacOS default mount location: "/Volumes/Kindle/system/vocabulary/vocab.db"
+            vocab_db_path = os.path.join(mount_dir_root, kindle_device_name, 'system', 'vocabulary', 'vocab.db')
+            # TODO for some reason this only works in debug mode, maybe related to how access to the db works
+            connection = sqlite3.connect(vocab_db_path)
+            if os.path.exists(vocab_db_path):
+                mounted = True
+                logger.info(f'{kindle_device_name} mounted')
+                try:
+                    on_mounted_nonflask(ankikindle_injection, ankiconnect_injection, connection)
+                finally:
+                    connection.close()
+        elif kindle_device_name not in dirs and mounted:
+            mounted = False
+            logger.info(f"{kindle_device_name} unmounted")
+
+
+def on_mounted_nonflask(ankikindle_injection: ankikindle, ankiconnect_injection: ankiconnect_wrapper, connection: Connection):
+    ankikindle_injection.process_new_vocab_highlights(connection, ankiconnect_injection)
 
 
 def register_flask_routes(flask_app: Flask, ankikindle_injection,

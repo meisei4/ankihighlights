@@ -12,31 +12,36 @@ TEST_VOCAB_DB_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..
 TEST_FUTURE_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2080, 4, 25)
 
 
-def create_temp_db_directory_and_file() -> str:
+def create_temp_db_directory_and_file(base_db_path: str) -> str:
     temp_dir = os.path.join(os.path.dirname(__file__), 'tests_tmp')
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir)
 
-    shutil.copy(TEST_VOCAB_DB_FILE, os.path.join(temp_dir, 'vocab.db'))
+    shutil.copy(base_db_path, os.path.join(temp_dir, 'vocab.db'))
     return temp_dir
 
 
-def remove_temp_db_file(temp_dir: str):
-    db_file = os.path.join(temp_dir, 'vocab.db')
-    os.remove(db_file)
+def remove_temp_db_file(temp_db_file_path: str):
+    os.remove(temp_db_file_path)
+    logger.info(f"Removed temporary db file: {temp_db_file_path}")
 
 
 def remove_temp_db_directory(temp_dir: str) -> None:
-    remove_temp_db_file(temp_dir)
+    temp_db_file_path = get_test_temp_db_file_name(temp_dir)
+    remove_temp_db_file(temp_db_file_path)
     os.rmdir(temp_dir)
     logger.info(f"Removed temporary directory: {temp_dir}")
 
 
-def add_word_lookups_to_db(temp_db_directory: str,
+def get_test_temp_db_file_name(temp_dir: str):
+    return os.path.join(temp_dir, 'vocab.db')
+
+
+def add_word_lookups_to_db(temp_db_file_path: str,
                            db_update_ready_event: threading.Event,
                            db_update_processed_event: threading.Event,
                            stop_event: threading.Event):
-    conn = sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db'))
+    conn = sqlite3.connect(temp_db_file_path)
     try:
         db_update_ready_event.wait()
         cursor = conn.cursor()
