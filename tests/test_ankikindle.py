@@ -5,7 +5,7 @@ import vocab_db_accessor_wrap
 from .. import ankikindle
 from sqlite3 import Connection
 from unittest.mock import Mock
-from .test_util import add_word_lookups_to_db
+from .test_util import add_word_lookups_to_db_for_non_main_thread, get_test_temp_db_file_name
 
 
 def test_update_database_while_main_program_is_running(db_connection: Connection, temp_db_directory: str):
@@ -18,9 +18,9 @@ def test_update_database_while_main_program_is_running(db_connection: Connection
     db_update_ready_event = threading.Event()
     db_update_processed_event = threading.Event()
     main_thread_stop_event = threading.Event()
-
-    db_update_thread = threading.Thread(target=add_word_lookups_to_db,
-                                        args=(temp_db_directory,
+    temp_db_file_path = get_test_temp_db_file_name(temp_db_directory)
+    db_update_thread = threading.Thread(target=add_word_lookups_to_db_for_non_main_thread,
+                                        args=(temp_db_file_path,
                                               db_update_ready_event,
                                               db_update_processed_event,
                                               main_thread_stop_event))

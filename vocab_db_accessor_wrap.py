@@ -1,6 +1,7 @@
 import typing
 import logging
 import datetime
+from contextlib import closing
 from sqlite3 import Connection
 
 
@@ -48,7 +49,6 @@ def get_latest_lookup_timestamp(connection_injection: Connection) -> int:
 
 # TODO the new fixture update in conftest is removing the db at the module scope so this is no longer working,
 def set_latest_timestamp(connection_injection: Connection, timestamp: int) -> list[dict]:
-    check_and_create_latest_timestamp_table_if_not_exists(connection_injection)
     query = f"""
         INSERT INTO latest_timestamp (id, timestamp) 
         VALUES ((SELECT COALESCE(MAX(id), 0) + 1 FROM latest_timestamp), {timestamp})
@@ -57,7 +57,6 @@ def set_latest_timestamp(connection_injection: Connection, timestamp: int) -> li
 
 
 def get_latest_timestamp(connection_injection: Connection) -> typing.Optional:
-    check_and_create_latest_timestamp_table_if_not_exists(connection_injection)
     query = "SELECT timestamp FROM latest_timestamp ORDER BY timestamp DESC LIMIT 1"
     rows = execute_query(connection_injection, query)
     if rows:
@@ -66,8 +65,7 @@ def get_latest_timestamp(connection_injection: Connection) -> typing.Optional:
 
 
 def execute_query(connection: Connection, query: str) -> list[dict]:
-    with connection:
-        cursor = connection.cursor()
+    with closing(connection.cursor()) as cursor:
         logger.debug(f"Executing query: {query}")
         cursor.execute(query)
 
@@ -80,6 +78,7 @@ def execute_query(connection: Connection, query: str) -> list[dict]:
         for row in cursor.fetchall():
             results.append(dict(zip(columns, row)))
         logger.debug(f"Query results: {results}")
+        connection.commit()
         return results
 
 

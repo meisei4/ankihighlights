@@ -13,14 +13,14 @@ def pytest_configure():
 logger = logging.getLogger(__name__)  # TODO figure out best practices for package level logger vs module level loggers
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def temp_db_directory():
     temp_dir = create_temp_db_directory_and_file(TEST_VOCAB_DB_FILE)
     yield temp_dir
+    remove_temp_db_directory(temp_dir)
 
 
-# TODO figure out clean up: gpt is unable to help explain why the Permission error happens when trying to remove db dir
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def db_connection(temp_db_directory: str):
     db_file = os.path.join(temp_db_directory, 'vocab.db')
     conn = sqlite3.connect(db_file)
@@ -29,5 +29,3 @@ def db_connection(temp_db_directory: str):
         yield conn
     finally:
         conn.close()
-
-    remove_temp_db_directory(temp_db_directory)
