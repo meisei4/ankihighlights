@@ -18,6 +18,7 @@ def test_continuous_mount_unmount_logging(client):
     with patch('ankikindle_flask_app.on_mounted'):
         ankikindle_flask_app.watch_for_kindle_mount_flask(client, "/Volumes", "Kindle")
 
+
 @pytest.mark.skip("resigning for today at work, this isnt working after refactoring for the unit tests to work")
 def test_basic_integration_with_kindle_mounting_and_db_processing():
     ready_for_first_mount_event = threading.Event()
