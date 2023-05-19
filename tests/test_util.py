@@ -1,15 +1,18 @@
+import logging
 import os
 import shutil
 import sqlite3
 import threading
 import vocab_db_accessor_wrap
-from .conftest import logger
 
 # __file__ is this file, so next command is: get path to this module file, hop out with cd .., then go cd
 # resource, then there's the file
 TEST_VOCAB_DB_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'test_resources', 'vocab.db'))
 # TODO probability is i will be dead and thus not my problem
 TEST_FUTURE_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2080, 4, 25)
+
+# TODO there was a circular dependancy between test_util and conftest, figure out where to put the main logger
+logger = logging.getLogger(__name__)
 
 
 def create_temp_db_directory_and_file(base_db_path: str) -> str:

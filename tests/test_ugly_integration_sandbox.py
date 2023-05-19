@@ -1,6 +1,9 @@
 import os
 import time
 import sqlite3
+
+import pytest
+
 import ankiconnect_wrapper
 from .. import ankikindle # TODO find out why the pycharm allows for the incorrect semantics of "import ankikindle"
 from .conftest import logger
@@ -8,6 +11,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 
+@pytest.mark.skip("not yet")
 def test_continuous_running_until_manual_exit_mount_and_unmount_with_db_processing():
     watch_for_kindle_mount_nonflask(ankikindle, ankiconnect_wrapper, "/Volumes", "Kindle")
 

@@ -2,11 +2,10 @@ import os
 import json
 import sqlite3
 import threading
-import test_util
 import vocab_db_accessor_wrap
 from .conftest import logger
 from sqlite3 import Connection
-from .test_util import create_temp_db_directory_and_file, add_word_lookups_to_db
+from .test_util import create_temp_db_directory_and_file, add_word_lookups_to_db, TEST_VOCAB_DB_FILE
 
 
 def test_get_all_word_look_ups_after_timestamp(db_connection: Connection, temp_db_directory):
@@ -26,7 +25,7 @@ def test_get_all_word_look_ups_after_timestamp(db_connection: Connection, temp_d
 
 
 def test_get_table_info():
-    temp_db_directory = create_temp_db_directory_and_file(test_util.TEST_VOCAB_DB_FILE)
+    temp_db_directory = create_temp_db_directory_and_file(TEST_VOCAB_DB_FILE)
     with sqlite3.connect(os.path.join(temp_db_directory, 'vocab.db')) as conn:
         table_info = vocab_db_accessor_wrap.get_table_info(conn)
         logger.info(json.dumps(table_info, indent=2))

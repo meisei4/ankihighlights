@@ -3,7 +3,7 @@ import pytest
 import logging
 import sqlite3
 import vocab_db_accessor_wrap
-from tests import test_util
+from .test_util import TEST_VOCAB_DB_FILE, create_temp_db_directory_and_file, remove_temp_db_directory
 
 
 def pytest_configure():
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)  # TODO figure out best practices for packa
 
 @pytest.fixture(scope="module")
 def temp_db_directory():
-    temp_dir = test_util.create_temp_db_directory_and_file()
+    temp_dir = create_temp_db_directory_and_file(TEST_VOCAB_DB_FILE)
     yield temp_dir
 
 
@@ -30,4 +30,4 @@ def db_connection(temp_db_directory: str):
     finally:
         conn.close()
 
-    test_util.remove_temp_db_directory(temp_db_directory)
+    remove_temp_db_directory(temp_db_directory)
