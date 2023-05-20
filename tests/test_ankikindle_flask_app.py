@@ -5,21 +5,13 @@ import sqlite3
 import tempfile
 import threading
 import ankiconnect_wrapper
-import ankikindle_flask_app
 from . import test_util
 from .. import ankikindle
 from .conftest import logger
-from unittest.mock import patch
 from .test_util import TEST_VOCAB_DB_FILE
 
 
-@pytest.mark.skip("this test is only to test the speed in which the os mounts and unmounts the kindle")
-def test_continuous_mount_unmount_logging(client):
-    with patch('ankikindle_flask_app.on_mounted'):
-        ankikindle_flask_app.watch_for_kindle_mount_flask(client, "/Volumes", "Kindle")
-
-
-@pytest.mark.skip("resigning for today at work, this isnt working after refactoring for the unit tests to work")
+# @pytest.mark.skip("resigning for today at work, this isn't working after refactoring for the unit tests to work")
 def test_basic_integration_with_kindle_mounting_and_db_processing():
     ready_for_first_mount_event = threading.Event()
     ready_for_following_mount_events = threading.Event()
@@ -54,11 +46,11 @@ def test_basic_integration_with_kindle_mounting_and_db_processing():
 
     all_kindle_mounts_finished_event.wait()
     watch_kindle_mounting_event_thread.join()
+    logger.info("monitor_kindle_mount_status_for_tests thread stopped")
+
     # TODO technically the Kindle unmounted should show up the second time around but the loop skips it
     assert log_messages == ['Kindle mounted', 'processed mount event 1', 'Kindle unmounted',
                             'Kindle mounted', 'processed mount event 2']
-
-    logger.info("monitor_kindle_mount_status_for_tests thread stopped")
 
     assert not os.path.exists(temp_db_file_path)
     assert not watch_kindle_mounting_event_thread.is_alive()
