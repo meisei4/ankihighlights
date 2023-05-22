@@ -5,6 +5,15 @@ from contextlib import closing
 from sqlite3 import Connection
 
 
+# TODO This whole module needs a Exception handling refactoring
+#   majority of the errors i get during tests are related to trying to access a connection to the database or during an access
+#   Idea:
+#   first provide some way of making a connection here (never call sqlite3.connect(file) on its own without using this module
+#   make sure that this module can support multiple connections to the same database file (as long as locks and stuff work?)
+#   make sure it also includes file access error Exception handling, missing table errors, and all other errors thrown upwards
+#   this way errors will be controlled and handled at the connection leve rather than randomly causing tests to hang
+
+
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 logger = logging.getLogger(__name__)
 _latest_timestamp: int = -1
