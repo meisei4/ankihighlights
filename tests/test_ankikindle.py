@@ -53,8 +53,6 @@ def test_update_database_while_main_program_is_running(db_connection: Connection
     ankiconnect_wrapper_mock.add_anki_note.assert_called_once_with(expected_note)
 
 
-# TODO figure out how to make this wrapper more vulnerable to change. since it doesnt actually call the code that its
-#  intended to test: the {ankikindle.main(...)} method
 def ankikindle_main_function_wrapper(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper,
                                      db_update_ready_event: threading.Event,
                                      db_update_processed_event: threading.Event,

@@ -24,7 +24,8 @@ def test_get_all_word_look_ups_after_timestamp(db_connection: Connection, temp_d
         assert result[0]["usage"] == "日本語の例文"
         assert result[0]["title"] == "日本の本"
         assert result[0]["authors"] == "著者A"
-        db_connection.commit()  # TODO figure out how to do the best/most transparent practice
+        db_connection.commit()  # TODO figure out how to do the best/most transparent practice with all these commit and closes
+
     finally:
         db_connection.close()
 

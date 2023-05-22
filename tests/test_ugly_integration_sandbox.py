@@ -9,6 +9,11 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 
+# TODO core things that need attention:
+#   ankiconnect transactions are not structured safely to be able to recognize duplicate notes
+#   Exception handling really needs to be improved, including proper logs
+#   I want it to be possible to look at the code and completely be able to understand everything just through logs
+
 @pytest.mark.skip("not yet")
 def test_continuous_running_until_manual_exit_mount_and_unmount_with_db_processing():
     watch_for_kindle_mount_nonflask(ankikindle, ankiconnect_wrapper, "/Volumes", "Kindle")

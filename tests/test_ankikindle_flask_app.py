@@ -1,6 +1,5 @@
 import os
 import shutil
-import pytest
 import sqlite3
 import tempfile
 import threading
