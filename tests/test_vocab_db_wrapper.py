@@ -5,7 +5,7 @@ import vocab_db_accessor_wrap
 # from .conftest import temp_db_directory, db_connection
 from sqlite3 import Connection
 from contextlib import closing
-from .test_util import add_word_lookups_to_db, add_word_lookups_to_db_for_non_main_thread, get_test_temp_db_file_name
+from .test_util import add_word_lookups_to_db_for_non_main_thread, get_test_temp_db_file_name
 
 
 def test_get_all_word_look_ups_after_timestamp(db_connection: Connection, temp_db_directory: str):

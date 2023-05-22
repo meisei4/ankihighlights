@@ -48,6 +48,7 @@ def add_word_lookups_to_db(db_connection: Connection,
                            db_update_processed_event: threading.Event,
                            stop_event: threading.Event):
     db_update_ready_event.wait()
+    logger.info("Received db_update_ready_event")
     try:
         with closing(db_connection.cursor()) as cursor:
             cursor.execute(f"""
@@ -64,6 +65,7 @@ def add_word_lookups_to_db(db_connection: Connection,
                     """)
         db_connection.commit()
         db_update_processed_event.wait()
+        logger.info("Received db_update_processed_event")
     except sqlite3.Error as e:
         logger.info(f"Database error: {e}")
     except Exception as e:
@@ -71,3 +73,4 @@ def add_word_lookups_to_db(db_connection: Connection,
     finally:
         db_connection.close()
         stop_event.set()
+        logger.info("stop_event set")
