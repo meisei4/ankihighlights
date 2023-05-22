@@ -22,19 +22,6 @@ DEFAULT_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2023, 4, 28)
 _running = False
 
 
-def main(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper, stop_event: threading.Event):
-    global _running
-    _running = True
-    try:
-        while not stop_event.is_set():
-            process_new_vocab_highlights(connection_injection, ankiconnect_injection)
-
-    except ConnectionError as e:
-        ankikindle_main_logger.error(f"connection error occurred during ankikindle run{e}")
-    finally:
-        _running = False
-
-
 def process_new_vocab_highlights(connection_injection: Connection, ankiconnect_injection: ankiconnect_wrapper) -> list[dict]:
     latest_timestamp = vocab_db_accessor_wrap.get_latest_timestamp(connection_injection)
     if latest_timestamp is None:
