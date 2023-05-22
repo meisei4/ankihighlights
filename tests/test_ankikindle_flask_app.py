@@ -1,29 +1,18 @@
 import os
 import shutil
-import time
-from sqlite3 import Connection
-
 import pytest
 import sqlite3
 import tempfile
 import threading
 import ankiconnect_wrapper
-import ankikindle_flask_app
+import vocab_db_accessor_wrap
 from . import test_util
 from .. import ankikindle
 from .conftest import logger
-from unittest.mock import patch
 from .test_util import TEST_VOCAB_DB_FILE
 
 
-@pytest.mark.skip("this test is only to test the speed in which the os mounts and unmounts the kindle")
-def test_continuous_mount_unmount_logging(client):
-    with patch('ankikindle_flask_app.on_mounted'):
-        ankikindle_flask_app.watch_for_kindle_mount_flask(client, "/Volumes", "Kindle")
-
-pytest.mark.skip("this is not working because the lookup_timestamp isnt being created, figure out how to get that created")
-def test_basic_integration_with_kindle_mounting_and_db_processing(db_connection: Connection, temp_db_directory: str):
-    ready_for_first_mount_event = threading.Event()
+def test_basic_integration_with_kindle_mounting_and_db_processing():
     ready_for_following_mount_events = threading.Event()
     db_temp_file_ready_for_processing_event = threading.Event()
     all_kindle_mounts_finished_event = threading.Event()
@@ -32,24 +21,18 @@ def test_basic_integration_with_kindle_mounting_and_db_processing(db_connection:
     temp_db_file_path = test_util.get_test_temp_db_file_name(temp_dir.name)
     log_messages = []
     number_of_mounts_to_be_tested = 2
-    is_a_real_mount = False
     watch_kindle_mounting_event_thread = threading.Thread(target=monitor_kindle_mount_status_for_tests,
                                                           args=(ankiconnect_wrapper,
-                                                                ready_for_first_mount_event,
                                                                 ready_for_following_mount_events,
                                                                 db_temp_file_ready_for_processing_event,
                                                                 all_kindle_mounts_finished_event,
                                                                 temp_db_file_path,
                                                                 log_messages,
-                                                                number_of_mounts_to_be_tested,
-                                                                is_a_real_mount))
+                                                                number_of_mounts_to_be_tested))
     logger.info("Starting watch_kindle_mounting_event_thread")
     watch_kindle_mounting_event_thread.start()
-    ready_for_first_mount_event.set()
-    logger.info("ready_for_first_mount_event set")
 
     logger.info("Begin first simulated mount with unchanged test db")
-
     simulate_kindle_device_mounting(temp_db_file_path, db_temp_file_ready_for_processing_event)
 
     ready_for_following_mount_events.wait()
@@ -63,8 +46,8 @@ def test_basic_integration_with_kindle_mounting_and_db_processing(db_connection:
 
     watch_kindle_mounting_event_thread.join()
     # TODO technically the Kindle unmounted should show up the second time around but the loop skips it
-    assert log_messages == ['Kindle mounted', 'processed mount event 1', 'Kindle unmounted',
-                            'Kindle mounted', 'processed mount event 2']
+    assert log_messages == ['Kindle mounted', 'Processed mount event 1', 'Kindle unmounted',
+                            'Kindle mounted', 'Processed mount event 2']
 
     logger.info("monitor_kindle_mount_status_for_tests thread stopped")
 
@@ -73,24 +56,23 @@ def test_basic_integration_with_kindle_mounting_and_db_processing(db_connection:
 
     # TODO add more asserts about the state of the database after processing
 
+    # TODO add automated card removal
+
     logger.info("full end to end basic integration test completed")
 
 
 def monitor_kindle_mount_status_for_tests(ankiconnect_injection: ankiconnect_wrapper,
-                                          ready_for_first_mount_event: threading.Event,
-                                          ready_for_following_mount_events: threading.Event,
+                                          ready_for_following_mounts_event: threading.Event,
                                           db_temp_file_ready_for_processing_event: threading.Event,
                                           all_kindle_mounts_finished_event: threading.Event,
                                           temp_db_file_path: str,
                                           log_messages: list,
-                                          number_of_mounts_to_be_tested: int,
-                                          is_a_real_mount: bool):
-    ready_for_first_mount_event.wait()
-    logger.info("Received ready_for_first_mount_event")
+                                          number_of_mounts_to_be_tested: int):
     mounted = False
     processed_mounts = 0
     while processed_mounts < number_of_mounts_to_be_tested:
         logger.info("monitor_kindle_mount_status_for_tests loop started")
+        # TODO sould this db_temp_file_ready_for_processing just be a wait? then avoid the loop?
         if db_temp_file_ready_for_processing_event.is_set() and os.path.exists(temp_db_file_path) and not mounted:
             mounted = True
             logger.info('Kindle mounted')
@@ -103,15 +85,13 @@ def monitor_kindle_mount_status_for_tests(ankiconnect_injection: ankiconnect_wra
             log_messages.append(f"Processed mount event {processed_mounts}")
             db_temp_file_ready_for_processing_event.clear()
             logger.info("db_temp_file_ready_for_processing_event cleared")
-            ready_for_following_mount_events.set()
-            logger.info("ready_for_following_mount_events set")
 
         elif not os.path.exists(temp_db_file_path) and mounted:
             mounted = False
             logger.info('Kindle unmounted')
             log_messages.append('Kindle unmounted')
-
-        time.sleep(2)
+            ready_for_following_mounts_event.set()  #only after the first mount process can this get set
+            logger.info("ready_for_following_mounts_event set")
 
     all_kindle_mounts_finished_event.set()
     logger.info("all_kindle_mounts_finished_event set")
@@ -147,6 +127,8 @@ def connect_to_db_and_process_potential_new_vocab_lookups_then_disconnect_and_de
         temp_db_file_path: str,
         db_temp_file_ready_for_processing_event: threading.Event):
     connection_injection = sqlite3.connect(temp_db_file_path)
+    # TODO idealy this should probalby not have to be called
+    vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(connection_injection)
     try:
         ankikindle.process_new_vocab_highlights(connection_injection, ankiconnect_injection)
     finally:

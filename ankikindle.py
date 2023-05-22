@@ -1,5 +1,4 @@
 import logging
-import threading
 import ankiconnect_wrapper
 import vocab_db_accessor_wrap
 from datetime import datetime

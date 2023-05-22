@@ -1,7 +1,7 @@
-import logging
 import os
 import shutil
 import sqlite3
+import logging
 import threading
 from contextlib import closing
 from sqlite3 import Connection
@@ -40,6 +40,8 @@ def add_word_lookups_to_db_for_non_main_thread(db_file_path: str,
                                                db_update_processed_event: threading.Event,
                                                stop_event: threading.Event):
     connection_injection = sqlite3.connect(db_file_path)
+    # TODO this might not be best here since the majority of tests that use it, dont require latest_timestamp table
+    vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(connection_injection)
     add_word_lookups_to_db(connection_injection, db_update_ready_event, db_update_processed_event, stop_event)
 
 
