@@ -78,7 +78,7 @@ The database used in this script is an SQLite database containing the following 
 2. Install the required packages (so far):
 
 ```bash
-pip install requests pytest flask selenium
+pip install requests pytest flask selenium watchdog
 ```
 
 1. Install the AnkiConnect add-on in Anki by following the instructions on [anki-connect's GitHub page](https://github.com/FooSoft/anki-connect).
