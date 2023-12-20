@@ -1,4 +1,4 @@
-import ankiconnect_wrapper
+from src import ankiconnect_wrapper
 
 
 def test_remove_value_order_from_dict():

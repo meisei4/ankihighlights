@@ -2,8 +2,7 @@ import os
 import time
 import pytest
 import sqlite3
-import ankiconnect_wrapper
-from .. import ankikindle  # TODO find out why the pycharm allows for the incorrect semantics of "import ankikindle"
+from src import ankikindle, ankiconnect_wrapper
 from .conftest import logger
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler

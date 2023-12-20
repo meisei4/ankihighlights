@@ -3,10 +3,8 @@ import shutil
 import sqlite3
 import tempfile
 import threading
-import ankiconnect_wrapper
-import vocab_db_accessor_wrap
 from . import test_util
-from .. import ankikindle
+from src import ankikindle, ankiconnect_wrapper, vocab_db_accessor_wrap
 from .conftest import logger
 from .test_util import TEST_VOCAB_DB_FILE
 
