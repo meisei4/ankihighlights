@@ -1,4 +1,4 @@
 # Ignore backup and temporary files
-test_resources/
+tests/test_resources/
 tests/test_tmp
 .idea
