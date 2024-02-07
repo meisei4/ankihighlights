@@ -1,11 +1,12 @@
-version: "3.3"
-
-services:
-  anki-desktop:
-    image: "pnorcross/anki-desktop:latest"
+services: 
+  anki-desktop: 
+    build:
+      context: ./
+      dockerfile: Dockerfile
     volumes:
-      - /data/apps/anki/config:/config/app
+      - ~/.local/share/Anki2:/config/app/Anki2
+      - ~/backups:/config/app/backups
     ports:
-      - "3000:3000"
+      - 3000:3000
       # Anki Connect port
-      - "8765:8765"
+      - 8765:8765
