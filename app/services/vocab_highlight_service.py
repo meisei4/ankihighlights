@@ -1,8 +1,5 @@
-# services/vocab_highlight_service.py
-
 import logging
-
-from anki_service import AnkiService
+from app.services.anki_service import AnkiService
 from app import db
 from app.models.models import Lookup
 
