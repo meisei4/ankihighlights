@@ -1,3 +1,5 @@
+version: '3.8'
+
 services: 
   anki-desktop: 
     build:
@@ -7,31 +9,19 @@ services:
       - ~/.local/share/Anki2:/config/app/Anki2
       - ~/backups:/config/app/backups
     ports:
-      - 3000:3000
-      # Anki Connect port
-      - 8765:8765
+      - "3000:3000"
+      - "8765:8765" # Anki Connect port
 
   postgres-db:
     image: postgres:latest
     environment:
-      POSTGRES_USER: username
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: dumbuser
+      POSTGRES_PASSWORD: dumbpass
       POSTGRES_DB: book_vocab_db
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  mainapp:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "7000:7000"
-    env_file:
-      - .env.container
-    depends_on:
-      - postgres-db
+      - postgres-data:/var/lib/postgresql/data
 
 volumes:
   postgres-data:

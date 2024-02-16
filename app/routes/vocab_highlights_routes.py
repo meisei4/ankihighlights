@@ -1,8 +1,8 @@
-from flask import Blueprint, jsonify, request
+from flask import jsonify, request
+
+from app.routes import vocab_highlight_routes
 from app.services.anki_service import AnkiService
 from app.services.vocab_highlight_service import VocabHighlightService
-
-vocab_highlight_routes = Blueprint('vocab_highlights', __name__, url_prefix='/vocab_highlights')
 
 
 def handle_service_response(success, data=None, message=None, status_code=200):

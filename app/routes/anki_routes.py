@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify, request
-from app.services.anki_service import AnkiService
+from flask import jsonify, request
 
-anki_routes = Blueprint('anki', __name__, url_prefix='/anki')
+from app.routes import anki_routes
+from app.services.anki_service import AnkiService
 
 def handle_service_response(response):
     if 'error' in response:
