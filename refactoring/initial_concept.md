@@ -49,25 +49,3 @@ Here's a very basic structure of what the Flask app file structure might look li
     config.py
     run.py
 ```
-
-And a simple example of a Flask route in `api.py`:
-
-```python
-from flask import Blueprint, request, jsonify
-from app.services.vocab_services import add_vocab_word
-
-api_blueprint = Blueprint('api', __name__, url_prefix='/api')
-
-@api_blueprint.route('/vocab', methods=['POST'])
-def add_vocab():
-    data = request.json
-    word = data.get('word')
-    usage = data.get('usage')
-    # Call a service function to process and add the vocab word
-    add_vocab_word(word, usage)
-    return jsonify({"message": "Vocab word added successfully"}), 201
-```
-
-### 6. **Conclusion**
-
-Your Flask app will serve as a powerful interface between various vocab word sources and Anki, streamlining the process of vocab learning and review. It’s scalable, allowing for the addition of new vocab sources and functionalities over time, and provides a centralized API for managing vocab words and generating Anki cards.

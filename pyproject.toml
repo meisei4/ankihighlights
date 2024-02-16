@@ -12,6 +12,7 @@ Flask-SQLAlchemy = "^2.4.4"
 requests = "^2.28.2"
 testcontainers = "^3.7.1"
 psycopg2-binary = "^2.9.9"
+python-dotenv = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.0.0"
