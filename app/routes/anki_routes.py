@@ -1,67 +1,59 @@
 from flask import Blueprint, jsonify, request
-
-from app.services.ankiconnect_service import AnkiService
+from app.services.anki_service import AnkiService
 
 anki_routes = Blueprint('anki', __name__, url_prefix='/anki')
 
+def handle_service_response(response):
+    if 'error' in response:
+        return jsonify({"success": False, "message": response['error']}), 500
+    return jsonify({"success": True, "data": response}), 200
+
 @anki_routes.route('/request_permission', methods=['GET'])
 def request_permission():
-    try:
-        permission_granted = AnkiService.request_connection_permission()
-        return jsonify({"success": True, "permission_granted": permission_granted}), 200 if permission_granted else 403
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    response = AnkiService.request_connection_permission()
+    return handle_service_response(response)
 
 @anki_routes.route('/decks', methods=['GET'])
 def get_decks():
-    try:
-        decks = AnkiService.get_all_deck_names()
-        return jsonify({"success": True, "decks": decks}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    response = AnkiService.get_all_deck_names()
+    return handle_service_response(response)
 
 @anki_routes.route('/models', methods=['GET'])
 def get_models():
-    try:
-        models = AnkiService.get_all_model_names()
-        return jsonify({"success": True, "models": models}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    response = AnkiService.get_all_model_names()
+    return handle_service_response(response)
 
 @anki_routes.route('/find_notes', methods=['POST'])
 def find_notes():
-    try:
-        query = request.json.get('query', '')
-        notes = AnkiService.find_notes(query)
-        return jsonify({"success": True, "notes": notes}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    query = request.json.get('query', '')
+    response = AnkiService.find_notes(query)
+    return handle_service_response(response)
 
 @anki_routes.route('/note_info', methods=['POST'])
 def get_notes_info():
-    try:
-        note_ids = request.json.get('note_ids', [])
-        notes_info = AnkiService.get_notes_info(note_ids)
-        return jsonify({"success": True, "notes_info": notes_info}), 200
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    note_ids = request.json.get('note_ids', [])
+    response = AnkiService.get_notes_info(note_ids)
+    return handle_service_response(response)
 
 @anki_routes.route('/add_note', methods=['POST'])
 def add_note():
-    try:
-        data = request.json
-        note_id = AnkiService.add_anki_note(
-            deck_name=data['deck_name'],
-            model_name=data['model_name'],
-            front=data['front'],
-            back=data['back'],
-            tags=data.get('tags', [])
-        )
-        if note_id:
-            return jsonify({"success": True, "note_id": note_id}), 200
-        else:
-            return jsonify({"success": False, "message": "Failed to add note"}), 400
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)}), 500
+    data = request.json
+    response = AnkiService.add_anki_note(
+        deck_name=data['deck_name'],
+        model_name=data['model_name'],
+        front=data['front'],
+        back=data['back'],
+        tags=data.get('tags', [])
+    )
+    return handle_service_response({"note_id": response} if response else {"error": "Failed to add note"})
 
-# Add more routes as necessary for your application's functionality, like updating or deleting notes.
+# Example route for updating note fields
+@anki_routes.route('/update_note', methods=['POST'])
+def update_note():
+    data = request.json
+    note_id = data.get('note_id')
+    fields = data.get('fields', {})
+    if not note_id or not fields:
+        return jsonify({"success": False, "message": "Note ID and fields are required"}), 400
+    response = AnkiService.update_note_fields(note_id, fields)
+    return handle_service_response(response)
