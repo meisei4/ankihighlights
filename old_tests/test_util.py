@@ -6,7 +6,7 @@ import threading
 from contextlib import closing
 from sqlite3 import Connection
 
-from src import vocab_db_accessor_wrap
+from old_src import vocab_db_accessor_wrap
 
 TEST_VOCAB_DB_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), '.', 'test_resources', 'vocab.db'))
 TEST_FUTURE_TIMESTAMP = vocab_db_accessor_wrap.get_timestamp_ms(2080, 4, 25)  # TODO ill be dead thing

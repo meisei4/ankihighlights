@@ -1,13 +1,14 @@
+import os
 from app import create_app
 from app.services.kindle_db_sync_service import KindleSyncService
-import os
 
-# Initialize the Flask application
+from config import load_environment
+
+load_environment()
+
 app = create_app()
 
-
 def sync_kindle_db():
-
     kindle_db_path = os.getenv('KINDLE_DB_PATH')
     if kindle_db_path:
         with app.app_context():
@@ -15,7 +16,7 @@ def sync_kindle_db():
 
 
 if __name__ == "__main__":
-    # TODO: figure out how to better integrate the syncing
+    # Perform any necessary operations before running the server
     sync_kindle_db()
 
     # Start the Flask application

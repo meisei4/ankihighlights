@@ -2,7 +2,7 @@ import os
 import pytest
 import logging
 import sqlite3
-from src import vocab_db_accessor_wrap
+from old_src import vocab_db_accessor_wrap
 from .test_util import TEST_VOCAB_DB_FILE, create_temp_db_directory_and_file, remove_temp_db_directory
 
 

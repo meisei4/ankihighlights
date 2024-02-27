@@ -1,11 +1,14 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv('.env')
+def load_environment():
+    ENVIRONMENT = os.getenv('FLASK_ENV', 'testing')
+ # TODO: figure out how to load based on env context vv
+    if ENVIRONMENT == "testing":
+        dotenv_path = '.env.local'
+    elif ENVIRONMENT == "production":
+        dotenv_path = '.env.container'
+    else:
+        dotenv_path = '.env'  # default to the main .env file
 
-ENVIRONMENT = os.getenv('FLASK_ENV', 'testing')
-
-if ENVIRONMENT == "testing":
-    load_dotenv('.env.local', override=True)
-elif ENVIRONMENT == "production":
-    load_dotenv('..env.container', override=True)
+    load_dotenv()

@@ -1,6 +1,6 @@
 import threading
 
-from src import vocab_db_accessor_wrap
+from old_src import vocab_db_accessor_wrap
 #  TODO why do the fixtures not get explicitly imported from conftest?
 # from .conftest import temp_db_directory, db_connection
 from sqlite3 import Connection

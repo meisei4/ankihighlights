@@ -1,15 +1,19 @@
-# tests/conftest.py
-
+import logging
+import os
 import pytest
 from app import create_app, db
-import os
+from config import load_environment
+
+
+def pytest_configure(config):
+    load_environment()
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+    logger.info("Test suite configuration complete.")
 
 @pytest.fixture(scope='session')
 def test_app():
     """Fixture to create a test app with a test database."""
-    # Setup test environment variables here or load from a .env.test file
-    os.environ['FLASK_ENV'] = 'testing'
-
     app = create_app()
     app.config.update({
         'TESTING': True,
@@ -17,7 +21,6 @@ def test_app():
         'SQLALCHEMY_TRACK_MODIFICATIONS': False
     })
 
-    # Setup the test database
     with app.app_context():
         db.create_all()
         yield app
@@ -28,8 +31,3 @@ def test_app():
 def test_client(test_app):
     """A test client for the app."""
     return test_app.test_client()
-
-@pytest.fixture(scope='session')
-def kindle_db_path():
-    """Fixture to provide the path to the test Kindle DB."""
-    return os.path.abspath('app_tests/test_resources/vocab.db')

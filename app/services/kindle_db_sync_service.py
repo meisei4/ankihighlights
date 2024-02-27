@@ -2,13 +2,15 @@ import sqlite3
 from sqlalchemy.exc import SQLAlchemyError
 from app import db
 from app.models.models import Word, BookInfo, Lookup
+from app import logger
 
-# TODO: figure out if this should become a CLI implementation
+
 class KindleSyncService:
     @staticmethod
-    def sync_from_kindle_db(kindle_db_path):
+    def sync_from_kindle_db(kindle_conn):
+        logger.info(f"Starting sync from Kindle database")
         # Connect to the Kindle database
-        with sqlite3.connect(kindle_db_path) as kindle_conn:
+        with kindle_conn:
             kindle_cursor = kindle_conn.cursor()
 
             # Extract data from Kindle DB
@@ -20,12 +22,16 @@ class KindleSyncService:
             """)
             rows = kindle_cursor.fetchall()
 
+            logger.info(f"Retrieved {len(rows)} rows from Kindle database")
+
             for row in rows:
                 KindleSyncService.process_row(row)
+            logger.info("Sync completed successfully.")
 
     @staticmethod
     def process_row(row):
         word_text, usage_text, timestamp, book_title, book_authors = row
+        logger.debug(f"Processing row: {row}")
 
         # Transform and load data into Custom DB
         try:
@@ -44,7 +50,6 @@ class KindleSyncService:
                 db.session.flush()  # Generates the ID for further use
 
             # Handling Lookup
-            # Convert timestamp from Kindle's format to POSIX timestamp
             usage_timestamp = timestamp  # Adjust transformation as necessary
             lookup = Lookup.query.filter_by(word_id=word.id, book_info_id=book_info.id, usage=usage_text).first()
             if not lookup:
@@ -52,12 +57,8 @@ class KindleSyncService:
                 db.session.add(lookup)
 
             db.session.commit()
+            logger.info(f"Successfully processed and inserted/updated row in the database for word: {word_text}")
 
         except SQLAlchemyError as e:
             db.session.rollback()
-            # Proper logging is essential for debugging
-            print(f"Error processing row {row}: {e}")
-
-# Use the service
-kindle_db_path = 'path_to_kindle_db.sqlite'
-KindleSyncService.sync_from_kindle_db(kindle_db_path)
+            logger.error(f"Error processing row {row}: {e}")
