@@ -1,4 +1,4 @@
-from old_src import ankiconnect_wrapper
+from deprecated_app.old_src import ankiconnect_wrapper
 
 
 def test_remove_value_order_from_dict():

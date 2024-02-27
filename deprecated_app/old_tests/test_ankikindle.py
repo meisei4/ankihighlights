@@ -1,6 +1,7 @@
 import pytest
 import threading
-from old_src import ankikindle, ankiconnect_wrapper, vocab_db_accessor_wrap
+from old_src import ankikindle, vocab_db_accessor_wrap
+from ..old_src import ankiconnect_wrapper
 from sqlite3 import Connection
 from unittest.mock import Mock
 from .test_util import add_word_lookups_to_db_for_non_main_thread, get_test_temp_db_file_name

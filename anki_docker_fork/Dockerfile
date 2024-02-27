@@ -17,4 +17,4 @@ RUN \
 
 VOLUME "/config/app"
 
-COPY ./root /
+COPY root /

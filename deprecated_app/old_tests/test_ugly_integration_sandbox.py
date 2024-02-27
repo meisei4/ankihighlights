@@ -2,7 +2,8 @@ import os
 import time
 import pytest
 import sqlite3
-from old_src import ankikindle, ankiconnect_wrapper
+from old_src import ankikindle
+from ..old_src import ankiconnect_wrapper
 from .conftest import logger
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
