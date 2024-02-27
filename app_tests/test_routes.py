@@ -16,4 +16,3 @@ def test_process_highlights(client, init_database):
     response = client.post('/vocab_highlights/process')
     assert response.status_code == 200
     assert response.json['success'] == True
-    # Further assertions can check for the side effects in Anki or the database.

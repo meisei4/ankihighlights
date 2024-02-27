@@ -3,14 +3,14 @@ version: '3.8'
 services: 
   anki-desktop: 
     build:
-      context: ./
+      context: .
       dockerfile: Dockerfile
-    volumes:
-      - ~/.local/share/Anki2:/config/app/Anki2
-      - ~/backups:/config/app/backups
     ports:
       - "3000:3000"
       - "8765:8765" # Anki Connect port
+    volumes:
+      - ~/.local/share/Anki2:/config/app/Anki2
+      - ~/backups:/config/app/backups
 
   postgres-db:
     image: postgres:latest

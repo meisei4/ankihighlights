@@ -5,7 +5,7 @@ from contextlib import closing
 from sqlite3 import Connection
 
 
-# TODO This whole module needs a Exception handling refactoring
+# TODO This whole module needs a Exception handling misc
 #   majority of the errors i get during old_tests are related to trying to access a connection to the database or during an access
 #   Idea:
 #   first provide some way of making a connection here (never call sqlite3.connect(file) on its own without using this module

@@ -1,5 +1,4 @@
 from flask import jsonify, request
-
 from app.routes import anki_routes
 from app.services.anki_service import AnkiService
 
@@ -47,7 +46,6 @@ def add_note():
     )
     return handle_service_response({"note_id": response} if response else {"error": "Failed to add note"})
 
-# Example route for updating note fields
 @anki_routes.route('/update_note', methods=['POST'])
 def update_note():
     data = request.json

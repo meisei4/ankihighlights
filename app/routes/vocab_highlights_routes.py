@@ -1,5 +1,4 @@
 from flask import jsonify, request
-
 from app.routes import vocab_highlight_routes
 from app.services.anki_service import AnkiService
 from app.services.vocab_highlight_service import VocabHighlightService

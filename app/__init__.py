@@ -6,19 +6,15 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 db = SQLAlchemy()
-
 
 def create_app():
     app = Flask(__name__)
 
-    # Assign configurations to the Flask app instance using environment variables
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'some_default_secret_value')
 
-    # Initialize the database with the Flask app
     db.init_app(app)
 
     with app.app_context():
@@ -26,7 +22,6 @@ def create_app():
         app.register_blueprint(anki_routes)
         app.register_blueprint(vocab_highlight_routes)
 
-        # Create the database tables for all models, if they don't already exist
         db.create_all()
 
     return app

@@ -2,17 +2,14 @@ import pytest
 from datetime import datetime
 from app import db
 from app.models.models import Word, BookInfo, Lookup
-from app_tests.conftest import logger
+from app_tests import logger
 
-
-# Assuming logging is already configured
 
 @pytest.mark.usefixtures('test_app')
 class TestDatabaseOperations:
     def test_insert_word_and_lookup(self, init_database):
         logger.info("Starting test: test_insert_word_and_lookup")
 
-        # Create new word and book info
         logger.info("Inserting new Word and BookInfo into the database")
         new_word = Word(word='Python')
         new_book_info = BookInfo(title='Learn Python Programming', authors='John Doe')
@@ -24,7 +21,6 @@ class TestDatabaseOperations:
         assert Word.query.count() == 1, "Word count mismatch"
         assert BookInfo.query.count() == 1, "BookInfo count mismatch"
 
-        # Create a new lookup
         logger.info("Inserting new Lookup into the database")
         timestamp = int(datetime.now().timestamp())
         new_lookup = Lookup(word=new_word, book_info=new_book_info, usage='Python is great!', timestamp=timestamp)
@@ -43,7 +39,6 @@ class TestDatabaseOperations:
     def test_get_word_lookups_after_timestamp(self, init_database):
         logger.info("Starting test: test_get_word_lookups_after_timestamp")
 
-        # Assuming a fixture or a previous test has populated the database
         test_timestamp = datetime(2023, 4, 27).timestamp()
         results = Lookup.query.filter(Lookup.timestamp > test_timestamp).all()
 

@@ -5,7 +5,7 @@ from app import create_app, db
 from config import load_environment
 
 
-def pytest_configure(config):
+def pytest_configure():
     load_environment()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
@@ -13,7 +13,6 @@ def pytest_configure(config):
 
 @pytest.fixture(scope='session')
 def test_app():
-    """Fixture to create a test app with a test database."""
     app = create_app()
     app.config.update({
         'TESTING': True,

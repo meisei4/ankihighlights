@@ -47,17 +47,14 @@ def setup_database():
         detach=True,
     )
 
-    # Construct DB URI and create engine
     db_uri = f"postgresql://dumbuser:dumbpass@localhost:5432/book_vocab_db"
     engine = create_engine(db_uri)
 
-    # Optionally, wait for the database to be ready (implement proper check)
     import time
-    time.sleep(10)  # Adjust based on your setup
+    time.sleep(5)
 
-    yield engine  # Provide the engine to the tests
+    yield engine
 
-    # Teardown: stop and remove the container
     print("Stopping PostgreSQL container...")
     container.stop()
     container.remove()
@@ -73,15 +70,11 @@ def db_connection(temp_db_directory: str):
         conn.close()
 
 def test_sync_from_kindle_db(setup_database, db_connection, test_app):
-    # Push the application context
     with test_app.app_context():
-        # Now using the temporary database for the test
         engine = setup_database
 
-        # Assuming KindleSyncService can accept a connection to the SQLite db
         KindleSyncService.sync_from_kindle_db(db_connection)
 
-        # Perform checks to ensure data was inserted correctly
         with engine.connect() as connection:
             word_count = connection.execute('SELECT COUNT(*) FROM words').scalar()
             book_info_count = connection.execute('SELECT COUNT(*) FROM book_info').scalar()
