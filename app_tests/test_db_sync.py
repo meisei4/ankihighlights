@@ -4,9 +4,11 @@ import docker
 import pytest
 import sqlite3
 from sqlalchemy import create_engine
-from app.services.kindle_db_sync_service import KindleSyncService
+from app.services.ebook_db_sync_service import EbookDBSyncService
 from app_tests import logger
 
+# TODO this test suite only gets ran with the docker containers not yet deployed
+#  kind of an integration test but do not have docker running
 def get_test_temp_db_file_name(temp_dir: str):
     return os.path.join(temp_dir, 'vocab.db')
 
@@ -26,9 +28,9 @@ def remove_temp_db_directory(temp_dir: str) -> None:
 
 @pytest.fixture(scope="function")
 def temp_db_directory():
-    kindle_db_env_path = os.getenv('KINDLE_DB_PATH')
-    kindle_db_abs_path = os.path.abspath(kindle_db_env_path)
-    temp_dir = create_temp_db_directory_and_file(kindle_db_abs_path)
+    ebook_db_env_path = os.getenv('EBOOK_DB_PATH')
+    ebook_db_abs_path = os.path.abspath(ebook_db_env_path)
+    temp_dir = create_temp_db_directory_and_file(ebook_db_abs_path)
     yield temp_dir
     remove_temp_db_directory(temp_dir)
 
@@ -39,15 +41,16 @@ def setup_database():
     container = client.containers.run(
         'postgres',
         environment={
-            'POSTGRES_DB': 'book_vocab_db',
+            'POSTGRES_DB': 'reduced_ebook_lookups',
             'POSTGRES_USER': 'dumbuser',
             'POSTGRES_PASSWORD': 'dumbpass',
         },
-        ports={'5432/tcp': '5432'},
+        ports={'5432/tcp': '5432'},  # TODO figure out 5432 port conflict for when postgres docker is running
         detach=True,
     )
 
-    db_uri = f"postgresql://dumbuser:dumbpass@localhost:5432/book_vocab_db"
+    # TODO figure out the 5432 port here for the above TODO with docker vs programmatic test container deployment
+    db_uri = f"postgresql://dumbuser:dumbpass@localhost:5432/reduced_ebook_lookups"
     engine = create_engine(db_uri)
 
     import time
@@ -64,16 +67,15 @@ def db_connection(temp_db_directory: str):
     db_file = get_test_temp_db_file_name(temp_db_directory)
     conn = sqlite3.connect(db_file)
     try:
-        # Assuming vocab_db_accessor_wrap.check_and_create_latest_timestamp_table_if_not_exists(conn) is needed
         yield conn
     finally:
         conn.close()
 
-def test_sync_from_kindle_db(setup_database, db_connection, test_app):
+def test_sync_from_ebook_db(setup_database, db_connection, test_app):
     with test_app.app_context():
         engine = setup_database
 
-        KindleSyncService.sync_from_kindle_db(db_connection)
+        EbookDBSyncService.sync_from_ebook_db(db_connection)
 
         with engine.connect() as connection:
             word_count = connection.execute('SELECT COUNT(*) FROM words').scalar()

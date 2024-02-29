@@ -4,8 +4,7 @@ import sqlite3
 import tempfile
 import threading
 from . import test_util
-from old_src import ankikindle, vocab_db_accessor_wrap
-from ..old_src import ankiconnect_wrapper
+from ..old_src import ankiconnect_wrapper,ankikindle, vocab_db_accessor_wrap
 from .conftest import logger
 from .test_util import TEST_VOCAB_DB_FILE
 

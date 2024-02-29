@@ -4,24 +4,24 @@ from app.models.models import Word, BookInfo, Lookup
 from app import logger
 
 
-class KindleSyncService:
+class EbookDBSyncService:
     @staticmethod
-    def sync_from_kindle_db(kindle_conn):
-        logger.info(f"Starting sync from Kindle database")
-        with kindle_conn:
-            kindle_cursor = kindle_conn.cursor()
-            kindle_cursor.execute("""
+    def sync_from_ebook_db(ebook_vocab_db_conn):
+        logger.info(f"Starting sync from ebook database")
+        with ebook_vocab_db_conn:
+            ebook_db_cursor = ebook_vocab_db_conn.cursor()
+            ebook_db_cursor.execute("""
                 SELECT w.word, l.usage, l.timestamp, b.title, b.authors 
                 FROM lookups l
                 INNER JOIN words w ON l.word_key = w.id
                 INNER JOIN book_info b ON l.book_key = b.id
             """)
-            rows = kindle_cursor.fetchall()
+            rows = ebook_db_cursor.fetchall()
 
-            logger.info(f"Retrieved {len(rows)} rows from Kindle database")
+            logger.info(f"Retrieved {len(rows)} rows from ebook database")
 
             for row in rows:
-                KindleSyncService.process_row(row)
+                EbookDBSyncService.process_row(row)
             logger.info("Sync completed successfully.")
 
     @staticmethod

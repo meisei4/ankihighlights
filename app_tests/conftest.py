@@ -28,5 +28,4 @@ def test_app():
 
 @pytest.fixture(scope='function')
 def test_client(test_app):
-    """A test client for the app."""
     return test_app.test_client()

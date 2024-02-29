@@ -17,7 +17,7 @@ services:
     environment:
       POSTGRES_USER: dumbuser
       POSTGRES_PASSWORD: dumbpass
-      POSTGRES_DB: book_vocab_db
+      POSTGRES_DB: reduced_ebook_lookups
     ports:
       - "5432:5432"
     volumes:
