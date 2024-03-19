@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from app import create_app
+from app.app import create_app
 from app.services.ebook_db_sync_service import EbookDBSyncService
 from config import load_environment
 
@@ -17,6 +17,6 @@ def sync_ebook_db():
 
 
 if __name__ == "__main__":
-    sync_ebook_db()
+    # sync_ebook_db()
 
     app.run(host='0.0.0.0', port=int(os.getenv('FLASK_RUN_PORT')))
