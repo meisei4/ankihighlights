@@ -4,9 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 import logging
 
-from app.routes.anki_routes import anki_routes
-from app.routes.vocab_highlights_routes import vocab_highlight_routes
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -22,6 +19,8 @@ def create_app():
     migrate.init_app(app, db)
 
     with app.app_context():
+        from app.routes.anki_routes import anki_routes
+        from app.routes.vocab_highlights_routes import vocab_highlight_routes
         app.register_blueprint(anki_routes)
         app.register_blueprint(vocab_highlight_routes)
 

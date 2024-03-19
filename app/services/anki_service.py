@@ -1,12 +1,12 @@
 import os
 import requests
-from app import logger
+from app.app import logger
 
 
 class AnkiService:
     API_URL = os.getenv("API_URL")
     HEADERS = {"Content-Type": "application/json"}
-    VERSION = os.getenv("VERSION")
+    VERSION = os.getenv("VERSION", "6")  # Defaulting to 6 as a safe fallback
 
     @classmethod
     def send_request(cls, action, params=None) -> dict:

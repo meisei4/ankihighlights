@@ -1,5 +1,5 @@
 from app.services.anki_service import AnkiService
-from app import db, logger
+from app.app import db, logger
 from app.models.models import Lookup
 
 class VocabHighlightService:

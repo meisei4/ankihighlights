@@ -1,4 +1,4 @@
-from app import db
+from app.app import db
 
 class Word(db.Model):
     __tablename__ = 'words'

@@ -1,7 +1,7 @@
 import logging
 import os
 import pytest
-from app import create_app, db
+from app.app import create_app, db
 from config import load_environment
 
 
@@ -17,7 +17,8 @@ def test_app():
     app.config.update({
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': os.getenv('DATABASE_URL'),
-        'SQLALCHEMY_TRACK_MODIFICATIONS': False
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'VERSION': int(os.getenv('VERSION'))
     })
 
     with app.app_context():

@@ -1,7 +1,6 @@
 from sqlalchemy.exc import SQLAlchemyError
-from app import db
+from app.app import db, logger
 from app.models.models import Word, BookInfo, Lookup
-from app import logger
 
 
 class EbookDBSyncService:
