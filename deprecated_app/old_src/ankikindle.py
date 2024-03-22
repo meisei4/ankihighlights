@@ -1,9 +1,9 @@
 import logging
-import ankiconnect_wrapper
-import vocab_db_accessor_wrap
 from datetime import datetime
 from sqlite3 import Connection
 
+from ..old_src import vocab_db_accessor_wrap
+from deprecated_app.old_src import ankiconnect_wrapper
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] [%(threadName)s] %(message)s')
 ankikindle_main_logger = logging.getLogger(__name__)

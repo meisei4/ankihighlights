@@ -1,6 +1,6 @@
 import pytest
 import threading
-from old_src import ankikindle, vocab_db_accessor_wrap
+from ..old_src import vocab_db_accessor_wrap, ankikindle
 from ..old_src import ankiconnect_wrapper
 from sqlite3 import Connection
 from unittest.mock import Mock
