@@ -10,9 +10,6 @@ def pytest_configure():
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
 
-    # Log environment variables
-    logger.info("Test suite configuration complete.")
-
 
 @pytest.fixture(scope='session')
 def test_app():
