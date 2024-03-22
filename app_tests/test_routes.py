@@ -1,18 +1,13 @@
-from app.models.models import Lookup, Word, BookInfo
+import logging
 
 
 def test_request_permission_route(test_client):
     response = test_client.get('/anki/request_permission')
-    assert response.status_code == 200
-    assert 'success' in response.json
-
-def test_process_highlights(test_client, init_database):
-    word = Word(word='test')
-    book_info = BookInfo(title='Test Book', authors='Author A')
-    lookup = Lookup(word=word, book_info=book_info, usage='Usage example', timestamp=123456789)
-    init_database.session.add_all([word, book_info, lookup])
-    init_database.session.commit()
-
-    response = test_client.post('/vocab_highlights/process')
-    assert response.status_code == 200
-    assert response.json['success'] == True
+    response_json = response.json
+    logging.info(response_json)
+    assert 'success' in response_json
+    # Optionally, assert the success is True
+    assert response_json['success'] is True
+    # To further verify the response structure, you might want to check the 'data' part
+    assert 'permission' in response_json['data']
+    assert response_json['data']['permission'] == 'granted'

@@ -1,13 +1,17 @@
-from flask import jsonify, request
+from flask import request
 from app.services.anki_service import AnkiService
 from flask import Blueprint
 
 anki_routes = Blueprint('anki', __name__, url_prefix='/anki')
 
+from flask import jsonify
+
 def handle_service_response(response):
-    if 'error' in response:
+    # Check if the 'error' key is present and not None
+    if response.get('error'):
         return jsonify({"success": False, "message": response['error']}), 500
-    return jsonify({"success": True, "data": response}), 200
+    else:
+        return jsonify({"success": True, "data": response.get('result')}), 200
 
 @anki_routes.route('/request_permission', methods=['GET'])
 def request_permission():

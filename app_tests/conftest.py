@@ -7,9 +7,12 @@ from config import load_environment
 
 def pytest_configure():
     load_environment()
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
+
+    # Log environment variables
     logger.info("Test suite configuration complete.")
+
 
 @pytest.fixture(scope='session')
 def test_app():
