@@ -1,6 +1,7 @@
-from app.services.anki_service import AnkiService
 from app.app import db, logger
 from app.models.models import Lookup
+from app.services.anki_service import AnkiService
+
 
 class VocabHighlightService:
 
@@ -32,4 +33,3 @@ class VocabHighlightService:
             logger.info(f"Processed highlight for word '{highlight.word.word}' with Anki note ID {note_id}")
         else:
             logger.error(f"Failed to process highlight for word '{highlight.word.word}'")
-

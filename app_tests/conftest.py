@@ -1,6 +1,8 @@
 import logging
 import os
+
 import pytest
+
 from app.app import create_app, db
 from config import load_environment
 
@@ -26,6 +28,7 @@ def test_app():
         yield app
         db.drop_all()
         db.session.remove()
+
 
 @pytest.fixture(scope='function')
 def test_client(test_app):

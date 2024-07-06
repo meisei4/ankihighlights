@@ -1,10 +1,12 @@
-from flask import request
-from app.services.anki_service import AnkiService
 from flask import Blueprint
+from flask import request
+
+from app.services.anki_service import AnkiService
 
 anki_routes = Blueprint('anki', __name__, url_prefix='/anki')
 
 from flask import jsonify
+
 
 def handle_service_response(response):
     # Check if the 'error' key is present and not None
@@ -13,20 +15,24 @@ def handle_service_response(response):
     else:
         return jsonify({"success": True, "data": response.get('result')}), 200
 
+
 @anki_routes.route('/request_permission', methods=['GET'])
 def request_permission():
     response = AnkiService.request_connection_permission()
     return handle_service_response(response)
+
 
 @anki_routes.route('/decks', methods=['GET'])
 def get_decks():
     response = AnkiService.get_all_deck_names()
     return handle_service_response(response)
 
+
 @anki_routes.route('/models', methods=['GET'])
 def get_models():
     response = AnkiService.get_all_model_names()
     return handle_service_response(response)
+
 
 @anki_routes.route('/find_notes', methods=['POST'])
 def find_notes():
@@ -34,11 +40,13 @@ def find_notes():
     response = AnkiService.find_notes(query)
     return handle_service_response(response)
 
+
 @anki_routes.route('/note_info', methods=['POST'])
 def get_notes_info():
     note_ids = request.json.get('note_ids', [])
     response = AnkiService.get_notes_info(note_ids)
     return handle_service_response(response)
+
 
 @anki_routes.route('/add_note', methods=['POST'])
 def add_note():
@@ -51,6 +59,7 @@ def add_note():
         tags=data.get('tags', [])
     )
     return handle_service_response({"note_id": response} if response else {"error": "Failed to add note"})
+
 
 @anki_routes.route('/update_note', methods=['POST'])
 def update_note():
