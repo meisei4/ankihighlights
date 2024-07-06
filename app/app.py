@@ -38,8 +38,8 @@ def create_app():
 
     try:
         with app.app_context():
-            from app.routes.anki_routes import anki_routes
-            from app.routes.vocab_highlights_routes import vocab_highlight_routes
+            from app.routes.anki_route_controller import anki_routes
+            from app.routes.vocab_highlights_route_controller import vocab_highlight_routes
             app.register_blueprint(anki_routes)
             app.register_blueprint(vocab_highlight_routes)
 
