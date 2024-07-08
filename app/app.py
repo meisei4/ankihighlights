@@ -5,10 +5,12 @@ from flask import Flask
 from flask_migrate import Migrate
 from sqlalchemy import create_engine
 
+from app import logger
 from app.models import init_model
+from app.logging_config import configure_logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# TODO: untested that this has any affect on the __init__.py
+configure_logging(level=logging.INFO)  # Set to INFO for the main app
 
 migrate = Migrate()
 

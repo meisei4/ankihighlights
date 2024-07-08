@@ -4,16 +4,16 @@ import pytest
 from app.app import create_app
 from app.models.meta import DBSession, Base
 from config import load_environment
+from app.logging_config import configure_logging
 
 
 def pytest_configure():
     load_environment()
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    configure_logging(level=logging.DEBUG)  # Set to DEBUG for tests only
 
 
 @pytest.fixture(scope='session')
 def test_app():
-    load_environment()
     app = create_app()
     app.config.update({
         'TESTING': True,
