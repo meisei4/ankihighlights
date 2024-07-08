@@ -1,6 +1,3 @@
-Here is the markdown file reflecting the current models and including the Kindle references:
-
-```markdown
 # SQLite Kindle Database to PostgreSQL Custom Database Typing Mapping
 
 ## Mapping Overview
