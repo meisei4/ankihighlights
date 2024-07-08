@@ -6,6 +6,7 @@ from app.services.vocab_highlight_service import VocabHighlightService
 
 vocab_highlight_routes = Blueprint('vocab_highlights', __name__, url_prefix='/vocab_highlights')
 
+
 # TODO: The only purpose of this controller would be for manual api testing? still not sure if its even necessary
 
 def handle_service_response(success, data=None, message=None, status_code=200):
@@ -26,7 +27,7 @@ def process_highlights():
 
 @vocab_highlight_routes.route('/request_permission', methods=['POST'])
 def request_permission():
-    response = AnkiService.request_connection_permission()
+    response = AnkiService.request_permission()
     if 'error' not in response:
         return handle_service_response(True, data={"permission_granted": response},
                                        message="Permission request processed.")

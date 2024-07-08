@@ -1,7 +1,10 @@
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.app import db, logger
-from app.models.models import Word, BookInfo, Lookup
+from app.app import logger
+from app.models import DBSession
+from app.models.book_info import BookInfo
+from app.models.lookup import Lookup
+from app.models.word import Word
 
 
 class EbookDBSyncService:
@@ -33,24 +36,24 @@ class EbookDBSyncService:
             word = Word.query.filter_by(word=word_text).first()
             if not word:
                 word = Word(word=word_text)
-                db.session.add(word)
-                db.session.flush()  # Generates the ID for further use
+                DBSession.add(word)
+                DBSession.flush()  # Generates the ID for further use
 
             book_info = BookInfo.query.filter_by(title=book_title, authors=book_authors).first()
             if not book_info:
                 book_info = BookInfo(title=book_title, authors=book_authors)
-                db.session.add(book_info)
-                db.session.flush()  # Generates the ID for further use
+                DBSession.add(book_info)
+                DBSession.flush()  # Generates the ID for further use
 
             usage_timestamp = timestamp
-            lookup = Lookup.query.filter_by(word_id=word.id, book_info_id=book_info.id, usage=usage_text).first()
+            lookup = Lookup.query.filter_by(word_id=word.id, book_id=book_info.id, usage=usage_text).first()
             if not lookup:
-                lookup = Lookup(word_id=word.id, book_info_id=book_info.id, usage=usage_text, timestamp=usage_timestamp)
-                db.session.add(lookup)
+                lookup = Lookup(word_id=word.id, book_id=book_info.id, usage=usage_text, timestamp=usage_timestamp)
+                DBSession.add(lookup)
 
-            db.session.commit()
+            DBSession.commit()
             logger.info(f"Successfully processed and inserted/updated row in the database for word: {word_text}")
 
         except SQLAlchemyError as e:
-            db.session.rollback()
+            DBSession.rollback()
             logger.error(f"Error processing row {row}: {e}")

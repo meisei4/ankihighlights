@@ -6,6 +6,7 @@ from app.services.anki_service import AnkiService
 
 anki_routes = Blueprint('anki', __name__, url_prefix='/anki')
 
+
 # TODO: I dont know if this controller is even needed... It could be completely meaningless
 
 def handle_service_response(response):
@@ -18,7 +19,7 @@ def handle_service_response(response):
 
 @anki_routes.route('/request_permission', methods=['GET'])
 def request_permission():
-    response = AnkiService.request_connection_permission()
+    response = AnkiService.request_permission()
     return handle_service_response(response)
 
 

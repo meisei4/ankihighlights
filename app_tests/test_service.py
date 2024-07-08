@@ -1,7 +1,7 @@
 import logging
 
-from app.app import db
-from app.models.models import LatestTimestamp
+from app.models import DBSession
+from app.models.latest_timestamp import LatestTimestamp
 from app.services.anki_service import AnkiService
 from app.services.vocab_highlight_service import VocabHighlightService
 
@@ -21,9 +21,9 @@ def test_process_new_vocab_highlights(test_client, add_lookup_data, reset_anki):
     # Initialize LatestTimestamp
     logger.info("Initializing LatestTimestamp")
     latest_timestamp = 0
-    LatestTimestamp.query.delete()
-    db.session.add(LatestTimestamp(timestamp=latest_timestamp))
-    db.session.commit()
+    DBSession.query(LatestTimestamp).delete()
+    DBSession.add(LatestTimestamp(timestamp=latest_timestamp))
+    DBSession.commit()
 
     # Process new vocab highlights
     logger.info("Processing new vocab highlights")

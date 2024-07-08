@@ -1,10 +1,10 @@
+# app_tests/conftest.py
 import logging
 import os
 import pytest
-from app.app import create_app, db
-from app.models.models import Lookup, BookInfo, Word
+from app.app import create_app
+from app.models.meta import DBSession, Base
 from config import load_environment
-from app.services.anki_service import AnkiService
 
 
 def pytest_configure():
@@ -25,41 +25,41 @@ def test_app():
     })
 
     with app.app_context():
-        db.create_all()
+        Base.metadata.create_all()
         yield app
-        db.session.remove()
-        db.drop_all()
+        DBSession.remove()
+        Base.metadata.drop_all()
 
 
 @pytest.fixture(scope='function')
 def test_client(test_app):
     with test_app.test_client() as client:
         yield client
-        db.session.remove()
+        DBSession.remove()
+
 
 @pytest.fixture(scope='function')
 def add_lookup_data():
     def _add_lookup_data():
-        # Clean up existing data
-        Lookup.query.delete()
-        BookInfo.query.delete()
-        Word.query.delete()
-        db.session.commit()
+        from app.models.lookup import Lookup
+        from app.models.book_info import BookInfo
+        from app.models.word import Word
+        DBSession.query(Lookup).delete()
+        DBSession.query(BookInfo).delete()
+        DBSession.query(Word).delete()
+        DBSession.commit()
 
-        # Create a book record
         book = BookInfo(title="日本の本", authors="著者A")
-        db.session.add(book)
-        db.session.commit()
+        DBSession.add(book)
+        DBSession.commit()
 
-        # Create a word record
         word = Word(word="日本語")
-        db.session.add(word)
-        db.session.commit()
+        DBSession.add(word)
+        DBSession.commit()
 
-        # Create lookup records associated with the book and word
         word_lookup = Lookup(word_id=word.id, book_id=book.id, usage="日本語の例文", timestamp=1)
-        db.session.add(word_lookup)
-        db.session.commit()
+        DBSession.add(word_lookup)
+        DBSession.commit()
 
     return _add_lookup_data
 
@@ -67,14 +67,13 @@ def add_lookup_data():
 @pytest.fixture(scope='function')
 def reset_anki():
     def _reset_anki():
+        from app.services.anki_service import AnkiService
         deck_name = "test_deck"
 
-        # Ensure the deck exists
         existing_decks = AnkiService.get_all_deck_names()
         if deck_name not in existing_decks:
             AnkiService.create_deck(deck_name)
 
-        # Clear all notes from the deck
         note_ids = AnkiService.find_notes(f"deck:{deck_name}")
         if note_ids:
             AnkiService.delete_notes(note_ids)
