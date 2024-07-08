@@ -1,13 +1,11 @@
-version: '3.8'
-
-services: 
-  anki-desktop: 
+services:
+  anki-desktop:
     build:
       context: .
       dockerfile: anki_docker_fork/Dockerfile
     ports:
       - "3000:3000"
-      - "8765:8765" # Anki Connect port
+      # - "8765:8765" # TODO: Anki Connect port, This breaks if not using the anki docker, and instead machine docker
     volumes:
       - ~/.local/share/Anki2:/config/app/Anki2
       - ~/backups:/config/app/backups

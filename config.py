@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 
+
 # TODO: figure out how to load based on env context
 def load_environment():
     """

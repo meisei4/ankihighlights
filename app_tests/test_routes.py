@@ -1,6 +1,7 @@
 import logging
 
 
+# TODO: I dont even know if there should be routes yet...
 def test_request_permission_route(test_client):
     response = test_client.get('/anki/request_permission')
     response_json = response.json

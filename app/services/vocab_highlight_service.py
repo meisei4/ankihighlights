@@ -1,35 +1,54 @@
+from app.app import logger
+from app.models.latest_timestamp import LatestTimestamp
+from app.models.lookup import Lookup
+from app.models.meta import DBSession
 from app.services.anki_service import AnkiService
-from app.app import db, logger
-from app.models.models import Lookup
+
 
 class VocabHighlightService:
 
     @staticmethod
-    def process_new_vocab_highlights(deck_name="DefaultDeck", model_name="Basic"):
-        highlights = Lookup.query.filter(Lookup.anki_card_id.is_(None)).all()
-        for highlight in highlights:
-            VocabHighlightService.process_highlight(highlight, deck_name, model_name)
+    def check_and_create_latest_timestamp_if_not_exists():
+        """Check if the latest timestamp exists, if not, create it with a default value."""
+        if DBSession.query(LatestTimestamp).count() == 0:
+            latest_timestamp = LatestTimestamp(timestamp=0)  # Default timestamp
+            DBSession.add(latest_timestamp)
+            DBSession.commit()
+            logger.info("Table 'latest_timestamp' initialized with default value.")
 
     @staticmethod
-    def process_highlight(highlight, deck_name, model_name):
-        query = f"deck:{deck_name} front:{highlight.word.word}"
-        existing_note_ids = AnkiService.find_notes(query)
+    def get_latest_timestamp():
+        """Retrieve the latest timestamp from the database."""
+        latest_timestamp_record = DBSession.query(LatestTimestamp).order_by(LatestTimestamp.timestamp.desc()).first()
+        return latest_timestamp_record.timestamp if latest_timestamp_record else 0
 
-        if not existing_note_ids:
-            note_id = AnkiService.add_anki_note(
-                deck_name=deck_name,
-                model_name=model_name,
-                front=highlight.word.word,
-                back=highlight.usage,
-                tags=["vocab"]
-            )
-        else:
-            note_id = existing_note_ids[0]
+    @staticmethod
+    def set_latest_timestamp(timestamp):
+        """Set a new latest timestamp in the database."""
+        latest_timestamp_record = LatestTimestamp(timestamp=timestamp)
+        DBSession.add(latest_timestamp_record)
+        DBSession.commit()
 
-        if note_id:
-            highlight.anki_card_id = note_id
-            db.session.commit()
-            logger.info(f"Processed highlight for word '{highlight.word.word}' with Anki note ID {note_id}")
-        else:
-            logger.error(f"Failed to process highlight for word '{highlight.word.word}'")
+    @staticmethod
+    def get_word_lookups_after_timestamp(timestamp):
+        """Retrieve all word lookups that occurred after a given timestamp."""
+        return DBSession.query(Lookup).filter(Lookup.timestamp > timestamp).all()
 
+    @staticmethod
+    def process_new_vocab_highlights(deck_name="DefaultDeck", model_name="Basic"):
+        """Process new vocabulary highlights, add them to Anki, and update the latest timestamp."""
+        VocabHighlightService.check_and_create_latest_timestamp_if_not_exists()
+
+        latest_timestamp = VocabHighlightService.get_latest_timestamp()
+        highlights = VocabHighlightService.get_word_lookups_after_timestamp(latest_timestamp)
+
+        if highlights:
+            logger.info(f"New vocab highlights found: {highlights}")
+            added_note_ids = AnkiService.add_notes_to_anki(highlights, deck_name, model_name)
+
+            if added_note_ids:
+                new_latest_timestamp = max(highlight.timestamp for highlight in highlights)
+                VocabHighlightService.set_latest_timestamp(new_latest_timestamp)
+                logger.info(f"Updated latest timestamp to: {new_latest_timestamp}")
+
+        return highlights
