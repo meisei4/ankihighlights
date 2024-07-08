@@ -36,6 +36,9 @@ def create_app():
     logger.info(f"VERSION: {os.getenv('VERSION')}")
     logger.info("Database and migrations initialized.")
 
+    # logger.info(f"ANKI_API_URL: {os.getenv('ANKI_API_URL')}")
+
+
     try:
         with app.app_context():
             from app.routes.anki_route_controller import anki_routes

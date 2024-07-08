@@ -1,12 +1,12 @@
 from flask import Blueprint
 from flask import request
+from flask import jsonify
 
 from app.services.anki_service import AnkiService
 
 anki_routes = Blueprint('anki', __name__, url_prefix='/anki')
 
-from flask import jsonify
-
+# TODO: I dont know if this controller is even needed... It could be completely meaningless
 
 def handle_service_response(response):
     # Check if the 'error' key is present and not None

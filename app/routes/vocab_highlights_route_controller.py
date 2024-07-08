@@ -6,6 +6,7 @@ from app.services.vocab_highlight_service import VocabHighlightService
 
 vocab_highlight_routes = Blueprint('vocab_highlights', __name__, url_prefix='/vocab_highlights')
 
+# TODO: The only purpose of this controller would be for manual api testing? still not sure if its even necessary
 
 def handle_service_response(success, data=None, message=None, status_code=200):
     if success:
