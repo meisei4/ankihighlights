@@ -1,7 +1,7 @@
 from app.app import logger
-from app.models import DBSession
 from app.models.latest_timestamp import LatestTimestamp
 from app.models.lookup import Lookup
+from app.models.meta import DBSession
 from app.services.anki_service import AnkiService
 
 

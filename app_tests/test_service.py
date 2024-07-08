@@ -1,11 +1,8 @@
-import logging
-
-from app.models import DBSession
 from app.models.latest_timestamp import LatestTimestamp
+from app.models.meta import DBSession
 from app.services.anki_service import AnkiService
 from app.services.vocab_highlight_service import VocabHighlightService
-
-logger = logging.getLogger(__name__)
+from app_tests import logger
 
 
 def test_process_new_vocab_highlights(test_client, add_lookup_data, reset_anki):

@@ -8,6 +8,7 @@ from sqlalchemy import create_engine
 from app.services.ebook_db_sync_service import EbookDBSyncService
 from app_tests import logger
 
+
 def get_test_temp_db_file_name(temp_dir: str):
     return os.path.join(temp_dir, 'vocab.db')
 

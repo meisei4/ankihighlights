@@ -1,6 +1,6 @@
 from flask import Blueprint
-from flask import request
 from flask import jsonify
+from flask import request
 
 from app.services.anki_service import AnkiService
 

@@ -1,11 +1,11 @@
-# app/app.py
 import logging
 import os
+
 from flask import Flask
 from flask_migrate import Migrate
-from sqlalchemy import engine_from_config, create_engine
+from sqlalchemy import create_engine
 
-from app.models import init_model, DBSession
+from app.models import init_model
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

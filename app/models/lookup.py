@@ -10,4 +10,3 @@ class Lookup(Base):
     book_id = Column(Integer, ForeignKey('book_info.id'), nullable=False)
     usage = Column(String, nullable=False)
     timestamp = Column(BigInteger, nullable=False)
-

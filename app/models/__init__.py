@@ -1,15 +1,9 @@
 from app.models.anki_card import AnkiCard
-from app.models.meta import DBSession, Base
-from app.models.word import Word
-from app.models.lookup import Lookup
-from app.models.latest_timestamp import LatestTimestamp
 from app.models.book_info import BookInfo
-
-
-def initialize_sql(engine):
-    DBSession.configure(bind=engine)
-    Base.metadata.bind = engine
-    Base.metadata.create_all(engine)
+from app.models.latest_timestamp import LatestTimestamp
+from app.models.lookup import Lookup
+from app.models.meta import DBSession, Base, initialize_sql
+from app.models.word import Word
 
 
 def init_model(engine):

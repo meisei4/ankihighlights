@@ -1,6 +1,5 @@
 asdfasdfas
 
-
 model: Model
 
 routes: controller

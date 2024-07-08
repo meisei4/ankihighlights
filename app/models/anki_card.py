@@ -14,4 +14,3 @@ class AnkiCard(Base):
     anki_card_id = Column(String(255), nullable=False, unique=True)
     usage = Column(String(255), nullable=True)
     timestamp = Column(BigInteger, nullable=False)
-

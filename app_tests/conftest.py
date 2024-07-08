@@ -1,4 +1,3 @@
-# app_tests/conftest.py
 import logging
 import os
 import pytest
@@ -28,6 +27,8 @@ def test_app():
         Base.metadata.create_all()
         yield app
         DBSession.remove()
+        # TODO debbuger flag that allows you to look at the database after tests
+        #  for now just comment the line below
         Base.metadata.drop_all()
 
 

@@ -2,9 +2,13 @@
 
 ### Overview
 
-This application is a Flask-based web app that integrates with SQLite to access the Kindle's vocabulary database, extracts words and their usage, and uses AnkiConnect to add these words to an Anki deck. The Kindle's vocabulary database is a SQLite file named `vocab.db` (e.g., for macOS located at the system path `/Volumes/Kindle/system/vocabulary/vocab.db` when the Kindle device is mounted).
+This application is a Flask-based web app that integrates with SQLite to access the Kindle's vocabulary database,
+extracts words and their usage, and uses AnkiConnect to add these words to an Anki deck. The Kindle's vocabulary
+database is a SQLite file named `vocab.db` (e.g., for macOS located at the system
+path `/Volumes/Kindle/system/vocabulary/vocab.db` when the Kindle device is mounted).
 
-The `vocab.db` database consists of several tables, with the `LOOKUPS` and `WORDS` tables being the most relevant. The `LOOKUPS` table contains the word usage and its metadata, while the `WORDS` table contains the words themselves.
+The `vocab.db` database consists of several tables, with the `LOOKUPS` and `WORDS` tables being the most relevant.
+The `LOOKUPS` table contains the word usage and its metadata, while the `WORDS` table contains the words themselves.
 
 ## Table of Contents
 
@@ -20,7 +24,8 @@ The `vocab.db` database consists of several tables, with the `LOOKUPS` and `WORD
 - Adds new flashcards to a specified Anki deck.
 - Updates existing flashcards with additional example sentences (upon duplicate highlights/lookups to Kindle vocab db).
 - Supports custom deck and card type configurations (not yet implemented).
-- Provides a priority deck for frequent vocabulary (vocab words that are encountered more than a certain threshold while reading on Kindle).
+- Provides a priority deck for frequent vocabulary (vocab words that are encountered more than a certain threshold while
+  reading on Kindle).
 
 ## Database Structure
 
@@ -36,7 +41,8 @@ It is recommended to use PyCharm Community Edition and set up a Poetry virtual e
    poetry install
    ```
 
-2. Install the AnkiConnect add-on in Anki by following the instructions on [anki-connect's GitHub page](https://github.com/FooSoft/anki-connect).
+2. Install the AnkiConnect add-on in Anki by following the instructions
+   on [anki-connect's GitHub page](https://github.com/FooSoft/anki-connect).
 
 ## Usage
 
