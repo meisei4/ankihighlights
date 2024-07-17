@@ -1,8 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-
 from app.models.meta import Base
-
 
 class Word(Base):
     __tablename__ = 'words'
@@ -10,3 +8,4 @@ class Word(Base):
     word = Column(String(255), nullable=False, unique=True)
     lookups = relationship('Lookup', backref='word', lazy=True, cascade="all, delete-orphan")
     anki_cards = relationship('AnkiCard', backref='word', lazy=True, cascade="all, delete-orphan")
+

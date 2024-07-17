@@ -1,3 +1,4 @@
+from app.anki_constants import CUSTOM_CARD_MODEL_NAME
 from app.app import logger
 from app.models.latest_timestamp import LatestTimestamp
 from app.models.lookup import Lookup
@@ -34,8 +35,9 @@ class VocabHighlightService:
         """Retrieve all word lookups that occurred after a given timestamp."""
         return DBSession.query(Lookup).filter(Lookup.timestamp > timestamp).all()
 
+
     @staticmethod
-    def process_new_vocab_highlights(deck_name="DefaultDeck", model_name="Basic"):
+    def process_new_vocab_highlights(deck_name="DefaultDeck"):
         """Process new vocabulary highlights, add them to Anki, and update the latest timestamp."""
         VocabHighlightService.check_and_create_latest_timestamp_if_not_exists()
 
@@ -44,7 +46,7 @@ class VocabHighlightService:
 
         if highlights:
             logger.info(f"New vocab highlights found: {highlights}")
-            added_note_ids = AnkiService.add_notes_to_anki(highlights, deck_name, model_name)
+            added_note_ids = AnkiService.add_notes_to_anki(highlights, deck_name, model_name=CUSTOM_CARD_MODEL_NAME)
 
             if added_note_ids:
                 new_latest_timestamp = max(highlight.timestamp for highlight in highlights)

@@ -1,8 +1,17 @@
 import logging
 import os
+from datetime import datetime
+from sqlite3 import IntegrityError
+
 import pytest
+from sqlalchemy import insert
+
 from app.app import create_app
+from app.models import LatestTimestamp
 from app.models.meta import DBSession, Base
+from app.models.lookup import Lookup
+from app.models.book_info import BookInfo
+from app.models.word import Word
 from config import load_environment
 
 
@@ -41,33 +50,51 @@ def test_client(test_app):
 
 @pytest.fixture(scope='function')
 def add_lookup_data():
-    def _add_lookup_data():
+    def _add_lookup_data(word="日本語", usage="日本語の例文"):
+        from app.models.meta import DBSession
         from app.models.lookup import Lookup
         from app.models.book_info import BookInfo
-        from app.models.word import Word
-        DBSession.query(Lookup).delete()
-        DBSession.query(BookInfo).delete()
-        DBSession.query(Word).delete()
-        DBSession.commit()
 
+        # Use the utility function to get or create the word
+        word_id = get_or_create_word(word)
+
+        # Add the book info (assuming it doesn't already exist)
         book = BookInfo(title="日本の本", authors="著者A")
         DBSession.add(book)
         DBSession.commit()
 
-        word = Word(word="日本語")
-        DBSession.add(word)
-        DBSession.commit()
+        current_timestamp = int(datetime.now().timestamp())
 
-        word_lookup = Lookup(word_id=word.id, book_id=book.id, usage="日本語の例文", timestamp=1)
+        word_lookup = Lookup(word_id=word_id, book_id=book.id, usage=usage, timestamp=current_timestamp)
         DBSession.add(word_lookup)
         DBSession.commit()
 
     return _add_lookup_data
 
 
+# TODO: This seems obnoxious, and I have a feeling it can be easily fixed with DB structure
+#  is it appropriate to have inserts into the lookups table only,
+#  such that the Words table gets updated when a new word is added to the Lookups table?
+def get_or_create_word(word):
+    existing_word = DBSession.query(Word).filter_by(word=word).first()
+    if existing_word:
+        return existing_word.id
+    else:
+        try:
+            new_word = Word(word=word)
+            DBSession.add(new_word)
+            DBSession.commit()
+            return new_word.id
+        except IntegrityError:
+            DBSession.rollback()
+            existing_word = DBSession.query(Word).filter_by(word=word).first()
+            return existing_word.id
+
+
 @pytest.fixture(scope='function')
 def reset_anki():
     def _reset_anki():
+
         from app.services.anki_service import AnkiService
         deck_name = "test_deck"
 
@@ -78,5 +105,16 @@ def reset_anki():
         note_ids = AnkiService.find_notes(f"deck:{deck_name}")
         if note_ids:
             AnkiService.delete_notes(note_ids)
+
+        # TODO: this DB refresh should be in a more obvious location perhaps
+        #  it has been the main cause for the update example sentence to fail
+        DBSession.query(Lookup).delete()
+        DBSession.query(BookInfo).delete()
+        DBSession.query(Word).delete()
+
+        latest_timestamp = 0
+        DBSession.query(LatestTimestamp).delete()
+        DBSession.add(LatestTimestamp(timestamp=latest_timestamp))
+        DBSession.commit()
 
     return _reset_anki

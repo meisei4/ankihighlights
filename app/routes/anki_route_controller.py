@@ -55,8 +55,7 @@ def add_note():
     response = AnkiService.add_anki_note(
         deck_name=data['deck_name'],
         model_name=data['model_name'],
-        front=data['front'],
-        back=data['back'],
+        fields=data['fields'],
         tags=data.get('tags', [])
     )
     return handle_service_response({"note_id": response} if response else {"error": "Failed to add note"})
