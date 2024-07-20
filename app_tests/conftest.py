@@ -95,7 +95,7 @@ def get_or_create_word(word):
 def reset_anki():
     def _reset_anki():
 
-        from app.services.anki_service import AnkiService
+        from app.services.ankiconnect_service import AnkiService
         deck_name = "test_deck"
 
         existing_decks = AnkiService.get_all_deck_names()

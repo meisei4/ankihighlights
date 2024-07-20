@@ -14,7 +14,7 @@ migrate = Migrate()
 
 
 def create_app():
-    logger.setLevel(logging.DEBUG)  # Ensure logger captures debug messages
+    logger.setLevel(logging.DEBUG)
     logger.info("Starting application setup.")
 
     app = Flask(__name__)
@@ -39,10 +39,8 @@ def create_app():
 
     try:
         with app.app_context():
-            from app.routes.anki_route_controller import anki_routes
-            from app.routes.vocab_highlights_route_controller import vocab_highlight_routes
-            app.register_blueprint(anki_routes)
-            app.register_blueprint(vocab_highlight_routes)
+            from app.controllers.highlight_controller import highlight_routes
+            app.register_blueprint(highlight_routes)
             logger.info("Database tables created and blueprints registered.")
     except Exception as e:
         logger.error(f"Error during application setup: {e}")

@@ -1,14 +1,33 @@
 import logging
 
+def test_process_highlights_route(test_client, add_lookup_data, reset_anki):
+    # Reset Anki and database state
+    reset_anki()
 
-# TODO: I dont even know if there should be routes yet...
-def test_request_permission_route(test_client):
-    response = test_client.get('/anki/request_permission')
-    response_json = response.json
+    # Add some lookup data to process
+    add_lookup_data(word="日本語", usage="日本語の文")
+    add_lookup_data(word="和文", usage="また別の和文")
+
+    # Make the POST request to process highlights
+    response = test_client.post('/highlight/process')
+    response_json = response.get_json()
     logging.info(response_json)
-    assert 'success' in response_json
-    # Optionally, assert the success is True
-    assert response_json['success'] is True
-    # To further verify the response structure, you might want to check the 'data' part
-    assert 'permission' in response_json['data']
-    assert response_json['data']['permission'] == 'granted'
+
+    # Check the response status code
+    assert response.status_code == 200
+    assert response_json.get('success') is True
+
+    # Verify that the highlights have been processed
+    assert 'data' in response_json
+    highlights = response_json['data'].get('highlight')
+    assert highlights is not None
+    assert isinstance(highlights, list)
+    assert len(highlights) > 0  # Ensure highlights were actually processed
+
+    # Additional checks for highlight DTO structure
+    for highlight in highlights:
+        assert 'id' in highlight
+        assert 'word_id' in highlight
+        assert 'book_id' in highlight
+        assert 'usage' in highlight
+        assert 'timestamp' in highlight

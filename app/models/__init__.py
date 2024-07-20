@@ -1,4 +1,3 @@
-from app.models.anki_card import AnkiCard
 from app.models.book_info import BookInfo
 from app.models.latest_timestamp import LatestTimestamp
 from app.models.lookup import Lookup

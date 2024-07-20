@@ -1,9 +1,7 @@
 import time
 
-from app.models.latest_timestamp import LatestTimestamp
-from app.models.meta import DBSession
-from app.services.anki_service import AnkiService
-from app.services.vocab_highlight_service import VocabHighlightService
+from app.services.ankiconnect_service import AnkiService
+from app.services.highlight_service import HighlightService
 from app_tests import logger
 
 
@@ -19,7 +17,7 @@ def test_process_new_vocab_highlights(test_client, add_lookup_data, reset_anki):
 
     # Verify LatestTimestamp is updated
     logger.info("Verifying LatestTimestamp is updated")
-    new_latest_timestamp = VocabHighlightService.get_latest_timestamp()
+    new_latest_timestamp = HighlightService.get_latest_timestamp()
     assert new_latest_timestamp > 0
 
     # Verify notes added to Anki
@@ -55,7 +53,7 @@ def test_update_existing_note_with_new_example(test_client, add_lookup_data, res
 
     # Process new vocab highlights again
     logger.info("Processing new vocab highlights with new example sentence")
-    VocabHighlightService.process_new_vocab_highlights(deck_name="test_deck")
+    HighlightService.process_new_vocab_highlights(deck_name="test_deck")
 
     # Verify that the note was updated with the new example sentence
     logger.info("Verifying note updated with new example sentence")
@@ -76,7 +74,7 @@ def initialize_and_process_highlights(add_lookup_data_func, deck_name="test_deck
 
     # Process new vocab highlights
     logger.info("Processing new vocab highlights")
-    highlights = VocabHighlightService.process_new_vocab_highlights(deck_name=deck_name)
+    highlights = HighlightService.process_new_vocab_highlights(deck_name=deck_name)
 
     # Verify new highlights were processed
     logger.info("Verifying new highlights processed")
