@@ -1,5 +1,6 @@
 from app.models.book_info import BookInfo
 
+
 class BookInfoDTO:
     @staticmethod
     def to_dict(book_info: BookInfo) -> dict:

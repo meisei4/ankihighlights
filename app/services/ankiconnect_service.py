@@ -152,7 +152,6 @@ class AnkiService:
         }
         return cls.add_anki_note(deck_name, model_name, fields, ["vocab"])
 
-
     @classmethod
     def create_model(cls, model_name, in_order_fields, css="", is_cloze=False, card_templates=None):
         if card_templates is None:

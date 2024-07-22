@@ -1,5 +1,6 @@
 from app.models.word import Word
 
+
 class WordDTO:
     @staticmethod
     def to_dict(word: Word) -> dict:

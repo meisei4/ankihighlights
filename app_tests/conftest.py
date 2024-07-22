@@ -4,13 +4,12 @@ from datetime import datetime
 from sqlite3 import IntegrityError
 
 import pytest
-from sqlalchemy import insert
 
 from app.app import create_app
 from app.models import LatestTimestamp
-from app.models.meta import DBSession, Base
-from app.models.lookup import Lookup
 from app.models.book_info import BookInfo
+from app.models.lookup import Lookup
+from app.models.meta import DBSession, Base
 from app.models.word import Word
 from config import load_environment
 

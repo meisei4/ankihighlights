@@ -5,6 +5,7 @@ from app.models.lookup import Lookup
 from app.models.meta import DBSession
 from app.services.ankiconnect_service import AnkiService
 
+
 class HighlightService:
 
     @staticmethod
