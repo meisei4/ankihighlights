@@ -46,3 +46,9 @@ def get_word_lookups_after(timestamp):
                                        message="Word lookups retrieved successfully.")
     except Exception as e:
         return handle_service_response(False, message=str(e), status_code=500)
+
+
+# Add a simple test endpoint
+@highlight_routes.route('/test', methods=['GET'])
+def test_endpoint():
+    return jsonify({"success": True, "message": "Test endpoint is working!"}), 200
