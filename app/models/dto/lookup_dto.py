@@ -1,5 +1,6 @@
 from app.models.lookup import Lookup
 
+
 class LookupDTO:
     @staticmethod
     def to_dict(lookup: Lookup) -> dict:

@@ -1,5 +1,6 @@
 import logging
 
+
 def test_process_highlights_route(test_client, add_lookup_data, reset_anki):
     # Reset Anki and database state
     reset_anki()

@@ -1,5 +1,6 @@
 from app.models.latest_timestamp import LatestTimestamp
 
+
 class LatestTimestampDTO:
     @staticmethod
     def to_dict(latest_timestamp: LatestTimestamp) -> dict:
