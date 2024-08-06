@@ -1,55 +1,42 @@
+from injector import inject
+
 from app.anki_constants import CUSTOM_CARD_MODEL_NAME
-from app.app import logger
-from app.models.latest_timestamp import LatestTimestamp
-from app.models.lookup import Lookup
-from app.models.meta import DBSession
+from app.logger import logger
+from app.repositories.highlight_repository import HighlightRepository
+from app.repositories.latest_timestamp_repository import LatestTimestampRepository
 from app.services.ankiconnect_service import AnkiService
 
 
 class HighlightService:
+    @inject
+    def __init__(self, highlight_repository: HighlightRepository,
+                 latest_timestamp_repository: LatestTimestampRepository):
+        self.highlight_repository = highlight_repository
+        self.latest_timestamp_repository = latest_timestamp_repository
 
-    @staticmethod
-    def check_and_create_latest_timestamp_if_not_exists():
-        """Check if the latest timestamp exists, if not, create it with a default value."""
-        if DBSession.query(LatestTimestamp).count() == 0:
-            latest_timestamp = LatestTimestamp(timestamp=0)  # Default timestamp
-            DBSession.add(latest_timestamp)
-            DBSession.commit()
-            logger.info("Table 'latest_timestamp' initialized with default value.")
+    def check_and_create_latest_timestamp_if_not_exists(self):
+        self.latest_timestamp_repository.check_and_create_latest_timestamp_if_not_exists()
 
-    @staticmethod
-    def get_latest_timestamp():
-        """Retrieve the latest timestamp from the database."""
-        latest_timestamp_record = DBSession.query(LatestTimestamp).order_by(LatestTimestamp.timestamp.desc()).first()
-        return latest_timestamp_record.timestamp if latest_timestamp_record else 0
+    def get_latest_timestamp(self):
+        return self.latest_timestamp_repository.get_latest_timestamp()
 
-    @staticmethod
-    def set_latest_timestamp(timestamp):
-        """Set a new latest timestamp in the database."""
-        latest_timestamp_record = LatestTimestamp(timestamp=timestamp)
-        DBSession.add(latest_timestamp_record)
-        DBSession.commit()
+    def set_latest_timestamp(self, timestamp):
+        self.latest_timestamp_repository.set_latest_timestamp(timestamp)
 
-    @staticmethod
-    def get_word_lookups_after_timestamp(timestamp):
-        """Retrieve all word lookups that occurred after a given timestamp."""
-        return DBSession.query(Lookup).filter(Lookup.timestamp > timestamp).all()
+    def get_word_lookups_after_timestamp(self, timestamp):
+        return self.highlight_repository.get_word_lookups_after_timestamp(timestamp)
 
-    @staticmethod
-    def process_new_vocab_highlights(deck_name="DefaultDeck"):
-        """Process new vocabulary highlights, add them to Anki, and update the latest timestamp."""
-        HighlightService.check_and_create_latest_timestamp_if_not_exists()
-
-        latest_timestamp = HighlightService.get_latest_timestamp()
-        highlights = HighlightService.get_word_lookups_after_timestamp(latest_timestamp)
+    def process_new_vocab_highlights(self, deck_name="DefaultDeck"):
+        self.check_and_create_latest_timestamp_if_not_exists()
+        latest_timestamp = self.get_latest_timestamp()
+        highlights = self.get_word_lookups_after_timestamp(latest_timestamp)
 
         if highlights:
             logger.info(f"New vocab highlights found: {highlights}")
             added_note_ids = AnkiService.add_notes_to_anki(highlights, deck_name, model_name=CUSTOM_CARD_MODEL_NAME)
-
             if added_note_ids:
                 new_latest_timestamp = max(highlight.timestamp for highlight in highlights)
-                HighlightService.set_latest_timestamp(new_latest_timestamp)
+                self.set_latest_timestamp(new_latest_timestamp)
                 logger.info(f"Updated latest timestamp to: {new_latest_timestamp}")
 
         return highlights

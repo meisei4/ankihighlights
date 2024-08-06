@@ -4,8 +4,10 @@ from datetime import datetime
 from sqlite3 import IntegrityError
 
 import pytest
+from flask_injector import FlaskInjector
 
-from app.app import create_app
+from app.app import create_app, configure
+from app.injection_dependencies import Dependencies
 from app.models import LatestTimestamp
 from app.models.book_info import BookInfo
 from app.models.lookup import Lookup
@@ -33,10 +35,9 @@ def test_app():
 
     with app.app_context():
         Base.metadata.create_all()
+        FlaskInjector(app=app, modules=[configure])
         yield app
         DBSession.remove()
-        # TODO debbuger flag that allows you to look at the database after tests
-        #  for now just comment the line below
         Base.metadata.drop_all()
 
 
@@ -54,10 +55,8 @@ def add_lookup_data():
         from app.models.lookup import Lookup
         from app.models.book_info import BookInfo
 
-        # Use the utility function to get or create the word
         word_id = get_or_create_word(word)
 
-        # Add the book info (assuming it doesn't already exist)
         book = BookInfo(title="日本の本", authors="著者A")
         DBSession.add(book)
         DBSession.commit()
@@ -71,9 +70,6 @@ def add_lookup_data():
     return _add_lookup_data
 
 
-# TODO: This seems obnoxious, and I have a feeling it can be easily fixed with DB structure
-#  is it appropriate to have inserts into the lookups table only,
-#  such that the Words table gets updated when a new word is added to the Lookups table?
 def get_or_create_word(word):
     existing_word = DBSession.query(Word).filter_by(word=word).first()
     if existing_word:
@@ -93,7 +89,6 @@ def get_or_create_word(word):
 @pytest.fixture(scope='function')
 def reset_anki():
     def _reset_anki():
-
         from app.services.ankiconnect_service import AnkiService
         deck_name = "test_deck"
 
@@ -105,8 +100,6 @@ def reset_anki():
         if note_ids:
             AnkiService.delete_notes(note_ids)
 
-        # TODO: this DB refresh should be in a more obvious location perhaps
-        #  it has been the main cause for the update example sentence to fail
         DBSession.query(Lookup).delete()
         DBSession.query(BookInfo).delete()
         DBSession.query(Word).delete()
@@ -117,3 +110,10 @@ def reset_anki():
         DBSession.commit()
 
     return _reset_anki
+
+
+@pytest.fixture(scope='function')
+def deps(test_app):
+    with test_app.app_context():
+        injector = FlaskInjector(app=test_app, modules=[configure])
+        yield injector.injector.get(Dependencies)

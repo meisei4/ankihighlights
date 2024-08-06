@@ -15,6 +15,7 @@ psycopg2-binary = "^2.9.9"
 python-dotenv = "^1.0.1"
 docker = "^7.0.0"
 flask-migrate = "^4.0.5"
+flask-injector = "^0.15.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.0.2"

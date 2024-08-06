@@ -1,7 +1,7 @@
 import requests
 
 from app.anki_constants import CUSTOM_CARD_MODEL_NAME, CUSTOM_CARD_FIELDS, CUSTOM_CARD_CSS, CUSTOM_CARD_TEMPLATES
-from app.app import logger
+from app.logger import logger
 from app.util import remove_value_order_from_dict
 
 

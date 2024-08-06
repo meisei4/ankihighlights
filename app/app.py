@@ -2,15 +2,28 @@ import logging
 import os
 
 from flask import Flask
+from flask_injector import FlaskInjector
 from flask_migrate import Migrate
+from injector import singleton
 from sqlalchemy import create_engine
 
+from app.logger import logger
 from app.models import init_model
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from app.models.dto.latest_timestamp_dto import LatestTimestampDTO
+from app.models.dto.lookup_dto import LookupDTO
+from app.repositories.highlight_repository import HighlightRepository
+from app.repositories.latest_timestamp_repository import LatestTimestampRepository
+from app.services.highlight_service import HighlightService
 
 migrate = Migrate()
+
+
+def configure(binder):
+    binder.bind(HighlightRepository, to=HighlightRepository, scope=singleton)
+    binder.bind(LatestTimestampRepository, to=LatestTimestampRepository, scope=singleton)
+    binder.bind(HighlightService, to=HighlightService, scope=singleton)
+    binder.bind(LatestTimestampDTO, to=LatestTimestampDTO, scope=singleton)
+    binder.bind(LookupDTO, to=LookupDTO, scope=singleton)
 
 
 def create_app():
@@ -42,6 +55,11 @@ def create_app():
             from app.controllers.highlight_controller import highlight_routes
             app.register_blueprint(highlight_routes)
             logger.info("Database tables created and blueprints registered.")
+
+            # Integrate FlaskInjector after app context is created
+            FlaskInjector(app=app, modules=[configure])
+            logger.info("FlaskInjector configured.")
+
     except Exception as e:
         logger.error(f"Error during application setup: {e}")
 
