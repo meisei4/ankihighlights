@@ -1,8 +1,18 @@
 import logging
 import os
+from datetime import datetime
+from sqlite3 import IntegrityError
+
 import pytest
-from app.app import create_app
+from flask_injector import FlaskInjector
+
+from app.app import create_app, configure
+from app.injection_dependencies import Dependencies
+from app.models import LatestTimestamp
+from app.models.book_info import BookInfo
+from app.models.lookup import Lookup
 from app.models.meta import DBSession, Base
+from app.models.word import Word
 from config import load_environment
 
 
@@ -25,10 +35,9 @@ def test_app():
 
     with app.app_context():
         Base.metadata.create_all()
+        FlaskInjector(app=app, modules=[configure])
         yield app
         DBSession.remove()
-        # TODO debbuger flag that allows you to look at the database after tests
-        #  for now just comment the line below
         Base.metadata.drop_all()
 
 
@@ -41,34 +50,46 @@ def test_client(test_app):
 
 @pytest.fixture(scope='function')
 def add_lookup_data():
-    def _add_lookup_data():
+    def _add_lookup_data(word="日本語", usage="日本語の例文"):
+        from app.models.meta import DBSession
         from app.models.lookup import Lookup
         from app.models.book_info import BookInfo
-        from app.models.word import Word
-        DBSession.query(Lookup).delete()
-        DBSession.query(BookInfo).delete()
-        DBSession.query(Word).delete()
-        DBSession.commit()
+
+        word_id = get_or_create_word(word)
 
         book = BookInfo(title="日本の本", authors="著者A")
         DBSession.add(book)
         DBSession.commit()
 
-        word = Word(word="日本語")
-        DBSession.add(word)
-        DBSession.commit()
+        current_timestamp = int(datetime.now().timestamp())
 
-        word_lookup = Lookup(word_id=word.id, book_id=book.id, usage="日本語の例文", timestamp=1)
+        word_lookup = Lookup(word_id=word_id, book_id=book.id, usage=usage, timestamp=current_timestamp)
         DBSession.add(word_lookup)
         DBSession.commit()
 
     return _add_lookup_data
 
 
+def get_or_create_word(word):
+    existing_word = DBSession.query(Word).filter_by(word=word).first()
+    if existing_word:
+        return existing_word.id
+    else:
+        try:
+            new_word = Word(word=word)
+            DBSession.add(new_word)
+            DBSession.commit()
+            return new_word.id
+        except IntegrityError:
+            DBSession.rollback()
+            existing_word = DBSession.query(Word).filter_by(word=word).first()
+            return existing_word.id
+
+
 @pytest.fixture(scope='function')
 def reset_anki():
     def _reset_anki():
-        from app.services.anki_service import AnkiService
+        from app.services.ankiconnect_service import AnkiService
         deck_name = "test_deck"
 
         existing_decks = AnkiService.get_all_deck_names()
@@ -79,4 +100,20 @@ def reset_anki():
         if note_ids:
             AnkiService.delete_notes(note_ids)
 
+        DBSession.query(Lookup).delete()
+        DBSession.query(BookInfo).delete()
+        DBSession.query(Word).delete()
+
+        latest_timestamp = 0
+        DBSession.query(LatestTimestamp).delete()
+        DBSession.add(LatestTimestamp(timestamp=latest_timestamp))
+        DBSession.commit()
+
     return _reset_anki
+
+
+@pytest.fixture(scope='function')
+def deps(test_app):
+    with test_app.app_context():
+        injector = FlaskInjector(app=test_app, modules=[configure])
+        yield injector.injector.get(Dependencies)

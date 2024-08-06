@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, Column, BigInteger, String
+from sqlalchemy import ForeignKey, Integer, Column, BigInteger, String, UniqueConstraint
 
 from app.models.meta import Base
 
@@ -10,3 +10,7 @@ class Lookup(Base):
     book_id = Column(Integer, ForeignKey('book_info.id'), nullable=False)
     usage = Column(String, nullable=False)
     timestamp = Column(BigInteger, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('word_id', 'usage', 'timestamp', name='uq_word_usage_timestamp'),
+    )
