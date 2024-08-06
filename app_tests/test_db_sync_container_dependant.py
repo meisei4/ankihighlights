@@ -5,8 +5,10 @@ import sqlite3
 import pytest
 from sqlalchemy import create_engine
 
-from app.services.ebook_db_sync_service import EbookDBSyncService
 from app_tests import logger
+from flask_injector import FlaskInjector
+from app.injection_dependencies import Dependencies
+from app.app import configure
 
 
 def get_test_temp_db_file_name(temp_dir: str):
@@ -60,12 +62,19 @@ def db_connection(temp_db_directory: str):
         conn.close()
 
 
+@pytest.fixture(scope='function')
+def deps(test_app):
+    with test_app.app_context():
+        injector = FlaskInjector(app=test_app, modules=[configure])
+        yield injector.injector.get(Dependencies)
+
+
 # NOTE: THIS REQUIRES THE postgres container to be running (to avoid having to make throwaway containers each test)
-def test_sync_from_ebook_db(setup_database, db_connection, test_app):
+def test_sync_from_ebook_db(setup_database, db_connection, test_app, deps: Dependencies):
     with test_app.app_context():
         engine = setup_database
 
-        EbookDBSyncService.sync_from_ebook_db(db_connection)
+        deps.ebook_db_sync_service.sync_from_ebook_db(db_connection)
 
         with engine.connect() as connection:
             word_count = connection.execute('SELECT COUNT(*) FROM words').scalar()

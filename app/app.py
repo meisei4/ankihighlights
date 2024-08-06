@@ -11,14 +11,18 @@ from app.logger import logger
 from app.models import init_model
 from app.models.dto.latest_timestamp_dto import LatestTimestampDTO
 from app.models.dto.lookup_dto import LookupDTO
+from app.repositories.ebook_db_sync_repository import EbookDBSyncRepository
 from app.repositories.highlight_repository import HighlightRepository
 from app.repositories.latest_timestamp_repository import LatestTimestampRepository
+from app.services.ebook_db_sync_service import EbookDBSyncService
 from app.services.highlight_service import HighlightService
 
 migrate = Migrate()
 
 
 def configure(binder):
+    binder.bind(EbookDBSyncRepository, to=EbookDBSyncRepository, scope=singleton)
+    binder.bind(EbookDBSyncService, to=EbookDBSyncService, scope=singleton)
     binder.bind(HighlightRepository, to=HighlightRepository, scope=singleton)
     binder.bind(LatestTimestampRepository, to=LatestTimestampRepository, scope=singleton)
     binder.bind(HighlightService, to=HighlightService, scope=singleton)
